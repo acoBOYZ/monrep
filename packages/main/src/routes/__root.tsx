@@ -1,9 +1,14 @@
-import { StreamDbProvider } from "@monrep/db/stream";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import appCss from "../tailwind.css?url";
 import type { ReactNode } from "react";
+import { App } from "@/App";
+import { getRootDehydratedDbState } from "@/server/getRootDehydratedDbState";
 
 export const Route = createRootRoute({
+  loader: async () => {
+    const dehydratedDbState = await getRootDehydratedDbState();
+    return { dehydratedDbState };
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -24,10 +29,12 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
+  const { dehydratedDbState } = Route.useLoaderData();
+
   return (
-    <StreamDbProvider>
+    <App dehydratedDbState={dehydratedDbState}>
       <Outlet />
-    </StreamDbProvider>
+    </App>
   );
 }
 

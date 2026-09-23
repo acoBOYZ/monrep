@@ -13,7 +13,7 @@ Work that makes the control plane possible without lying about “production rea
 - [x] Monorepo shell (Bun, Turbo, packages)
 - [x] Web app package (`packages/main`) — TanStack Start playground
 - [x] Stream / DO module codegen (`createDoModule`, live collections)
-- [~] Realtime stream path solid enough for dashboard live UI
+- [x] Realtime stream path solid enough for dashboard live UI
 - [ ] Control-plane app shape clear (auth, orgs/servers list, no product Postgres required)
 - [ ] Durable Streams on CF wired for control-plane collections (servers, agents, jobs)
 

@@ -13,6 +13,7 @@ export * from "./checkbox";
 export * from "./combobox";
 export * from "./command";
 export * from "./copyable-button";
+export * from "./cube-loader";
 export * from "./dialog";
 export * from "./dropdown-menu";
 export * from "./input-group";

@@ -51,12 +51,12 @@ const ModalVariants = cva(
   {
     variants: {
       side: {
-        top: "max-lg:data-closed:slide-out-to-top max-lg:data-open:slide-in-from-top inset-x-0 top-0 max-h-[80dvh] rounded-b-xl border-b lg:h-fit",
+        top: "inset-x-0 top-0 max-h-[80dvh] rounded-b-xl border-b max-lg:data-closed:slide-out-to-top max-lg:data-open:slide-in-from-top lg:h-fit",
         bottom:
-          "max-lg:data-closed:slide-out-to-bottom max-lg:data-open:slide-in-from-bottom inset-x-0 bottom-0 max-h-[80dvh] rounded-t-xl border-t lg:h-fit",
-        left: "max-lg:data-closed:slide-out-to-left max-lg:data-open:slide-in-from-left inset-y-0 left-0 h-full w-3/4 rounded-r-xl border-r sm:max-w-sm lg:h-fit",
+          "inset-x-0 bottom-0 max-h-[80dvh] rounded-t-xl border-t max-lg:data-closed:slide-out-to-bottom max-lg:data-open:slide-in-from-bottom lg:h-fit",
+        left: "inset-y-0 left-0 h-full w-3/4 rounded-r-xl border-r max-lg:data-closed:slide-out-to-left max-lg:data-open:slide-in-from-left sm:max-w-sm lg:h-fit",
         right:
-          "max-lg:data-closed:slide-out-to-right max-lg:data-open:slide-in-from-right inset-y-0 right-0 h-full w-3/4 rounded-l-xl border-l sm:max-w-sm lg:h-fit",
+          "inset-y-0 right-0 h-full w-3/4 rounded-l-xl border-l max-lg:data-closed:slide-out-to-right max-lg:data-open:slide-in-from-right sm:max-w-sm lg:h-fit",
       },
     },
     defaultVariants: {

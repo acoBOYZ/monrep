@@ -6,10 +6,16 @@ import { routeTree } from "./routeTree.gen";
 export function getRouter() {
   return createTanStackRouter({
     routeTree,
-    defaultPreload: "intent",
-    scrollRestoration: true,
     defaultErrorComponent: ErrorState,
     defaultNotFoundComponent: NotFound,
+    defaultStructuralSharing: true,
+    defaultViewTransition: false,
+    defaultPreload: "intent",
+    pathParamsAllowedCharacters: [";", ":", "@", "&", "=", "+", "$"],
+    scrollRestoration: true,
+    scrollRestorationBehavior: "auto",
+    defaultHashScrollIntoView: { behavior: "smooth" },
+    routeMasks: [],
   });
 }
 

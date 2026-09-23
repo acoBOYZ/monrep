@@ -4,6 +4,7 @@ export type ParsedDoCollection = {
   name: string;
   type: string;
   primaryKey: string;
+  indexes: Array<string>;
 };
 
 export type ParsedDoModule = {
@@ -30,6 +31,55 @@ export function readBoolProp(source: string, propName: string): boolean | null {
   if (hit === "true") return true;
   if (hit === "false") return false;
   return null;
+}
+
+/** Parse `propName: ["a", "b"]` (string literals only). Missing → []. */
+export function readStringArrayProp(source: string, propName: string): Array<string> {
+  const re = new RegExp(`${propName}\\s*:\\s*\\[`);
+  const hit = re.exec(source);
+  if (!hit) return [];
+  const start = hit.index + hit[0].length - 1;
+  if (source[start] !== "[") return [];
+  let depth = 0;
+  let inString: '"' | "'" | null = null;
+  let escape = false;
+  let end = -1;
+  for (let i = start; i < source.length; i++) {
+    const ch = source[i]!;
+    if (inString) {
+      if (escape) {
+        escape = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escape = true;
+        continue;
+      }
+      if (ch === inString) inString = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      inString = ch;
+      continue;
+    }
+    if (ch === "[") depth += 1;
+    else if (ch === "]") {
+      depth -= 1;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  if (end < 0) return [];
+  const body = source.slice(start + 1, end);
+  const values: Array<string> = [];
+  const lit = /["']([^"']+)["']/g;
+  let m: RegExpExecArray | null;
+  while ((m = lit.exec(body))) {
+    values.push(m[1]!);
+  }
+  return values;
 }
 
 /** Extract balanced `{ ... }` body starting at `openBraceIndex` (must be `{`). */
@@ -159,6 +209,7 @@ export function parseDoModuleSource(source: string, fileBase: string): ParsedDoM
       name,
       type: readStringProp(body, "type") ?? name,
       primaryKey: readStringProp(body, "primaryKey") ?? "id",
+      indexes: readStringArrayProp(body, "indexes"),
     };
   });
 

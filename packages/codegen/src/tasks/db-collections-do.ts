@@ -14,12 +14,14 @@ type CollectionEntry = {
   name: string;
   exportName: string;
   streamModule: string;
-  type: string;
   primaryKey: string;
 };
 
 const actionName = (op: "upsert" | "delete", collectionName: string): string =>
   `${op}${pascal(collectionName)}`;
+
+const collectionOptionsExportName = (moduleId: string, collectionName: string): string =>
+  `${moduleId}${pascal(collectionName)}Collection`;
 
 export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): string {
   const byModule = new Map<string, Array<CollectionEntry>>();
@@ -30,43 +32,43 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
   }
 
   const moduleIds = [...byModule.keys()].sort((a, b) => a.localeCompare(b));
-  const sharedSchemaNames = entries.map((c) => `${c.exportName}DoSchema`);
   const sharedTypeNames = entries.map((c) => `T${c.exportName}Do`);
 
-  const dbFactoryBlocks = moduleIds.flatMap((moduleId) => {
+  const collectionOptionBlocks = entries.flatMap((c) => {
+    const exportName = collectionOptionsExportName(c.streamModule, c.name);
+    return [`export const ${exportName} = doCollection("${c.streamModule}", "${c.name}");`];
+  });
+
+  const doCollectionOptionsMap = [
+    "export const DO_COLLECTION_OPTIONS = {",
+    ...moduleIds.flatMap((moduleId) => {
+      const moduleEntries = byModule.get(moduleId)!;
+      return [
+        `  "${moduleId}": {`,
+        ...moduleEntries.map(
+          (c) => `    ${c.name}: ${collectionOptionsExportName(moduleId, c.name)},`,
+        ),
+        "  },",
+      ];
+    }),
+    "} as const;",
+  ];
+
+  const factoryBlocks = moduleIds.flatMap((moduleId) => {
     const moduleEntries = byModule.get(moduleId)!;
-    const pascalName = pascal(moduleId);
-    const schemaLines = moduleEntries.map(
-      (c) =>
-        `    ${c.name}: { schema: ${c.exportName}DoSchema, type: "${c.type}", primaryKey: "${c.primaryKey}" },`,
-    );
     const actionLines = moduleEntries.flatMap((c) => {
       const upsert = actionName("upsert", c.name);
       const del = actionName("delete", c.name);
-      const valueType = `T${c.exportName}Do`;
       return [
-        `      ${upsert}: createUpsertStreamAction<${valueType}>({ db, helpers: state.${c.name}, collection: db.collections.${c.name}, primaryKey: "${c.primaryKey}" }),`,
-        `      ${del}: createDeleteStreamAction<${valueType}>({ db, helpers: state.${c.name}, collection: db.collections.${c.name} }),`,
+        `      ${upsert}: createUpsertStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name}, primaryKey: "${c.primaryKey}" }),`,
+        `      ${del}: createDeleteStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name} }),`,
       ];
     });
-
     return [
-      `/** Concrete StreamDB factory for module \`${moduleId}\`. */`,
-      `const create${pascalName}StreamDB = (opts: CreateDoModuleDbOpts) => {`,
-      "  const state = createStateSchema({",
-      ...schemaLines,
-      "  });",
-      "  return createStreamDB({",
-      "    stream: opts.stream,",
-      "    onBatch: opts.onBatch,",
-      "    onBeforeBatch: opts.onBeforeBatch,",
-      "    state,",
-      "    actions: ({ db }) => ({",
+      `const create${pascal(moduleId)}StreamDB = (opts: CreateDoModuleDbOpts) =>`,
+      `  createDoStreamDB("${moduleId}", opts, ({ db, state }) => ({`,
       ...actionLines,
-      "    }),",
-      `    live: opts.live ?? DO_MODULE_LIVE["${moduleId}"],`,
-      "  });",
-      "};",
+      "  }));",
       "",
     ];
   });
@@ -86,28 +88,34 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
   });
 
   const sharedTypeImports = ["TDoModuleId", ...sharedTypeNames];
-  const sharedValueImports = [
-    ...(moduleIds.length > 0 ? ["DO_MODULE_LIVE"] : []),
-    ...sharedSchemaNames,
-  ];
+
+  const collectionExportNames = entries.map((c) =>
+    collectionOptionsExportName(c.streamModule, c.name),
+  );
+
+  const materializeCases = entries.map((c) => {
+    const exportName = collectionOptionsExportName(c.streamModule, c.name);
+    return `    case ${exportName}.id: return materializeDoOne(dbClient, ${exportName}, ensure, "${c.streamModule}", (db) => db.collections.${c.name});`;
+  });
+
+  const anyDoCollectionOptionsType =
+    collectionExportNames.length === 0
+      ? "export type AnyDoCollectionOptions = never;"
+      : `export type AnyDoCollectionOptions =\n${collectionExportNames.map((n) => `  | typeof ${n}`).join("\n")};`;
 
   return [
-    ...(sharedValueImports.length > 0
-      ? [`import {\n\t${sharedValueImports.join(",\n\t")}\n} from "../do";`]
-      : []),
-    ...(moduleIds.length > 0
-      ? ['import { createStateSchema, createStreamDB } from "@durable-streams/state/db";']
-      : []),
+    'import { doCollection } from "./stream/doCollection";',
+    'import { createDoStreamDB } from "./stream/createDoStreamDB";',
+    'import { materializeDoOne } from "./stream/materializeDoOne";',
     'import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";',
     'import type { ActionDefinition } from "@durable-streams/state/db";',
+    'import type { DbClient } from "@tanstack/react-db";',
     `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "../types";`,
-    'import type { CreateDoModuleDbOpts } from "./stream/types";',
+    'import type { CreateDoModuleDbOpts, DoStreamDb } from "./stream/types";',
     "",
-    ...dbFactoryBlocks,
-    "export type TDoModuleActionDefinitions = {",
-    ...actionDefinitionBlocks,
-    "};",
+    ...collectionOptionBlocks,
     "",
+    ...factoryBlocks,
     "const DO_MODULE_DB_FACTORY_IMPL = {",
     ...moduleIds.map((moduleId) => `  "${moduleId}": create${pascal(moduleId)}StreamDB,`),
     "} as const satisfies { [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => unknown; };",
@@ -115,6 +123,26 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
     "export const DO_MODULE_DB_FACTORIES: {",
     "  [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => ReturnType<(typeof DO_MODULE_DB_FACTORY_IMPL)[TModule]>;",
     "} = DO_MODULE_DB_FACTORY_IMPL;",
+    "",
+    "export async function materializeDoCollection(",
+    "  dbClient: DbClient,",
+    "  options: AnyDoCollectionOptions,",
+    "  ensure: <TModule extends TDoModuleId>(moduleId: TModule) => Promise<DoStreamDb<TModule>>,",
+    "): Promise<void> {",
+    "  switch (options.id) {",
+    ...materializeCases,
+    "  }",
+    "}",
+    "",
+    ...doCollectionOptionsMap,
+    "",
+    "export type TDoCollectionOptions = typeof DO_COLLECTION_OPTIONS;",
+    "",
+    anyDoCollectionOptionsType,
+    "",
+    "export type TDoModuleActionDefinitions = {",
+    ...actionDefinitionBlocks,
+    "};",
   ].join("\n");
 }
 
@@ -135,7 +163,6 @@ export async function runDbCollectionsDo(): Promise<void> {
         name: c.name,
         exportName: pascal(c.name),
         streamModule: parsed.moduleId,
-        type: c.type,
         primaryKey: c.primaryKey,
       });
     }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sessionPresenceCollection } from "@monrep/db/collections";
 import { useStreamDb } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
@@ -11,12 +12,9 @@ export const Route = createFileRoute("/playground/presence")({
 function PresencePlayground() {
   const { db, isReady } = useStreamDb("session");
   const live = useLiveQuery({
-    query: (q) => {
-      if (!db) return null;
-      return q.from({ p: db.collections.presence }).orderBy(({ p }) => p.userId, "asc");
-    },
+    query: (q) => q.from({ p: sessionPresenceCollection }).orderBy(({ p }) => p.userId, "asc"),
   });
-  const rows = live.data ?? [];
+  const rows = live.data;
 
   const [name, setName] = useState("Ada");
   const [userId, setUserId] = useState("ada");
@@ -49,8 +47,9 @@ function PresencePlayground() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        <code className="rounded bg-muted px-1">useStreamDb(&quot;session&quot;)</code> live query.
-        Open two tabs to verify realtime.
+        <code className="rounded bg-muted px-1">sessionPresenceCollection</code> SSR + live handoff.
+        Mutations via <code className="rounded bg-muted px-1">useStreamDb</code>. Open two tabs to
+        verify realtime.
       </p>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border border-border/60 p-3 text-xs">
