@@ -18,9 +18,7 @@
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
-    "@durable-streams/client": "^0.2.7",
     "@durable-streams/server-cloudflare": "^0.1.1",
-    "@durable-streams/state": "^0.3.2",
     "@monrep/db": "workspace:^",
     "@monrep/ui": "workspace:^",
     "@monrep/utils": "workspace:^",
@@ -28,7 +26,6 @@
     "@tanstack/react-router": "^1.170.38",
     "@tanstack/react-start": "^1.168.57",
     "@tanstack/react-store": "^0.11.1",
-    "@tanstack/store": "^0.11.1",
     "lucide-react": "^1.47.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

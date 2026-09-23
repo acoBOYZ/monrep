@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.10.0",
-    "@monrep/utils": "workspace:^",
     "@tanstack/react-pacer": "^0.23.0"
   },
   "devDependencies": {
