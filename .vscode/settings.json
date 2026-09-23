@@ -1,7 +1,7 @@
 {
   "editor.semanticHighlighting.enabled": false,
   "tailwindCSS.experimental.configFile": {
-    "@monorep/ui/src/globals.css": "packages/ui/src/**/*",
+    "packages/ui/src/globals.css": "packages/ui/src/**/*",
     "packages/main/src/styles.css": "packages/main/src/**/*",
   },
   // ------------------------------

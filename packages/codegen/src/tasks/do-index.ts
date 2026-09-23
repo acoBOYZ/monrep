@@ -115,18 +115,53 @@ async function syncIndex(): Promise<void> {
         `  streamPersist: ${m.importName}.streamPersist,`,
         `  type: ${m.importName}.collections.${c.name}.type,`,
         `  primaryKey: ${m.importName}.collections.${c.name}.primaryKey,`,
+        `  indexes: ${m.importName}.collections.${c.name}.indexes,`,
         `} as const;`,
         "",
       ];
     }),
   );
 
+  const rowBranches = modules.map(
+    (m, index) =>
+      `${index === 0 ? "  " : "  : "}TModule extends "${m.moduleId}"\n    ? TName extends keyof (typeof ${m.importName})["collections"]\n      ? z.output<(typeof ${m.importName})["collections"][TName]["Schema"]> & object\n      : never`,
+  );
+  const schemaBranches = modules.map(
+    (m, index) =>
+      `${index === 0 ? "  " : "  : "}TModule extends "${m.moduleId}"\n    ? TName extends keyof (typeof ${m.importName})["collections"]\n      ? (typeof ${m.importName})["collections"][TName]["Schema"]\n      : never`,
+  );
+  if (modules.length > 0) {
+    rowBranches.push("  : never;");
+    schemaBranches.push("  : never;");
+  }
+
   const lines = [
+    'import type { z } from "zod";',
     'import type { TStreamEpoch, TStreamLive } from "./create-do-module.gen";',
     ...modules.map((m) => `import ${m.importName} from "./${m.base}";`),
     "",
     `export type TDoModuleId = ${moduleUnion || "never"};`,
     "",
+    ...(modules.length === 0
+      ? [
+          "export type DoCollectionRow<_TModule extends TDoModuleId, _TName extends string> = never;",
+          "export type DoCollectionSchema<_TModule extends TDoModuleId, _TName extends string> = never;",
+          "",
+        ]
+      : [
+          "export type DoCollectionRow<",
+          "  TModule extends TDoModuleId,",
+          "  TName extends string,",
+          "> =",
+          ...rowBranches,
+          "",
+          "export type DoCollectionSchema<",
+          "  TModule extends TDoModuleId,",
+          "  TName extends string,",
+          "> =",
+          ...schemaBranches,
+          "",
+        ]),
     ...collectionExports,
     "export const DO_MODULE_EPOCH = {",
     ...moduleIds.map((id) => {
@@ -144,6 +179,21 @@ async function syncIndex(): Promise<void> {
       (m) => `  "${m.moduleId}": ${resolveModulePersist(m.streamPersist) ? "true" : "false"},`,
     ),
     "};",
+    "",
+    "export const DO_MODULES = {",
+    ...modules.map((m) => `  "${m.moduleId}": ${m.importName},`),
+    "} as const;",
+    "",
+    "export const DO_MODULE_STATE = {",
+    ...modules.flatMap((m) => [
+      `  "${m.moduleId}": {`,
+      ...m.collections.map(
+        (c) =>
+          `    ${c.name}: { schema: ${m.importName}.collections.${c.name}.Schema, type: ${m.importName}.collections.${c.name}.type, primaryKey: ${m.importName}.collections.${c.name}.primaryKey },`,
+      ),
+      "  },",
+    ]),
+    "} as const;",
     "",
   ];
 

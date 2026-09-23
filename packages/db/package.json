@@ -8,6 +8,7 @@
     ".": "./src/index.ts",
     "./do": "./src/do/index.ts",
     "./collections": "./src/collections/index.ts",
+    "./hydration": "./src/hydration/index.ts",
     "./types": "./src/types/index.ts",
     "./stream": "./src/stream/index.ts",
     "./stream/paths": "./src/stream/paths.ts",
@@ -25,6 +26,7 @@
     "@durable-streams/server-cloudflare": "^0.1.1",
     "@durable-streams/state": "^0.3.2",
     "@tanstack/react-db": "^0.4.1",
+    "@tanstack/react-store": "^0.11.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -16,6 +16,7 @@ export default createDoModule("session")({
     presence: {
       type: "presence",
       primaryKey: "userId",
+      indexes: ["userId"],
       schema: {
         userId: z.string(),
         name: z.string().optional(),

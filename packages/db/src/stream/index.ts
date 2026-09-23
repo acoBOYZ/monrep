@@ -1,3 +1,3 @@
-export { StreamDbProvider } from "./StreamDbProvider";
-export { useStreamDb } from "./context";
-export { STREAMS_PATH_PREFIX } from "./paths";
+export { StreamDbHost } from "./StreamDbHost";
+export { useStreamDb } from "./useStreamDb";
+export { STREAMS_PATH_PREFIX, streamModuleUrl } from "./paths";

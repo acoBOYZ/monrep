@@ -13,12 +13,14 @@ Package: [`packages/db`](./) · imports: `@monrep/db`, `@monrep/db/do`, `@monrep
 ```
 one file in src/do/     = one stream module (one URL, one connection)
   └── collections.*     = many shapes on that same stream
-        ↓ codegen
-  StreamDB factory      = TanStack DB collections + upsert/delete actions
+        ↓ codegen (registry)
+  doCollection(mod,name) = SSR + useLiveQuery descriptor
+  createDoStreamDB       = transport + upsert/delete actions
         ↓ browser
-  StreamDbProvider      = acquire all modules once
-  useStreamDb(id)       = grab that module’s db
-  useLiveQuery          = reactive rows
+  StreamDbHost          = acquire modules → streamDbStore
+  DbProvider / hydrate  = SSR snapshot on shared descriptors
+  useLiveQuery(desc)    = paint hydrate → sync mirrors StreamDB → handoff
+  useStreamDb(id)       = actions (mutations) once stream ready
 ```
 
 Example: `session.ts` can hold `presence`, `typing`, `users` together. Same live transport, same offset, same connection.
@@ -31,10 +33,10 @@ Example: `session.ts` can hold `presence`, `typing`, `users` together. Same live
 | --- | --- |
 | [`src/do/*.ts`](./src/do/) | Hand-authored modules (`createDoModule`) — **edit these** |
 | [`src/do/create-do-module.gen.ts`](./src/do/create-do-module.gen.ts) | Factory (from codegen template) |
-| [`src/do/index.gen.ts`](./src/do/index.gen.ts) | `TDoModuleId`, `*DoSchema`, `DO_MODULE_LIVE` / `PERSIST` |
-| [`src/collections/collections.do.gen.ts`](./src/collections/collections.do.gen.ts) | StreamDB factories + actions |
+| [`src/do/index.gen.ts`](./src/do/index.gen.ts) | `TDoModuleId`, `DO_MODULES`, `*DoSchema`, `DO_MODULE_LIVE` / `PERSIST` |
+| [`src/collections/collections.do.gen.ts`](./src/collections/collections.do.gen.ts) | Registry: `doCollection(...)` + factory map |
 | [`src/types/index.gen.ts`](./src/types/index.gen.ts) | `TPresenceDo`, … |
-| [`src/stream/`](./src/stream/) | Provider, acquire, paths, Worker handler |
+| [`src/stream/`](./src/stream/) | Host, acquire, paths, Worker handler |
 
 Never hand-edit `*.gen.ts`. Change a module file → `bun run codegen`.
 
@@ -85,24 +87,25 @@ You get things like `PresenceDoSchema`, `TPresenceDo`, `DO_MODULE_DB_FACTORIES["
 
 ---
 
-## Client: wire the provider
+## Client: wire the host
 
 Once at the app root (see `packages/main`):
 
 ```tsx
 // packages/main/src/routes/__root.tsx
-import { StreamDbProvider } from "@monrep/db/stream";
+import { StreamDbHost } from "@monrep/db/stream";
 
 function RootComponent() {
   return (
-    <StreamDbProvider>
+    <Fragment>
       <Outlet />
-    </StreamDbProvider>
+      <StreamDbHost />
+    <Fragment>
   );
 }
 ```
 
-`StreamDbProvider` acquires **every** module id, preloads StreamDB, and shares sessions across the tree (StrictMode-safe refcount).
+`StreamDbHost` acquires **every** module id, preloads StreamDB, and shares sessions across the tree (StrictMode-safe refcount).
 
 Worker must mount streams (already hooked in main):
 
@@ -120,17 +123,17 @@ Browser URL: `origin/_streams/<moduleId>` ([`browserStreamUrl`](./src/stream/pat
 ## Client: read + write
 
 ```tsx
+import { sessionPresenceCollection } from "@monrep/db/collections";
 import { useStreamDb } from "@monrep/db/stream";
 import { useLiveQuery } from "@tanstack/react-db";
 
 function PresencePlayground() {
   const { db, isReady } = useStreamDb("session");
 
+  // Shared descriptor → SSR hydrate paint, then StreamDB mirror handoff
   const live = useLiveQuery({
-    query: (q) => {
-      if (!db) return null;
-      return q.from({ p: db.collections.presence }).orderBy(({ p }) => p.userId, "asc");
-    },
+    query: (q) =>
+      q.from({ p: sessionPresenceCollection }).orderBy(({ p }) => p.userId, "asc"),
   });
 
   const insert = () => {
@@ -163,7 +166,7 @@ Open two tabs — both share the same stream; upserts show up live.
 | **`streamPersist: false` (default)** | No `sessionStorage`. Offset stays in memory for the open session (`Stream-Next-Offset`). Reload starts catch-up from `-1` (or whatever the stream still has). |
 | **`streamPersist: true`** | Resume key `stream-resume:<moduleId>`. Survives reload in that tab. Only turn on when you need it — less storage chatter, clearer privacy. |
 | **In-tab offset always** | Even without persist, the live consumer advances offset for the lifetime of the session. |
-| **Provider acquires all modules** | Today every module opens when the app mounts. Keep the module list small until we add lazy acquire. |
+| **Host acquires all modules** | Today every module opens when the app mounts. Keep the module list small until we add lazy acquire. |
 | **Actions append events** | Upsert/delete append to the stream; StreamDB materializes collections. Not a replacement for huge analytical history — use epochs / GC when streams should roll. |
 
 Rule of thumb for the control plane: **few modules**, **many collections inside**, SSE only where the UI is actually live.
@@ -174,7 +177,7 @@ Rule of thumb for the control plane: **few modules**, **many collections inside*
 
 ```ts
 import { /* schemas / DO_MODULE_* */ } from "@monrep/db";
-import { StreamDbProvider, useStreamDb } from "@monrep/db/stream";
+import { StreamDbHost, useStreamDb } from "@monrep/db/stream";
 import type { TDoModuleId, TPresenceDo } from "@monrep/db/types";
 ```
 

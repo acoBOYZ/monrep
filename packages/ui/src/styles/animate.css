@@ -15,6 +15,7 @@
     transform: translateY(0);
   }
 }
+
 /* ANIMATE-FADE-IN */
 
 /* ANIMATE-IOS-SPIN */
@@ -23,21 +24,25 @@
     transform: rotate(1turn);
   }
 }
+
 @layer utilities {
   .animate-ios-spin {
     animation: ios-spin 0.9s linear infinite;
     backface-visibility: hidden;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ios-spin {
     animation: none;
     border-top-color: transparent;
   }
 }
+
 [data-motion-off] .animate-ios-spin {
   animation: none;
 }
+
 /* ANIMATE-IOS-SPIN */
 
 /* UI-IMPACT — one-shot row splash on external data change */
@@ -49,9 +54,11 @@
       inset 0 0 0 1px color-mix(in srgb, var(--color-success) 35%, transparent),
       0 4px 16px color-mix(in srgb, var(--color-success) 18%, transparent);
   }
+
   45% {
     transform: scale(1.012);
   }
+
   100% {
     transform: scale(1);
     background-color: transparent;
@@ -64,4 +71,31 @@
     animation: ui-impact 750ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 }
+
 /* UI-IMPACT */
+
+/* ANIMATE-CUBE-PULSE */
+@keyframes an-cube-pulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.an-cube-cell {
+  animation: an-cube-pulse 650ms ease-in-out infinite;
+  fill: currentColor;
+  opacity: 0.15;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .an-cube-cell {
+    animation: none;
+  }
+}
+
+/* ANIMATE-CUBE-PULSE */

@@ -60,7 +60,7 @@
     ]
   },
   "sortTailwindcss": {
-    "stylesheet": "./apps/web/src/tailwind.css",
+    "stylesheet": "./packages/main/src/tailwind.css",
     "functions": ["cn", "clsx", "cva"]
   },
   "sortPackageJson": true,

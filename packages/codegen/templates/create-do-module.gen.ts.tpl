@@ -6,16 +6,23 @@ export type TStreamEpoch = "utc-day" | "utc-hour";
 /** Catch-up then live transport. Default `"long-poll"`. */
 export type TStreamLive = "sse" | "long-poll";
 
-export type DoCollectionProps<TShape extends z.ZodRawShape = z.ZodRawShape> = {
+export type DoCollectionProps<TShape extends z.ZodRawShape> = {
   /** Durable State event `type` discriminator. */
   type: string;
+  /** Zod column map — binds `primaryKey` / `indexes` to these keys. */
+  schema: TShape;
   /** Primary key field on the row object. */
   primaryKey: keyof TShape & string;
-  schema: TShape;
+  /** Columns to index for filters / orderBy / infinite. Omit = none. */
+  indexes?: ReadonlyArray<keyof TShape & string>;
 };
 
 export type CreateDoModuleProps<
-  TCols extends Record<string, DoCollectionProps>,
+  TCols extends {
+    [K in keyof TCols]: TCols[K] extends { schema: infer S extends z.ZodRawShape }
+      ? DoCollectionProps<S>
+      : never;
+  },
 > = {
   /**
    * Rolling stream-id window. Omit = immortal stream, never GC.
@@ -37,6 +44,7 @@ type BuiltCollection<TName extends string, TShape extends z.ZodRawShape> = {
   name: TName;
   type: string;
   primaryKey: keyof TShape & string;
+  indexes: ReadonlyArray<keyof TShape & string>;
   Schema: z.ZodObject<TShape>;
 };
 
@@ -46,7 +54,13 @@ type BuiltCollection<TName extends string, TShape extends z.ZodRawShape> = {
  * together in one StreamDB.
  */
 export function createDoModule<const TId extends string>(moduleId: TId) {
-  return <const TCols extends Record<string, DoCollectionProps>>({
+  return <
+    const TCols extends {
+      [K in keyof TCols]: TCols[K] extends { schema: infer S extends z.ZodRawShape }
+        ? DoCollectionProps<S>
+        : never;
+    },
+  >({
     streamEpoch,
     streamLive = "long-poll",
     streamPersist = false,
@@ -54,12 +68,13 @@ export function createDoModule<const TId extends string>(moduleId: TId) {
   }: CreateDoModuleProps<TCols>) => {
     const built: Record<string, BuiltCollection<string, z.ZodRawShape>> = {};
     for (const name of Object.keys(collections)) {
-      const col = collections[name];
+      const col = collections[name as keyof TCols];
       if (!col) continue;
       built[name] = {
         name,
         type: col.type,
         primaryKey: col.primaryKey,
+        indexes: col.indexes ?? [],
         Schema: z.object(col.schema),
       };
     }
