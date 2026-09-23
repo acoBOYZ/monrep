@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreFiles": [
+    "**/*.test.*",
+    "**/*bench.*",
+    "**/*.config.*",
+    "**/*.css",
+    "**/.ncurc.cjs",
+    "**/*.gen.*",
+    "**/*.sys.*"
+  ],
+  "ignore": [
+    "**/upstream/**",
+    "**/*.gen.*",
+    "**/bindings/**",
+    "**/scripts/**"
+  ]
+}

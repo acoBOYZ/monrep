@@ -1,0 +1,16 @@
+auto_review: true          # run on PR open/update
+summarize: true            # include PR summary
+path_filters:
+  include:
+    - packages/**
+  exclude:
+    - "**/node_modules/**"
+    - "**/*.lock"
+    - "**/dist/**"
+    - "**/.turbo/**"
+    - "**/.vscode/**"
+    - "docker/**"
+    - "**/*.md"
+behavior:
+  max_comments: 50
+  approve: false

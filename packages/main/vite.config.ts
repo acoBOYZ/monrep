@@ -1,0 +1,66 @@
+import { resolve } from 'node:path';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite';
+import { cloudflare } from '@cloudflare/vite-plugin';
+import { analyzer } from 'vite-bundle-analyzer';
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+
+const DOMAIN = "https://rai.monrep.com";
+
+export default defineConfig(({ mode }) => {
+  const isProduction = mode === "production";
+  const isDebug = mode === 'debug' || mode === 'development';
+  const isCompiler = process.env.REACT_COMPILER === 'true';
+  const useOxc = !isProduction && isCompiler;
+  // TODO: Remove it when oxc native react compiler is stable.
+  const useBabel = isProduction && isCompiler;
+
+  return {
+    server: {
+      port: 5274,
+    },
+    plugins: [
+      cloudflare({
+        viteEnvironment: { name: 'ssr' },
+        inspectorPort: false,
+      }),
+      tailwindcss(),
+      tanstackStart({
+        sitemap: {
+          enabled: true,
+          host: DOMAIN,
+        },
+        pages: [
+          {
+            path: '/',
+            sitemap: {
+              changefreq: 'monthly',
+              priority: 1,
+              alternateRefs: [
+                { hreflang: 'en', href: DOMAIN },
+                { hreflang: 'tr', href: DOMAIN },
+                { hreflang: 'x-default', href: DOMAIN },
+              ],
+            },
+          },
+        ],
+      }),
+      react({ compiler: useOxc }),
+      useBabel && babel({ presets: [reactCompilerPreset()] }),
+      isDebug && analyzer({ analyzerMode: 'static', openAnalyzer: true }),
+    ],
+    resolve: {
+      tsconfigPaths: true,
+      alias: {
+        tslib: 'tslib/tslib.es6.js',
+        "@": resolve(import.meta.dirname, "./src"),
+        "@monrep/db": resolve(import.meta.dirname, "../db/src"),
+        "@monrep/hooks": resolve(import.meta.dirname, "../hooks/src"),
+        "@monrep/ui": resolve(import.meta.dirname, "../ui/src"),
+        "@monrep/utils": resolve(import.meta.dirname, "../utils/src"),
+      },
+    },
+  }
+});

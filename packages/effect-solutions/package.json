@@ -1,0 +1,20 @@
+{
+  "name": "@monrep/effect-solutions",
+  "version": "0.4.8",
+  "private": true,
+  "author": "ACO .",
+  "type": "module",
+  "description": "Vendored effect-solutions upstream",
+  "exports": {},
+  "scripts": {
+    "lint": "oxlint --threads=1 scripts",
+    "clean": "rimraf dist node_modules bun.lock .turbo",
+    "fmt": "oxfmt scripts",
+    "fmtcheck": "oxfmt --check scripts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "typescript": "^7.0.2"
+  }
+}

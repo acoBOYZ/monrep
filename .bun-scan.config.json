@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rawtoast/bun-scan/v1.1.2/schema/bun-scan.schema.json",
+  "bunReportWarnings": false,
+  "ignore": [
+    "CVE-2026-41907",
+    "GHSA-rgj7-g3m4-5g8c",
+    "GHSA-g89c-p67h-r497",
+    "GHSA-2jg2-4ch7-h545",
+    "CVE-2026-2950",
+    "CVE-2026-4800",
+    "CVE-2026-25536"
+  ],
+  "packages": {}
+}

@@ -1,0 +1,7 @@
+node_modules
+.turbo
+.git
+dist
+.cmd
+.env
+.tree

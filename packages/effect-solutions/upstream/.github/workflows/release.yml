@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "effect-solutions@*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: macos-latest
+    env:
+      NPM_CONFIG_PROVENANCE: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: "1.1.30"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Publish packages via Changesets
+        run: npx changeset publish
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/effect-solutions@')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists"
+          else
+            gh release create "$TAG_NAME" --title "$TAG_NAME" --generate-notes
+          fi

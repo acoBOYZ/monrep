@@ -1,0 +1,39 @@
+{
+  "name": "@monrep/agent-skills",
+  "version": "0.5.2",
+  "private": true,
+  "description": "Workspace-only Agent Skills for the monrep monorepo. React standards, quality gates, and conventions consumed via TanStack Intent (not published to npm)",
+  "type": "module",
+  "author": "Ahmet Cevdet ÖZTÜRK",
+  "license": "MIT",
+  "homepage": "https://github.com/monrepco/monrep-mono",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/monrepco/monrep-mono.git",
+    "directory": "packages/agent-skills"
+  },
+  "keywords": [
+    "agent-skills",
+    "cursor",
+    "claude",
+    "react",
+    "tanstack-intent"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    "./skills/*": "./skills/*"
+  },
+  "files": [
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "scripts": {
+    "validate": "intent validate skills",
+    "stale": "intent stale",
+    "sync-versions": "bun ../../scripts/skills/sync-versions.ts"
+  },
+  "devDependencies": {
+    "@tanstack/intent": "^0.4.0",
+    "@types/bun": "^1.4.2"
+  }
+}

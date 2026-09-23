@@ -1,0 +1,31 @@
+{
+  "name": "@monrep/hooks",
+  "version": "1.0.0",
+  "private": true,
+  "author": "ACO .",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit --singleThreaded",
+    "lint": "oxlint --threads=1 src .",
+    "clean": "rimraf dist node_modules bun.lock .turbo",
+    "fmt": "oxfmt src",
+    "fmtcheck": "oxfmt --check src"
+  },
+  "dependencies": {
+    "@formkit/auto-animate": "^0.10.0",
+    "@monrep/utils": "workspace:^",
+    "@tanstack/react-pacer": "^0.23.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  }
+}

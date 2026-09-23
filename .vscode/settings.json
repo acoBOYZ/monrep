@@ -1,0 +1,83 @@
+{
+  "editor.semanticHighlighting.enabled": false,
+  "tailwindCSS.experimental.configFile": {
+    "@monorep/ui/src/globals.css": "packages/ui/src/**/*",
+    "packages/main/src/styles.css": "packages/main/src/**/*",
+  },
+  // ------------------------------
+  // i18n Ally — monorepo support
+  // ------------------------------
+  "i18n-ally.enabledFrameworks": [
+    "vscode",
+    "react",
+    "i18next",
+    "react-i18next",
+    "i18n-tag",
+    "custom",
+  ],
+  "i18n-ally.enabledParsers": [
+    "json",
+    "yaml",
+    "json5",
+  ],
+  "i18n-ally.localesPaths": [
+    "packages/*/src/i18n",
+    "packages/*/src/locales",
+  ],
+  "i18n-ally.defaultNamespace": "default",
+  "i18n-ally.namespace": true,
+  /**
+  * Relative to localesPaths
+  * Example:
+  *   en/common.json
+  *   tr/auth.json
+  */
+  "i18n-ally.pathMatcher": "{locale}/{namespace}.json",
+  // Key style
+  "i18n-ally.keystyle": "nested",
+  // Languages
+  "i18n-ally.sourceLanguage": "en",
+  "i18n-ally.displayLanguage": "tr",
+  // Monorepo-friendly options
+  "i18n-ally.sortKeys": true,
+  "i18n-ally.keepFulfilled": true,
+  "i18n-ally.autoDetection": false,
+  // FindItFaster
+  // Finde files               :=> Cmd + Shift + J
+  // Find text in files        :=> Cmd + Shift + U
+  // Find text (type-filtered) :=> Cmd + Shift + Ctrl + U
+  "find-it-faster.general.useTerminalInEditor": true,
+  "find-it-faster.general.killTerminalAfterUse": true,
+  // ------------------------------
+  // _TODO Tree Extensions Settings
+  // ------------------------------
+  "todo-tree.general.tags": [
+    "TODO",
+    "FIXME",
+    "BREAKING",
+    "DEPRECATED",
+    "REMOVE",
+    "MIGRATION",
+    "DB",
+    "SCHEMA"
+  ],
+  "todo-tree.general.tagGroups": {
+    "MIGRATION": [
+      "BREAKING",
+      "DEPRECATED",
+      "REMOVE"
+    ]
+  },
+  // ------------------------------
+  // Version Lens
+  // ------------------------------
+  // "versionlens.suggestions.showOnStartup": true,
+
+  // ------------------------------
+  // NPM
+  // ------------------------------
+  "npm.autoDetect": "off",
+  "npm.packageManager": "bun",
+  "rust-analyzer.linkedProjects": ["packages/whatsapp-rust/Cargo.toml"],
+  "rust-analyzer.check.command": "clippy",
+}

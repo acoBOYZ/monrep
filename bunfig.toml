@@ -1,0 +1,5 @@
+[install]
+auto = "auto"
+
+[install.security]
+scanner = "bun-scan"

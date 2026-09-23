@@ -1,0 +1,71 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "allowJs": true,
+    "types": ["bun", "node"],
+
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    "paths": {
+      "@monrep/db": ["./packages/db/src"],
+      "@monrep/db/do": ["./packages/db/src/do"],
+      "@monrep/db/collections": ["./packages/db/src/collections"],
+      "@monrep/db/types": ["./packages/db/src/types"],
+      "@monrep/db/stream": ["./packages/db/src/stream/index.ts"],
+      "@monrep/db/*": ["./packages/db/src/*"],
+      "@monrep/hooks": ["./packages/hooks/src"],
+      "@monrep/ui": ["./packages/ui/src"],
+      "@monrep/ui/*": ["./packages/ui/src/*"],
+      "@monrep/utils": ["./packages/utils/src"],
+      "@monrep/utils/*": ["./packages/utils/src/*"]
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ],
+
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "allowUnusedLabels": false,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+
+    "experimentalDecorators": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "removeComments": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    "doctor.config.ts",
+    "scripts/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/dist/**",
+    "**/build/**",
+    ".turbo",
+    "tmp",
+    "temp",
+    "**/doctor.config.ts",
+    "packages/effect-solutions/upstream/**"
+  ]
+}

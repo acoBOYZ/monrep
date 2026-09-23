@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "lokalise.i18n-ally",
+    "pkief.material-icon-theme",
+    "cweijan.vscode-database-client2",
+    "oxc.oxc-vscode",
+    "cardinal90.multi-cursor-case-preserve",
+    "mylesmurphy.prettify-ts",
+    "pflannery.vscode-versionlens",
+    "golang.go",
+    "bierner.markdown-preview-github-styles",
+    "gruntfuggly.todo-tree",
+    "bierner.comment-tagged-templates",
+  ]
+}

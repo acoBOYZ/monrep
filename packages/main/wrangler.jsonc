@@ -1,0 +1,33 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "monrep-main",
+  "compatibility_date": "2026-09-04",
+  "workers_dev": false,
+  "preview_urls": false,
+  // Custom entry: Durable Streams under /_streams/* + TanStack Start for everything else
+  "main": "./src/server/worker.ts",
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "STREAMS",
+        "class_name": "StreamObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "StreamObject"
+      ]
+    }
+  ],
+  "previews": {
+    "cache": {
+      "enabled": true
+    }
+  },
+  "dev": {
+    "inspector_port": 9329
+  }
+}

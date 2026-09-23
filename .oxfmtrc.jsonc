@@ -1,0 +1,90 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "indentWidth": 2,
+  "sortImports": {
+    "order": "asc",
+    "ignoreCase": false,
+    "newlinesBetween": false,
+    "internalPattern": ["@/"],
+    "customGroups": [
+      {
+        "groupName": "react",
+        "elementNamePattern": ["react", "react-**"],
+        "modifiers": ["value"]
+      },
+      {
+        "groupName": "workspace-react",
+        "elementNamePattern": ["@react/**"],
+        "modifiers": ["value"]
+      },
+      {
+        "groupName": "workspace-core",
+        "elementNamePattern": ["@core/**"],
+        "modifiers": ["value"]
+      },
+      {
+        "groupName": "type-react",
+        "elementNamePattern": ["react", "react-**"],
+        "modifiers": ["type"]
+      },
+      {
+        "groupName": "type-workspace-react",
+        "elementNamePattern": ["@react/**"],
+        "modifiers": ["type"]
+      },
+      {
+        "groupName": "type-workspace-core",
+        "elementNamePattern": ["@core/**"],
+        "modifiers": ["type"]
+      }
+    ],
+    "groups": [
+      // value: node → react → npm → our @react/@core → relatives
+      "builtin",
+      "react",
+      "external",
+      "workspace-react",
+      "workspace-core",
+      ["parent", "sibling", "index"],
+      // type: same stack order
+      "type-react",
+      ["type-builtin", "type-external"],
+      "type-workspace-react",
+      "type-workspace-core",
+      ["type-parent", "type-sibling", "type-index"],
+      "type-internal",
+      // value @/ last
+      "internal",
+      "unknown"
+    ]
+  },
+  "sortTailwindcss": {
+    "stylesheet": "./apps/web/src/tailwind.css",
+    "functions": ["cn", "clsx", "cva"]
+  },
+  "sortPackageJson": true,
+  "embeddedLanguageFormatting": "auto",
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.turbo/**",
+
+    // build outputs
+    "**/dist/**",
+    "**/build/**",
+    "**/coverage/**",
+    "**/.bundle/**",
+    "**/.wrangler/**",
+    "**/*-lottie.json",
+    "**/assets/**/*.json",
+
+    //generated
+    "**/*.lock",
+    "**/bun.lock",
+    "**/gen/**",
+    "**/*.gen.ts",
+    "**/*.d.ts",
+    "**/*.js",
+    "@core/spacetime/src/bindings/**",
+  ],
+}
