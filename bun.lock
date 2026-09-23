@@ -100,8 +100,8 @@
         "@monrep/ui": "workspace:^",
         "@monrep/utils": "workspace:^",
         "@tanstack/react-db": "^0.4.1",
-        "@tanstack/react-router": "^1.170.38",
-        "@tanstack/react-start": "^1.168.57",
+        "@tanstack/react-router": "^1.170.39",
+        "@tanstack/react-start": "^1.168.58",
         "@tanstack/react-store": "^0.11.1",
         "lucide-react": "^1.47.0",
         "react": "^19.3.0",
@@ -109,7 +109,7 @@
         "zod": "^4.6.5",
       },
       "devDependencies": {
-        "@cloudflare/vite-plugin": "^1.57.3",
+        "@cloudflare/vite-plugin": "^1.58.0",
         "@rolldown/plugin-babel": "^0.2.4",
         "@tailwindcss/vite": "^4.3.3",
         "@tanstack/router-cli": "^1.167.38",
@@ -123,7 +123,7 @@
         "typescript": "^7.0.2",
         "vite": "^8.3.0",
         "vite-bundle-analyzer": "^1.3.9",
-        "wrangler": "^4.136.3",
+        "wrangler": "^4.137.0",
       },
     },
     "packages/ui": {
