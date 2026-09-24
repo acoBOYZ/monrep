@@ -127,17 +127,19 @@ describe("createUpsertStreamAction", () => {
     expect(db.appended[0]?.value).toEqual({ userId: "u1", status: "away" });
   });
 
-  test("does not wipe optional fields on update when caller omits them", async () => {
+  test("preserves createdAt on partial update in live row and appended event", async () => {
     const createdAtSchema = z.object({
       userId: z.string(),
       status: z.string(),
       createdAt: z.string().optional(),
+      updatedAt: z.string().optional(),
     });
 
     type CreatedAtRow = z.infer<typeof createdAtSchema>;
 
     const createdAtCollection = createMockCollection<CreatedAtRow>();
     const db = createMockDb();
+    let stamp = 0;
 
     const action = createUpsertStreamAction<CreatedAtRow>({
       db,
@@ -146,17 +148,37 @@ describe("createUpsertStreamAction", () => {
       primaryKey: "userId",
       schema: createdAtSchema,
       insertGens: {
-        createdAt: () => "t-insert",
+        createdAt: () => `t-insert-${++stamp}`,
+        updatedAt: () => `t-updated-${stamp}`,
       },
-      updateGens: null,
+      updateGens: {
+        updatedAt: () => `t-updated-${++stamp}`,
+      },
     });
 
-    action.onMutate({ userId: "u1", status: "online" });
-    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert");
+    const insertPayload: CreatedAtRow = { userId: "u1", status: "online" };
+    action.onMutate(insertPayload);
+    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert-1");
+    await action.mutationFn(insertPayload, undefined);
+    expect(db.appended[0]?.value).toMatchObject({
+      userId: "u1",
+      createdAt: "t-insert-1",
+    });
 
-    // Simulate a partial upsert that omits createdAt (e.g. rename payload).
-    action.onMutate({ userId: "u1", status: "away" });
-    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert");
+    // Partial upsert omits createdAt (e.g. presence rename).
+    const updatePayload: CreatedAtRow = { userId: "u1", status: "away" };
+    action.onMutate(updatePayload);
+    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert-1");
+    expect(createdAtCollection.rows.get("u1")?.updatedAt).toBe("t-updated-2");
+    expect(stamp).toBe(2);
+
+    await action.mutationFn(updatePayload, undefined);
+    expect(db.appended[1]?.value).toMatchObject({
+      userId: "u1",
+      status: "away",
+      createdAt: "t-insert-1",
+      updatedAt: "t-updated-2",
+    });
   });
 
   test("rejects so TanStack DB can roll the optimistic row back", () => {

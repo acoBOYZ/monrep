@@ -15,6 +15,7 @@ type CollectionEntry = {
   exportName: string;
   streamModule: string;
   primaryKey: string;
+  indexes: Array<string>;
 };
 
 const actionName = (op: "upsert" | "delete", collectionName: string): string =>
@@ -41,11 +42,20 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
         `      ${del}: createDeleteStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name} }),`,
       ];
     });
+    const indexLines = moduleEntries.flatMap((c) =>
+      c.indexes.map(
+        (field) =>
+          `  sdb.collections.${c.name}.createIndex((r) => r.${field}, { indexType: BasicIndex });`,
+      ),
+    );
     return [
-      `const create${pascal(moduleId)}StreamDB = (opts: CreateDoModuleDbOpts) =>`,
-      `  createDoStreamDB("${moduleId}", opts, ({ db, state }) => ({`,
+      `const create${pascal(moduleId)}StreamDB = (opts: CreateDoModuleDbOpts) => {`,
+      `  const sdb = createDoStreamDB("${moduleId}", opts, ({ db, state }) => ({`,
       ...actionLines,
       "  }));",
+      ...indexLines,
+      "  return sdb;",
+      "};",
       "",
     ];
   });
@@ -67,9 +77,10 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
   const sharedTypeImports = ["TDoModuleId", ...sharedTypeNames];
 
   return [
+    'import { BasicIndex } from "@tanstack/react-db";',
+    'import { DO_MODULES } from "../do";',
     'import { createDoStreamDB } from "./stream/createDoStreamDB";',
     'import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";',
-    'import { DO_MODULES } from "../do";',
     'import type { ActionDefinition } from "@durable-streams/state/db";',
     `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "../types";`,
     'import type { CreateDoModuleDbOpts } from "./stream/types";',
@@ -107,6 +118,7 @@ export async function runDbCollectionsDo(): Promise<void> {
         exportName: pascal(c.name),
         streamModule: parsed.moduleId,
         primaryKey: c.primaryKey,
+        indexes: [...c.indexes],
       });
     }
   }

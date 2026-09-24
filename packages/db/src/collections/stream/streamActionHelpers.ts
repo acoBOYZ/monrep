@@ -1,5 +1,5 @@
 import { SchemaValidationError } from "@tanstack/react-db";
-import { applyDoWriteFields, isDoWriteFieldUnset } from "./applyDoWriteFields";
+import { applyDoWriteFields } from "./applyDoWriteFields";
 import type { DurableStream } from "@durable-streams/client";
 import type {
   ActionDefinition,
@@ -86,27 +86,10 @@ const prepareUpsertValue = <TValue extends object>(options: {
   updateGens: DoWriteFieldGens | null | undefined;
 }): { value: TValue; key: string; isUpdate: boolean } => {
   const { value, primaryKey, collection, schema, insertGens, updateGens } = options;
-  // We need to preserve existing fields on update when callers omit them in partial upserts.
-  // Zod parsing may materialize omitted optional fields as `undefined`, and our
-  // optimistic merge would otherwise overwrite the existing row.
-  const inputHasKey = new Set<keyof TValue & string>();
-  for (const key of Object.keys(value) as Array<keyof TValue & string>) inputHasKey.add(key);
   const existingKey = peekPrimaryKey(value, primaryKey);
   const isUpdate = existingKey !== undefined && collection.has(existingKey);
-
   applyDoWriteFields(value, isUpdate ? updateGens : insertGens);
   parseDoWriteValue(schema, value, isUpdate ? "update" : "insert");
-
-  if (isUpdate) {
-    // Drop keys that were absent from the caller's payload and are still unset after parsing.
-    // This ensures "partial upsert" doesn't wipe existing fields.
-    for (const key of Object.keys(value) as Array<keyof TValue & string>) {
-      if (inputHasKey.has(key)) continue;
-      const raw = (value as Record<string, unknown>)[key];
-      if (isDoWriteFieldUnset(raw)) delete (value as Record<string, unknown>)[key];
-    }
-  }
-
   return { value, key: readPrimaryKey(value, primaryKey), isUpdate };
 };
 
@@ -131,8 +114,11 @@ export const createUpsertStreamAction = <TValue extends object>(options: {
         updateGens,
       });
       if (prepared.isUpdate) {
+        // Partial → live, then live → payload so mutationFn appends a full row
+        // (StreamDB replaces on upsert; omitted audits like createdAt must survive).
         collection.update(prepared.key, (draft) => {
           Object.assign(draft, prepared.value);
+          Object.assign(prepared.value, draft);
         });
         return;
       }
