@@ -1,7 +1,8 @@
 import { StreamDbHost, useStreamsReady } from "@monrep/db/stream";
 import { tryCatch } from "@monrep/utils";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
-import { PageLoader } from "@/pages/PageLoader";
+import { Navbar } from "@/components/layouts/Navbar";
+import { PageLoader } from "@/components/pages/PageLoader";
 import { requireSession } from "@/server/auth/functions";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -27,7 +28,13 @@ function AuthenticatedLayout() {
   return (
     <>
       <StreamDbHost />
-      {streamsReady ? <Outlet /> : <PageLoader />}
+      {streamsReady ? (
+        <Navbar>
+          <Outlet />
+        </Navbar>
+      ) : (
+        <PageLoader />
+      )}
     </>
   );
 }

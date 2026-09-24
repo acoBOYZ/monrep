@@ -1,4 +1,5 @@
 import "zod/compile";
+import "temporal-polyfill/global";
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
 
 const CANONICAL_HOST = "app.monrep.com";

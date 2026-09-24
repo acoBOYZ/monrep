@@ -2,7 +2,7 @@
   "editor.semanticHighlighting.enabled": false,
   "tailwindCSS.experimental.configFile": {
     "packages/ui/src/globals.css": "packages/ui/src/**/*",
-    "packages/main/src/styles.css": "packages/main/src/**/*",
+    "packages/main/src/tailwind.css": "packages/main/src/**/*",
   },
   // ------------------------------
   // i18n Ally — monorepo support

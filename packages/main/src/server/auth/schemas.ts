@@ -1,7 +1,7 @@
 import { CapabilitySchema, RoleSchema } from "@monrep/db/schemas";
 import { z } from "zod";
 
-export const DEFAULT_AUTH_REDIRECT = "/playground/presence" as const;
+export const DEFAULT_AUTH_REDIRECT = "/servers" as const;
 
 export const AuthEnvSchema = z.object({
   ADMIN_EMAIL: z.email(),

@@ -13,7 +13,7 @@ One control plane. Many servers. No jumping between terminals every time somethi
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **Web app**             | Dashboard. Live view. Trigger updates, restarts, open a shell, watch logs.                                                         |
 | **CLI agent**           | Runs on the server as a single binary. Talks to the web app over a realtime channel. Executes what you ask.                        |
-| **CI (GitHub for now)** | Builds images / binaries. When source changes you can push updates the same way CF / Vercel / Netlify feel — but for *your* fleet. |
+| **CI (GitHub for now)** | Builds images / binaries. When source changes you can push updates the same way CF / Vercel / Netlify feel, but for *your* fleet. |
 
 
 You are not SSH’d into five machines at once. You open the page, pick a server, do the job.
@@ -27,7 +27,7 @@ You are not SSH’d into five machines at once. You open the page, pick a server
 - Disable one service or everything from the outside world when you need a kill switch  
 - Later: OpenTelemetry inputs, richer metrics, alerts
 
-Exact UI and CLI packaging are still moving — see [ROADMAP.md](./ROADMAP.md).
+Exact UI and CLI packaging are still moving. See [ROADMAP.md](./ROADMAP.md).
 
 ## Why this repo looks like a monorepo
 
@@ -45,7 +45,7 @@ Early. Public so people can follow along and contribute. Expect breakage; expect
 
 If you just cloned this: start from [ROADMAP.md](./ROADMAP.md) for “what exists vs what’s next,” then poke `packages/main` for the web app side.
 
-**Realtime / DO streams** (how `createDoModule`, StreamDB, and the client hooks work — with examples and performance notes): **[packages/db/README.md](./packages/db/README.md)**.
+**Realtime / DO streams** (how `createDoModule`, StreamDB, and the client hooks work with examples and performance notes): **[packages/db/README.md](./packages/db/README.md)**.
 
 ## Local (dev)
 
@@ -66,7 +66,7 @@ Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb op
 
 Plan is roughly:
 
-1. Build a single binary (Bun and/or Rust — TBD).
+1. Build a single binary (Bun and/or Rust TBD).
 2. Ship it so you can install on Linux.
 3. Agent connects to the control plane and waits.
 4. Web UI sends work; agent runs it; streams results back.
@@ -79,11 +79,11 @@ Issues and PRs welcome. Keep changes lean.
 
 Full rules (quality gates, import/polish house style, and **installing `/monrep` + Intent skills** for AI agents): **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
-Short version: don’t hand-edit generated files under `packages/db` — change the source and run `bun run codegen`. Agent hard rules live in [`AGENTS.md`](./AGENTS.md); if you code with Cursor, run `bun run skills:install` and keep the **monrep** skill in sync.
+Short version: don’t edit generated files under `packages/db`. Change the source and run `bun run codegen`. Agent hard rules live in [`AGENTS.md`](./AGENTS.md); if you code with Cursor, run `bun run skills:install` and keep the **monrep** skill in sync.
 
 ## License
 
-MIT — see `package.json`.
+MIT. See `package.json`.
 
 ---
 

@@ -1,5 +1,5 @@
 import { ensureStream } from "@monrep/db/stream/ensureStream";
-import { STREAMS_PATH_PREFIX } from "@monrep/db/stream/paths";
+import { streamPath } from "@monrep/db/stream/paths";
 import { nextUlid } from "@monrep/utils/ulid";
 import { env } from "cloudflare:workers";
 import { LoginAttemptSchema, UpsertAuthUserSchema } from "./schemas";
@@ -10,7 +10,7 @@ type ServerWriteModule = "audit" | "auth";
 
 /** In-process DO stub fetch — avoids Worker self-HTTP from serverFns. */
 const openServerStream = async (moduleId: ServerWriteModule): Promise<DurableStream> => {
-  const pathname = `${STREAMS_PATH_PREFIX}/${moduleId}`;
+  const pathname = streamPath(moduleId);
   const url = `https://streams.internal${pathname}`;
   return ensureStream({
     url,

@@ -35,10 +35,10 @@ const streamsHandler = createPublicStreamsHandler<StreamsEnv>({
 });
 
 export default {
-  async fetch(request: Request, env: StreamsEnv, _ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: StreamsEnv, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
     if (isStreamsPath(pathname)) {
-      return streamsHandler(request, env);
+      return streamsHandler(request, env, ctx);
     }
     return startHandler.fetch(request);
   },

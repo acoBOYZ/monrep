@@ -2,16 +2,14 @@ import { useState } from "react";
 import { useStreamDb } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
-import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useSafeMutation } from "@/hooks/useSafeMutation";
-import { logoutFn } from "@/server/auth/functions";
+import { createFileRoute } from "@tanstack/react-router";
+import { useSafeMutation } from "@/components/hooks/useSafeMutation";
 
 export const Route = createFileRoute("/_authenticated/playground/presence")({
   component: PresencePlayground,
 });
 
 function PresencePlayground() {
-  const navigate = useNavigate();
   const { db, isReady } = useStreamDb("testm");
   const safeMutation = useSafeMutation();
   const live = useLiveQuery({
@@ -22,7 +20,7 @@ function PresencePlayground() {
   });
   const rows = live.data ?? [];
 
-  const [name, setName] = useState("Ada");
+  const [name, setName] = useState("Aco");
   const [userId, setUserId] = useState("");
 
   const insertRow = () => {
@@ -45,27 +43,10 @@ function PresencePlayground() {
     void db.actions.deletePresence(first.userId);
   };
 
-  const signOut = async () => {
-    await logoutFn();
-    await navigate({ to: "/admin" });
-  };
-
   return (
-    <div className="mx-auto flex min-h-svh max-w-xl flex-col gap-4 bg-background p-6 text-foreground">
+    <div className="mx-auto flex max-w-xl flex-col gap-4 bg-background p-6 text-foreground">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-lg font-semibold tracking-tight">Presence playground</h1>
-        <div className="flex items-center gap-3">
-          <Link to="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-            Home
-          </Link>
-          <button
-            type="button"
-            onClick={signOut}
-            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
-          >
-            Sign out
-          </button>
-        </div>
       </div>
 
       <p className="text-xs text-muted-foreground">

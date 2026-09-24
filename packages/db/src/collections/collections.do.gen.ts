@@ -15,8 +15,10 @@ import { DO_MODULES } from "../do";
 import type { ActionDefinition } from "@durable-streams/state/db";
 import type {
 	TDoModuleId,
+	TMessageDo,
 	TPresenceDo,
 	TSecurityDo,
+	TTypingDo,
 	TUserDo
 } from "../types";
 import type { CreateDoModuleDbOpts } from "./stream/types";
@@ -35,8 +37,12 @@ const createAuthStreamDB = (opts: CreateDoModuleDbOpts) =>
 
 const createTestmStreamDB = (opts: CreateDoModuleDbOpts) =>
   createDoStreamDB("testm", opts, ({ db, state }) => ({
+      upsertMessage: createUpsertStreamAction({ db, helpers: state.message, collection: db.collections.message, primaryKey: "id", schema: DO_MODULES["testm"].collections.message.Schema, insertGens: DO_MODULES["testm"].collections.message.insertGens, updateGens: DO_MODULES["testm"].collections.message.updateGens }),
+      deleteMessage: createDeleteStreamAction({ db, helpers: state.message, collection: db.collections.message }),
       upsertPresence: createUpsertStreamAction({ db, helpers: state.presence, collection: db.collections.presence, primaryKey: "userId", schema: DO_MODULES["testm"].collections.presence.Schema, insertGens: DO_MODULES["testm"].collections.presence.insertGens, updateGens: DO_MODULES["testm"].collections.presence.updateGens }),
       deletePresence: createDeleteStreamAction({ db, helpers: state.presence, collection: db.collections.presence }),
+      upsertTyping: createUpsertStreamAction({ db, helpers: state.typing, collection: db.collections.typing, primaryKey: "userId", schema: DO_MODULES["testm"].collections.typing.Schema, insertGens: DO_MODULES["testm"].collections.typing.insertGens, updateGens: DO_MODULES["testm"].collections.typing.updateGens }),
+      deleteTyping: createDeleteStreamAction({ db, helpers: state.typing, collection: db.collections.typing }),
   }));
 
 const DO_MODULE_DB_FACTORY_IMPL = {
@@ -59,7 +65,11 @@ export type TDoModuleActionDefinitions = {
     deleteUser: ActionDefinition<string>;
   };
   "testm": {
+    upsertMessage: ActionDefinition<TMessageDo>;
+    deleteMessage: ActionDefinition<string>;
     upsertPresence: ActionDefinition<TPresenceDo>;
     deletePresence: ActionDefinition<string>;
+    upsertTyping: ActionDefinition<TTypingDo>;
+    deleteTyping: ActionDefinition<string>;
   };
 };

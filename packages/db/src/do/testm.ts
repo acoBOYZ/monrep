@@ -4,6 +4,7 @@ import { createDoModule, doTable } from "./create-do-module.gen";
 export default createDoModule("testm")({
   streamLive: "sse",
   streamPersist: false,
+  streamEpoch: "utc-hour",
   collections: {
     presence: doTable({
       primaryKey: "userId",
@@ -17,6 +18,37 @@ export default createDoModule("testm")({
       onInsert: ({ ctx }) => ({
         userId: ctx.ulid,
         createdAt: ctx.now,
+        updatedAt: ctx.now,
+      }),
+      onUpdate: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
+    }),
+    message: doTable({
+      primaryKey: "id",
+      indexes: ["createdAt", "id"],
+      schema: {
+        id: z.ulid(),
+        userId: z.ulid(),
+        name: z.string(),
+        body: z.string(),
+        createdAt: z.string(),
+      },
+      onInsert: ({ ctx }) => ({
+        id: ctx.ulid,
+        createdAt: ctx.now,
+      }),
+    }),
+    typing: doTable({
+      primaryKey: "userId",
+      indexes: ["userId"],
+      schema: {
+        userId: z.ulid(),
+        name: z.string(),
+        draft: z.string(),
+        updatedAt: z.string().optional(),
+      },
+      onInsert: ({ ctx }) => ({
         updatedAt: ctx.now,
       }),
       onUpdate: ({ ctx }) => ({
