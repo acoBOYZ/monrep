@@ -6,7 +6,6 @@ export default createDoModule("testm")({
   streamPersist: false,
   collections: {
     presence: doTable({
-      type: "presence",
       primaryKey: "userId",
       indexes: ["userId"],
       schema: {

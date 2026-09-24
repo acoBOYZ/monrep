@@ -1,6 +1,6 @@
 # Roadmap
 
-Living checklist for monrep. Check things off when they ship. Order can change — that’s fine.
+Living checklist for monrep. Check things off when they ship. Order can change that’s fine.
 
 Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 
@@ -14,7 +14,7 @@ Work that makes the control plane possible without lying about “production rea
 - [x] Web app package (`packages/main`) — TanStack Start playground
 - [x] Stream / DO module codegen (`createDoModule`, live collections)
 - [x] Realtime stream path solid enough for dashboard live UI
-- [ ] Control-plane app shape clear (auth, orgs/servers list, no product Postgres required)
+- [ ] Control plane app shape clear (auth, orgs/servers list, no product Postgres required)
 - [ ] Durable Streams on CF wired for control-plane collections (servers, agents, jobs)
 
 ---
@@ -23,14 +23,14 @@ Work that makes the control plane possible without lying about “production rea
 
 One page (ok, a few routes) that feels like “my fleet.”
 
-- [ ] Server list — register / revoke machines
+- [ ] Server list: register / revoke machines
 - [ ] Per-server overview (status, last seen, agent version)
-- [ ] Docker panel — list containers, start / stop / restart
-- [ ] Live shell — send commands, stream stdout/stderr
-- [ ] Live logs — attach to a service; optional error history store
-- [ ] Monitors — basic CPU / mem / disk (agent reports)
-- [ ] Kill switch — disable one service or all public access from the UI
-- [ ] Manual deploy / update trigger (talks to agent + CI artifacts)
+- [ ] Docker panel: list containers, start / stop / restart
+- [ ] Live shell: send commands, stream stdout/stderr
+- [ ] Live logs: attach to a service; optional error history store
+- [ ] Monitors: basic CPU / mem / disk (agent reports)
+- [ ] Kill switch: disable one service or all public access from the UI
+- [ ] Manual deploy / update trigger: talks to agent + CI artifacts
 
 ---
 
@@ -44,8 +44,8 @@ Install on Linux. Stays connected. Does the dirty work.
 - [ ] Persistent connection to control plane (WebSocket / stream)
 - [ ] Exec: shell, docker compose / docker CLI wrappers
 - [ ] Stream logs and command output back to the web app
-- [ ] Self-update when a new agent version ships
-- [ ] Safe defaults — auth, least privilege, no open remote shell without you
+- [ ] Self update when a new agent version ships
+- [ ] Safe defaults: auth, least privilege, no open remote shell without you
 
 ---
 
@@ -56,7 +56,7 @@ Feel like CF / Vercel for **your** servers.
 - [ ] GitHub Actions build images / binaries (opaque, no monorepo source on the box)
 - [ ] Agent can pull and roll a new image / binary
 - [ ] Web UI: “deploy this” / “restart that” without SSH
-- [ ] Caddy (or similar) on the box managed in a monorepo-friendly way — drop static nginx configs over time
+- [ ] Caddy (or similar) on the box managed in a monorepo-friendly way: drop static nginx configs over time
 
 ---
 
@@ -64,7 +64,7 @@ Feel like CF / Vercel for **your** servers.
 
 - [ ] OpenTelemetry inputs (accept OTLP or scrape from agent)
 - [ ] Error history searchable in the dashboard
-- [ ] Alerts (webhook / email — TBD)
+- [ ] Alerts (webhook / email TBD)
 - [ ] Deeper resource graphs
 
 ---

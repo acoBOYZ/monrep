@@ -18,7 +18,6 @@ export default createDoModule("session")({
   streamEpoch: "utc-day",
   collections: {
     presence: {
-      type: "presence",
       primaryKey: "userId",
       schema: {
         userId: z.string(),
@@ -26,7 +25,6 @@ export default createDoModule("session")({
       },
     },
     typing: {
-      type: "typing",
       primaryKey: "userId",
       schema: {
         userId: z.string(),
@@ -45,7 +43,6 @@ export default createDoModule("session")({
   streamPersist: false,
   collections: {
     users: doTable({
-      type: "users",
       primaryKey: "id",
       schema: {
         id: z.string(),
@@ -56,7 +53,6 @@ export default createDoModule("session")({
       }),
     }),
     presence: doTable({
-      type: "presence",
       primaryKey: "userId",
       indexes: ["userId"],
       schema: {
@@ -65,7 +61,6 @@ export default createDoModule("session")({
       },
     }),
     typing: doTable({
-      type: "typing",
       primaryKey: "userId",
       schema: {
         userId: z.string(),
@@ -84,8 +79,8 @@ describe("parseDoModuleSource", () => {
       streamLive: "sse",
       streamPersist: false,
       collections: [
-        { name: "presence", type: "presence", primaryKey: "userId", indexes: [] },
-        { name: "typing", type: "typing", primaryKey: "userId", indexes: [] },
+        { name: "presence", primaryKey: "userId", indexes: [] },
+        { name: "typing", primaryKey: "userId", indexes: [] },
       ],
     });
   });
@@ -98,14 +93,13 @@ describe("parseDoModuleSource", () => {
       streamLive: "sse",
       streamPersist: false,
       collections: [
-        { name: "users", type: "users", primaryKey: "id", indexes: [] },
+        { name: "users", primaryKey: "id", indexes: [] },
         {
           name: "presence",
-          type: "presence",
           primaryKey: "userId",
           indexes: ["userId"],
         },
-        { name: "typing", type: "typing", primaryKey: "userId", indexes: [] },
+        { name: "typing", primaryKey: "userId", indexes: [] },
       ],
     });
   });
@@ -115,7 +109,6 @@ describe("parseDoModuleSource", () => {
 export default createDoModule("users")({
   collections: {
     users: {
-      type: "users",
       primaryKey: "id",
       schema: { id: z.string() },
     },

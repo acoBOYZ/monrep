@@ -54,8 +54,6 @@ type WriteGensExactKeys<TShape extends z.ZodRawShape, TInsert, TUpdate> = (Exclu
       });
 
 export type DoCollectionProps<TShape extends z.ZodRawShape> = {
-  /** Durable State event `type` discriminator. */
-  type: string;
   /** Zod column map — binds `primaryKey` / `indexes` / write gens to these keys. */
   schema: TShape;
   /** Primary key field on the row object. */
@@ -85,7 +83,6 @@ export function doTable<
   const TUpdate extends DoFieldGens<TShape> = NoWriteGens,
 >(
   props: {
-    type: string;
     schema: TShape;
     primaryKey: keyof TShape & string;
     indexes?: ReadonlyArray<keyof TShape & string>;
@@ -121,7 +118,6 @@ export type CreateDoModuleProps<
 
 type BuiltCollection<TName extends string, TShape extends z.ZodRawShape> = {
   name: TName;
-  type: string;
   primaryKey: keyof TShape & string;
   indexes: ReadonlyArray<keyof TShape & string>;
   Schema: z.ZodObject<TShape>;
@@ -161,7 +157,6 @@ export function createDoModule<const TId extends string>(moduleId: TId) {
       if (!col) continue;
       built[name] = {
         name,
-        type: col.type,
         primaryKey: col.primaryKey,
         indexes: col.indexes ?? [],
         Schema: z.object(col.schema),
