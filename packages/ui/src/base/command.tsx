@@ -1,6 +1,7 @@
 import { createContext, use, useEffect, useState } from "react";
+import { Search } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { SearchIcon } from "lucide-react";
 import {
   Combobox,
   ComboboxEmpty,
@@ -163,7 +164,7 @@ export const CommandInput = ({ className, value, onValueChange, ...props }: Comm
   return (
     <InputGroup data-slot="command-input-wrapper" className="h-9 gap-2 border-b px-3">
       <InputGroupAddon>
-        <SearchIcon className="size-4 shrink-0 opacity-50" />
+        <HugeiconsIcon icon={Search} className="size-4 shrink-0 opacity-50" aria-hidden />
       </InputGroupAddon>
       <ComboboxInput
         data-slot="command-input"

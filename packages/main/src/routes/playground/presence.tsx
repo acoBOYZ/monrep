@@ -24,7 +24,9 @@ function PresencePlayground() {
   const insertRow = () => {
     if (!db) return;
     // Empty userId → onInsert fills ulid; omit audits so createdAt/updatedAt stamp.
-    safeMutation(() => db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }));
+    safeMutation(() =>
+      db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }),
+    );
     setUserId("");
   };
 
@@ -33,7 +35,7 @@ function PresencePlayground() {
     if (!db || !first) return;
     // Omit updatedAt so onUpdate can stamp a new value.
     safeMutation(() => db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` }));
-      db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` });
+    db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` });
   };
 
   const deleteFirst = () => {

@@ -1,6 +1,7 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react";
+import { XIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { XIcon } from "lucide-react";
 import { Button } from "./button";
 import type { ComponentProps, ComponentPropsWithRef } from "react";
 
@@ -79,7 +80,11 @@ export const DialogContent = ({
                   "size-7 md:size-9",
                 )}
               >
-                <XIcon className="size-4 transition-transform duration-150 group-hover/dialog:rotate-90 group-hover/dialog:stroke-3 md:size-5" />
+                <HugeiconsIcon
+                  icon={XIcon}
+                  className="size-4 transition-transform duration-150 group-hover/dialog:rotate-90 group-hover/dialog:stroke-3 md:size-5"
+                  aria-hidden
+                />
                 <span className="sr-only">Close</span>
               </Button>
             }

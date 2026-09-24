@@ -1,5 +1,6 @@
+import { ChevronRight, MoreHorizontal } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { ChevronRight, MoreHorizontal } from "lucide-react";
 import type { ComponentProps } from "react";
 
 export function Breadcrumb({ ...props }: ComponentProps<"nav">) {
@@ -50,7 +51,7 @@ export function BreadcrumbSeparator({ children, className, ...props }: Component
       className={cn("text-cool [&>svg]:size-3.5", className)}
       {...props}
     >
-      {children ?? <ChevronRight />}
+      {children ?? <HugeiconsIcon icon={ChevronRight} className="size-3.5" aria-hidden />}
     </li>
   );
 }
@@ -68,7 +69,7 @@ export function BreadcrumbEllipsis({
       className={cn("flex size-9 items-center justify-center", className)}
       {...props}
     >
-      <MoreHorizontal className="size-4" />
+      <HugeiconsIcon icon={MoreHorizontal} className="size-4" aria-hidden />
       <span className="sr-only">{moreLabel}</span>
     </span>
   );

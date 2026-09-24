@@ -20,6 +20,8 @@
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@floating-ui/react": "^0.27.20",
+    "@hugeicons/core-free-icons": "^4.3.5",
+    "@hugeicons/react": "^1.1.10",
     "@monrep/db": "workspace:^",
     "@monrep/hooks": "workspace:^",
     "@monrep/utils": "workspace:^",
@@ -28,7 +30,6 @@
     "@tanstack/react-store": "^0.11.1",
     "class-variance-authority": "^0.7.1",
     "input-otp": "^1.5.0",
-    "lucide-react": "^1.47.0",
     "react-number-format": "^5.4.5",
     "sonner": "^2.0.8"
   },

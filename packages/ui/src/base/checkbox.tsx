@@ -1,6 +1,7 @@
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react";
+import { Check } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { Check } from "lucide-react";
 import type { ComponentPropsWithRef } from "react";
 
 export const Checkbox = ({
@@ -30,7 +31,7 @@ export const Checkbox = ({
       {...props}
     >
       <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current transition-[opacity,transform] duration-150 ease-out data-[state=checked]:scale-100 data-[state=checked]:opacity-100 data-[state=unchecked]:scale-75 data-[state=unchecked]:opacity-0 motion-reduce:transition-none [&>svg]:transition-[stroke-dashoffset,transform,opacity] [&>svg]:duration-200 [&>svg]:ease-out [&>svg]:[stroke-dasharray:24] data-[state=checked]:[&>svg]:scale-100 data-[state=checked]:[&>svg]:[stroke-dashoffset:0] data-[state=unchecked]:[&>svg]:scale-90 data-[state=unchecked]:[&>svg]:[stroke-dashoffset:24] motion-reduce:[&>svg]:transition-none">
-        <Check className="size-3.5" />
+        <HugeiconsIcon icon={Check} className="size-3.5" aria-hidden />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   );

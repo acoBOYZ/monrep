@@ -1,6 +1,7 @@
+import { Check, Copy } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useCopy } from "@monrep/hooks";
 import { cn } from "@monrep/utils";
-import { CheckIcon, CopyIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 
 export interface CopyableButtonProps {
@@ -56,7 +57,7 @@ export const CopyableButton = ({
             isPending ? "scale-100 opacity-100" : "scale-0 opacity-0",
           )}
         >
-          <CheckIcon className="stroke-emerald-500" size={iconSize} aria-hidden="true" />
+          <HugeiconsIcon icon={Check} className="stroke-emerald-500" size={iconSize} aria-hidden />
         </span>
         <span
           className={cn(
@@ -64,7 +65,7 @@ export const CopyableButton = ({
             isPending ? "scale-0 opacity-0" : "scale-100 opacity-100",
           )}
         >
-          <CopyIcon size={iconSize} aria-hidden="true" />
+          <HugeiconsIcon icon={Copy} size={iconSize} aria-hidden />
         </span>
       </span>
     </button>

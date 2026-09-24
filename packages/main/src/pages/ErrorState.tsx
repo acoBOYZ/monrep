@@ -1,5 +1,6 @@
+import { RotateCcw } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CopyableButton } from "@monrep/ui/base";
-import { RotateCcw } from "lucide-react";
 import type { ComponentProps } from "react";
 import type { ErrorRouteComponent } from "@tanstack/react-router";
 
@@ -49,7 +50,7 @@ export function ErrorState({ error, reset }: ComponentProps<ErrorRouteComponent>
           onClick={reset}
           className="mt-3 inline-flex text-sm text-blue-500 hover:underline"
         >
-          <RotateCcw className="size-4" aria-hidden />
+          <HugeiconsIcon icon={RotateCcw} size={16} aria-hidden />
           Try again
         </Button>
       </div>

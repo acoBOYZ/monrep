@@ -1,7 +1,8 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { XIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
 import { cva } from "class-variance-authority";
-import { XIcon } from "lucide-react";
 import type { ComponentProps, ComponentPropsWithRef, HTMLAttributes } from "react";
 import type { VariantProps } from "class-variance-authority";
 
@@ -98,7 +99,11 @@ const ModalContent = ({
             "group/re-mo cursor-pointer",
           )}
         >
-          <XIcon className="size-4 transition-transform duration-150 group-hover/re-mo:rotate-90 group-hover/re-mo:stroke-3 md:size-5" />
+          <HugeiconsIcon
+            icon={XIcon}
+            className="size-4 transition-transform duration-150 group-hover/re-mo:rotate-90 group-hover/re-mo:stroke-3 md:size-5"
+            aria-hidden
+          />
           <span className="sr-only">Close</span>
         </ModalClose>
       </DialogPrimitive.Popup>

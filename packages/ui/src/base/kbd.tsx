@@ -1,7 +1,8 @@
+import { SlashIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
 import { formatForDisplay } from "@tanstack/react-hotkeys";
 import { cva } from "class-variance-authority";
-import { Slash } from "lucide-react";
 import type { ComponentProps } from "react";
 import type { Hotkey } from "@tanstack/react-hotkeys";
 import type { VariantProps } from "class-variance-authority";
@@ -80,7 +81,9 @@ export function KbdGroup({ hotkey, variant, size, className }: KbdGroupProps) {
     >
       {hotkeys.map((v, i) => (
         <span key={v} className="inline-flex items-center gap-1 leading-none">
-          {i > 0 ? <Slash className="size-2.5 opacity-60" /> : null}
+          {i > 0 ? (
+            <HugeiconsIcon icon={SlashIcon} className="size-2.5 opacity-60" aria-hidden />
+          ) : null}
           <span>{formatForDisplay(v)}</span>
         </span>
       ))}

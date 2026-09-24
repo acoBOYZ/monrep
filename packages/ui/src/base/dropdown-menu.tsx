@@ -1,7 +1,8 @@
 import { Children, createContext, isValidElement, use } from "react";
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import { Check, ChevronRight, Circle } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
 import type { ComponentProps, ComponentPropsWithRef } from "react";
 
 const dropdownMenuPopupClassName = cn(
@@ -210,7 +211,7 @@ export const DropdownMenuCheckboxItem = ({
   >
     <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
       <MenuPrimitive.CheckboxItemIndicator>
-        <CheckIcon className="size-4" />
+        <HugeiconsIcon icon={Check} className="size-4" aria-hidden />
       </MenuPrimitive.CheckboxItemIndicator>
     </span>
     {children}
@@ -238,7 +239,7 @@ export const DropdownMenuRadioItem = ({
   >
     <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
       <MenuPrimitive.RadioItemIndicator>
-        <CircleIcon className="size-2 fill-current" />
+        <HugeiconsIcon icon={Circle} className="size-2 fill-current" aria-hidden />
       </MenuPrimitive.RadioItemIndicator>
     </span>
     {children}
@@ -322,7 +323,7 @@ export const DropdownMenuSubTrigger = ({
     {...props}
   >
     {children}
-    <ChevronRightIcon className="ml-auto size-4" />
+    <HugeiconsIcon icon={ChevronRight} className="ml-auto size-4" aria-hidden />
   </MenuPrimitive.SubmenuTrigger>
 );
 

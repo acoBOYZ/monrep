@@ -1,7 +1,8 @@
+import { History, MessageCirclePlus, Sparkles } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@monrep/ui/base";
 import { cn } from "@monrep/utils";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { History, MessageCirclePlus, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: RaiHome });
 
@@ -15,16 +16,20 @@ function RaiHome() {
       >
         <div className="flex items-center gap-1">
           <Button type="button" variant="ghost" size="icon" className="size-7" title="History">
-            <History className="size-4 text-foreground/75" aria-hidden />
+            <HugeiconsIcon icon={History} className="size-4 text-foreground/75" aria-hidden />
           </Button>
           <Button type="button" variant="ghost" size="icon" className="size-7" title="New chat">
-            <MessageCirclePlus className="size-4 text-foreground/75" aria-hidden />
+            <HugeiconsIcon
+              icon={MessageCirclePlus}
+              className="size-4 text-foreground/75"
+              aria-hidden
+            />
           </Button>
         </div>
 
         <div className="pointer-events-none absolute inset-x-20 top-0 flex h-13 items-center justify-center">
           <div className="flex min-w-0 items-center gap-2">
-            <Sparkles className="size-3.5 shrink-0 text-primary" aria-hidden />
+            <HugeiconsIcon icon={Sparkles} className="size-3.5 shrink-0 text-primary" aria-hidden />
             <span className="truncate text-sm font-medium tracking-tight">monrep Via</span>
           </div>
         </div>
