@@ -7,7 +7,6 @@ export default createDoModule("auth")({
   streamPersist: false,
   collections: {
     user: doTable({
-      type: "user",
       primaryKey: "id",
       indexes: ["email"],
       schema: {

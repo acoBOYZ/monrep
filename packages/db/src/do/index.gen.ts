@@ -60,7 +60,7 @@ export const SecurityDoMeta = {
   streamEpoch: __audit_do.streamEpoch,
   streamLive: __audit_do.streamLive,
   streamPersist: __audit_do.streamPersist,
-  type: __audit_do.collections.security.type,
+  type: __audit_do.collections.security.name,
   primaryKey: __audit_do.collections.security.primaryKey,
   indexes: __audit_do.collections.security.indexes,
 } as const;
@@ -72,7 +72,7 @@ export const UserDoMeta = {
   streamEpoch: __auth_do.streamEpoch,
   streamLive: __auth_do.streamLive,
   streamPersist: __auth_do.streamPersist,
-  type: __auth_do.collections.user.type,
+  type: __auth_do.collections.user.name,
   primaryKey: __auth_do.collections.user.primaryKey,
   indexes: __auth_do.collections.user.indexes,
 } as const;
@@ -84,7 +84,7 @@ export const PresenceDoMeta = {
   streamEpoch: __testm_do.streamEpoch,
   streamLive: __testm_do.streamLive,
   streamPersist: __testm_do.streamPersist,
-  type: __testm_do.collections.presence.type,
+  type: __testm_do.collections.presence.name,
   primaryKey: __testm_do.collections.presence.primaryKey,
   indexes: __testm_do.collections.presence.indexes,
 } as const;
@@ -115,12 +115,24 @@ export const DO_MODULES = {
 
 export const DO_MODULE_STATE = {
   "audit": {
-    security: { schema: __audit_do.collections.security.Schema, type: __audit_do.collections.security.type, primaryKey: __audit_do.collections.security.primaryKey },
+    security: { 
+      schema: __audit_do.collections.security.Schema, 
+      type: __audit_do.collections.security.name, 
+      primaryKey: __audit_do.collections.security.primaryKey 
+    },
   },
   "auth": {
-    user: { schema: __auth_do.collections.user.Schema, type: __auth_do.collections.user.type, primaryKey: __auth_do.collections.user.primaryKey },
+    user: { 
+      schema: __auth_do.collections.user.Schema, 
+      type: __auth_do.collections.user.name, 
+      primaryKey: __auth_do.collections.user.primaryKey 
+    },
   },
   "testm": {
-    presence: { schema: __testm_do.collections.presence.Schema, type: __testm_do.collections.presence.type, primaryKey: __testm_do.collections.presence.primaryKey },
+    presence: { 
+      schema: __testm_do.collections.presence.Schema, 
+      type: __testm_do.collections.presence.name, 
+      primaryKey: __testm_do.collections.presence.primaryKey 
+    },
   },
 } as const;

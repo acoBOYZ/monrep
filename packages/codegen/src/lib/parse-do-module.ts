@@ -2,7 +2,6 @@
 
 export type ParsedDoCollection = {
   name: string;
-  type: string;
   primaryKey: string;
   indexes: Array<string>;
 };
@@ -208,7 +207,6 @@ export function parseDoModuleSource(source: string, fileBase: string): ParsedDoM
     const body = collectionBodyFor(collectionsBody, name) ?? "";
     return {
       name,
-      type: readStringProp(body, "type") ?? name,
       primaryKey: readStringProp(body, "primaryKey") ?? "id",
       indexes: readStringArrayProp(body, "indexes"),
     };

@@ -35,7 +35,6 @@ ${CREATE_IMPORT}
 export default createDoModule("${base}")({
   collections: {
     ${base}: doTable({
-      type: "${base}",
       primaryKey: "id",
       schema: {
         id: z.string(),
@@ -128,7 +127,7 @@ async function syncIndex(): Promise<void> {
         `  streamEpoch: ${m.importName}.streamEpoch,`,
         `  streamLive: ${m.importName}.streamLive,`,
         `  streamPersist: ${m.importName}.streamPersist,`,
-        `  type: ${m.importName}.collections.${c.name}.type,`,
+        `  type: ${m.importName}.collections.${c.name}.name,`,
         `  primaryKey: ${m.importName}.collections.${c.name}.primaryKey,`,
         `  indexes: ${m.importName}.collections.${c.name}.indexes,`,
         `} as const;`,
@@ -159,24 +158,24 @@ async function syncIndex(): Promise<void> {
     "",
     ...(modules.length === 0
       ? [
-          "export type DoCollectionRow<_TModule extends TDoModuleId, _TName extends string> = never;",
-          "export type DoCollectionSchema<_TModule extends TDoModuleId, _TName extends string> = never;",
-          "",
-        ]
+        "export type DoCollectionRow<_TModule extends TDoModuleId, _TName extends string> = never;",
+        "export type DoCollectionSchema<_TModule extends TDoModuleId, _TName extends string> = never;",
+        "",
+      ]
       : [
-          "export type DoCollectionRow<",
-          "  TModule extends TDoModuleId,",
-          "  TName extends string,",
-          "> =",
-          ...rowBranches,
-          "",
-          "export type DoCollectionSchema<",
-          "  TModule extends TDoModuleId,",
-          "  TName extends string,",
-          "> =",
-          ...schemaBranches,
-          "",
-        ]),
+        "export type DoCollectionRow<",
+        "  TModule extends TDoModuleId,",
+        "  TName extends string,",
+        "> =",
+        ...rowBranches,
+        "",
+        "export type DoCollectionSchema<",
+        "  TModule extends TDoModuleId,",
+        "  TName extends string,",
+        "> =",
+        ...schemaBranches,
+        "",
+      ]),
     ...collectionExports,
     "export const DO_MODULE_EPOCH = {",
     ...moduleIds.map((id) => {
@@ -204,7 +203,11 @@ async function syncIndex(): Promise<void> {
       `  "${m.moduleId}": {`,
       ...m.collections.map(
         (c) =>
-          `    ${c.name}: { schema: ${m.importName}.collections.${c.name}.Schema, type: ${m.importName}.collections.${c.name}.type, primaryKey: ${m.importName}.collections.${c.name}.primaryKey },`,
+          `    ${c.name}: { 
+      schema: ${m.importName}.collections.${c.name}.Schema, 
+      type: ${m.importName}.collections.${c.name}.name, 
+      primaryKey: ${m.importName}.collections.${c.name}.primaryKey 
+    },`,
       ),
       "  },",
     ]),

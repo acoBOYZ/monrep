@@ -6,7 +6,6 @@ export default createDoModule("audit")({
   streamPersist: false,
   collections: {
     security: doTable({
-      type: "security",
       primaryKey: "id",
       indexes: ["createdAt"],
       schema: {
