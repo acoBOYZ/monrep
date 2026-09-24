@@ -73,6 +73,7 @@ crash-report-1.txt
 crash-report-2.txt
 .example
 .wrangler
+.dev.vars
 .tmp
 .expect
 .oxlintrc.json.bak

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { StreamDbHost } from "@monrep/db/stream";
 import { SmartPopoverHost, Toaster, TooltipHost } from "@monrep/ui/base";
 import { DbClient, DbProvider } from "@tanstack/react-db";
 import type { ReactNode } from "react";
@@ -15,8 +14,6 @@ export function App({ children }: Props) {
     <DbProvider client={dbClient}>
       {children}
 
-      {/* Hosts */}
-      <StreamDbHost />
       <SmartPopoverHost />
       <TooltipHost />
       <Toaster />

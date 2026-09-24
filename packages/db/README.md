@@ -15,13 +15,21 @@ one file in src/do/     = one stream module (one URL, one connection)
   └── collections.*     = many shapes on that same stream
         ↓ codegen (registry)
   createDoStreamDB      = transport + upsert/delete actions
-        ↓ browser
+        ↓ browser (auth layout only)
   StreamDbHost          = acquire modules → streamDbStore
   useStreamDb(id)       = db.collections + db.actions once ready
   useLiveQuery(db.col)  = live read on StreamDB collections directly
 ```
 
-Example: `session.ts` can hold `presence`, `typing`, `users` together. Same live transport, same offset, same connection.
+Modules today:
+
+| Id | Role |
+| --- | --- |
+| `testm` | Playground presence (test only) |
+| `auth` | `user` rows + role/capabilities (RBAC) |
+| `audit` | `security` login attempts (ip, success, …) |
+
+Example: `testm.ts` holds `presence` for the playground. Auth gates live in `packages/main` (session cookie + capabilities) — StreamDbHost mounts only under `_authenticated`.
 
 There is **no** second TanStack mirror (`doCollection` / `createDoCollectionSync`). StreamDB already materializes TanStack collections — query those.
 
@@ -44,49 +52,30 @@ Never hand-edit `*.gen.ts`. Change a module file → `bun run codegen`.
 
 ## Define a module
 
-File name **must** match the module id (`session.ts` → `"session"`).
+File name **must** match the module id (`testm.ts` → `"testm"`).
 
 ```ts
-// packages/db/src/do/session.ts
+// packages/db/src/do/testm.ts
 import { z } from "zod";
 import { createDoModule, doTable } from "./create-do-module.gen";
 
-export default createDoModule("session")({
-  streamLive: "sse",          // or omit → "long-poll"
-  streamPersist: false,       // true → sessionStorage resume across reloads
-  // streamEpoch: "utc-hour", // optional rolling stream id window
+export default createDoModule("testm")({
+  streamLive: "sse",
+  streamPersist: false,
   collections: {
     presence: doTable({
       type: "presence",
       primaryKey: "userId",
       indexes: ["userId"],
       schema: {
-        userId: z.string(),
+        userId: z.ulid(),
         name: z.string().optional(),
         createdAt: z.string().optional(),
         updatedAt: z.string().optional(),
       },
-      // Keys must be schema fields; values are generator refs (not called here).
-      // Fills only when the caller left the field unset (`undefined` / `null` / `""`).
       onInsert: ({ ctx }) => ({
         userId: ctx.ulid,
         createdAt: ctx.now,
-        updatedAt: ctx.now,
-      }),
-      onUpdate: ({ ctx }) => ({
-        updatedAt: ctx.now,
-      }),
-    }),
-    typing: doTable({
-      type: "typing",
-      primaryKey: "userId",
-      indexes: ["userId"],
-      schema: {
-        userId: z.string(),
-        isTyping: z.boolean(),
-        updatedAt: z.string().optional(),
-      },
-      onInsert: ({ ctx }) => ({
         updatedAt: ctx.now,
       }),
       onUpdate: ({ ctx }) => ({
@@ -106,14 +95,14 @@ Then: `bun run codegen`.
 Once at the app root (see `packages/main`):
 
 ```tsx
-// packages/main/src/App.tsx
+// packages/main/src/routes/_authenticated.tsx
 import { StreamDbHost } from "@monrep/db/stream";
 
-export function App({ children }) {
+function AuthenticatedLayout() {
   return (
     <>
-      {children}
       <StreamDbHost />
+      <Outlet />
     </>
   );
 }
@@ -143,7 +132,7 @@ import { useStreamDb } from "@monrep/db/stream";
 import { SchemaValidationError, useLiveQuery } from "@tanstack/react-db";
 
 function PresencePlayground() {
-  const { db, isReady } = useStreamDb("session");
+  const { db, isReady } = useStreamDb("testm");
 
   const live = useLiveQuery({
     query: (q) => {

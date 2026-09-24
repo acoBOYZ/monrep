@@ -9,68 +9,175 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PlaygroundPresenceRouteImport } from './routes/playground/presence'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as PublicRouteImport } from './routes/_public'
+import { Route as AuthenticatedPlaygroundRouteRouteImport } from './routes/_authenticated/playground/route'
+import { Route as PublicIndexRouteImport } from './routes/_public/index'
+import { Route as PublicAdminRouteImport } from './routes/_public/admin'
+import { Route as AuthenticatedPlaygroundPresenceRouteImport } from './routes/_authenticated/playground/presence'
 
-const IndexRoute = IndexRouteImport.update({
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPlaygroundRouteRoute =
+  AuthenticatedPlaygroundRouteRouteImport.update({
+    id: '/playground',
+    path: '/playground',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PublicRoute,
 } as any)
-const PlaygroundPresenceRoute = PlaygroundPresenceRouteImport.update({
-  id: '/playground/presence',
-  path: '/playground/presence',
-  getParentRoute: () => rootRouteImport,
+const PublicAdminRoute = PublicAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => PublicRoute,
 } as any)
+const AuthenticatedPlaygroundPresenceRoute =
+  AuthenticatedPlaygroundPresenceRouteImport.update({
+    id: '/presence',
+    path: '/presence',
+    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/playground/presence': typeof PlaygroundPresenceRoute
+  '/': typeof PublicIndexRoute
+  '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/admin': typeof PublicAdminRoute
+  '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/playground/presence': typeof PlaygroundPresenceRoute
+  '/': typeof PublicIndexRoute
+  '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/admin': typeof PublicAdminRoute
+  '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/playground/presence': typeof PlaygroundPresenceRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_public': typeof PublicRouteWithChildren
+  '/_authenticated/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/_public/admin': typeof PublicAdminRoute
+  '/_public/': typeof PublicIndexRoute
+  '/_authenticated/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/playground/presence'
+  fullPaths: '/' | '/playground' | '/admin' | '/playground/presence'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/playground/presence'
-  id: '__root__' | '/' | '/playground/presence'
+  to: '/' | '/playground' | '/admin' | '/playground/presence'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/_public'
+    | '/_authenticated/playground'
+    | '/_public/admin'
+    | '/_public/'
+    | '/_authenticated/playground/presence'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  PlaygroundPresenceRoute: typeof PlaygroundPresenceRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  PublicRoute: typeof PublicRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/playground/presence': {
-      id: '/playground/presence'
-      path: '/playground/presence'
-      fullPath: '/playground/presence'
-      preLoaderRoute: typeof PlaygroundPresenceRouteImport
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/playground': {
+      id: '/_authenticated/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof AuthenticatedPlaygroundRouteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_public/': {
+      id: '/_public/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/admin': {
+      id: '/_public/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof PublicAdminRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_authenticated/playground/presence': {
+      id: '/_authenticated/playground/presence'
+      path: '/presence'
+      fullPath: '/playground/presence'
+      preLoaderRoute: typeof AuthenticatedPlaygroundPresenceRouteImport
+      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
     }
   }
 }
 
+interface AuthenticatedPlaygroundRouteRouteChildren {
+  AuthenticatedPlaygroundPresenceRoute: typeof AuthenticatedPlaygroundPresenceRoute
+}
+
+const AuthenticatedPlaygroundRouteRouteChildren: AuthenticatedPlaygroundRouteRouteChildren =
+  {
+    AuthenticatedPlaygroundPresenceRoute: AuthenticatedPlaygroundPresenceRoute,
+  }
+
+const AuthenticatedPlaygroundRouteRouteWithChildren =
+  AuthenticatedPlaygroundRouteRoute._addFileChildren(
+    AuthenticatedPlaygroundRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedPlaygroundRouteRoute: typeof AuthenticatedPlaygroundRouteRouteWithChildren
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedPlaygroundRouteRoute:
+    AuthenticatedPlaygroundRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
+interface PublicRouteChildren {
+  PublicAdminRoute: typeof PublicAdminRoute
+  PublicIndexRoute: typeof PublicIndexRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PublicAdminRoute: PublicAdminRoute,
+  PublicIndexRoute: PublicIndexRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  PlaygroundPresenceRoute: PlaygroundPresenceRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  PublicRoute: PublicRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

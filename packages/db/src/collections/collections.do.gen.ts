@@ -15,32 +15,34 @@ import { DO_MODULES } from "../do";
 import type { ActionDefinition } from "@durable-streams/state/db";
 import type {
 	TDoModuleId,
-	TAuditDo,
 	TPresenceDo,
-	TTypingDo,
-	TUsersDo
+	TSecurityDo,
+	TUserDo
 } from "../types";
 import type { CreateDoModuleDbOpts } from "./stream/types";
 
 const createAuditStreamDB = (opts: CreateDoModuleDbOpts) =>
   createDoStreamDB("audit", opts, ({ db, state }) => ({
-      upsertAudit: createUpsertStreamAction({ db, helpers: state.audit, collection: db.collections.audit, primaryKey: "id", schema: DO_MODULES["audit"].collections.audit.Schema, insertGens: DO_MODULES["audit"].collections.audit.insertGens, updateGens: DO_MODULES["audit"].collections.audit.updateGens }),
-      deleteAudit: createDeleteStreamAction({ db, helpers: state.audit, collection: db.collections.audit }),
+      upsertSecurity: createUpsertStreamAction({ db, helpers: state.security, collection: db.collections.security, primaryKey: "id", schema: DO_MODULES["audit"].collections.security.Schema, insertGens: DO_MODULES["audit"].collections.security.insertGens, updateGens: DO_MODULES["audit"].collections.security.updateGens }),
+      deleteSecurity: createDeleteStreamAction({ db, helpers: state.security, collection: db.collections.security }),
   }));
 
-const createSessionStreamDB = (opts: CreateDoModuleDbOpts) =>
-  createDoStreamDB("session", opts, ({ db, state }) => ({
-      upsertPresence: createUpsertStreamAction({ db, helpers: state.presence, collection: db.collections.presence, primaryKey: "userId", schema: DO_MODULES["session"].collections.presence.Schema, insertGens: DO_MODULES["session"].collections.presence.insertGens, updateGens: DO_MODULES["session"].collections.presence.updateGens }),
+const createAuthStreamDB = (opts: CreateDoModuleDbOpts) =>
+  createDoStreamDB("auth", opts, ({ db, state }) => ({
+      upsertUser: createUpsertStreamAction({ db, helpers: state.user, collection: db.collections.user, primaryKey: "id", schema: DO_MODULES["auth"].collections.user.Schema, insertGens: DO_MODULES["auth"].collections.user.insertGens, updateGens: DO_MODULES["auth"].collections.user.updateGens }),
+      deleteUser: createDeleteStreamAction({ db, helpers: state.user, collection: db.collections.user }),
+  }));
+
+const createTestmStreamDB = (opts: CreateDoModuleDbOpts) =>
+  createDoStreamDB("testm", opts, ({ db, state }) => ({
+      upsertPresence: createUpsertStreamAction({ db, helpers: state.presence, collection: db.collections.presence, primaryKey: "userId", schema: DO_MODULES["testm"].collections.presence.Schema, insertGens: DO_MODULES["testm"].collections.presence.insertGens, updateGens: DO_MODULES["testm"].collections.presence.updateGens }),
       deletePresence: createDeleteStreamAction({ db, helpers: state.presence, collection: db.collections.presence }),
-      upsertTyping: createUpsertStreamAction({ db, helpers: state.typing, collection: db.collections.typing, primaryKey: "userId", schema: DO_MODULES["session"].collections.typing.Schema, insertGens: DO_MODULES["session"].collections.typing.insertGens, updateGens: DO_MODULES["session"].collections.typing.updateGens }),
-      deleteTyping: createDeleteStreamAction({ db, helpers: state.typing, collection: db.collections.typing }),
-      upsertUsers: createUpsertStreamAction({ db, helpers: state.users, collection: db.collections.users, primaryKey: "id", schema: DO_MODULES["session"].collections.users.Schema, insertGens: DO_MODULES["session"].collections.users.insertGens, updateGens: DO_MODULES["session"].collections.users.updateGens }),
-      deleteUsers: createDeleteStreamAction({ db, helpers: state.users, collection: db.collections.users }),
   }));
 
 const DO_MODULE_DB_FACTORY_IMPL = {
   "audit": createAuditStreamDB,
-  "session": createSessionStreamDB,
+  "auth": createAuthStreamDB,
+  "testm": createTestmStreamDB,
 } as const satisfies { [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => unknown; };
 
 export const DO_MODULE_DB_FACTORIES: {
@@ -49,15 +51,15 @@ export const DO_MODULE_DB_FACTORIES: {
 
 export type TDoModuleActionDefinitions = {
   "audit": {
-    upsertAudit: ActionDefinition<TAuditDo>;
-    deleteAudit: ActionDefinition<string>;
+    upsertSecurity: ActionDefinition<TSecurityDo>;
+    deleteSecurity: ActionDefinition<string>;
   };
-  "session": {
+  "auth": {
+    upsertUser: ActionDefinition<TUserDo>;
+    deleteUser: ActionDefinition<string>;
+  };
+  "testm": {
     upsertPresence: ActionDefinition<TPresenceDo>;
     deletePresence: ActionDefinition<string>;
-    upsertTyping: ActionDefinition<TTypingDo>;
-    deleteTyping: ActionDefinition<string>;
-    upsertUsers: ActionDefinition<TUsersDo>;
-    deleteUsers: ActionDefinition<string>;
   };
 };

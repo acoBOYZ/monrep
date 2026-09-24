@@ -12,9 +12,10 @@
 import type { z } from "zod";
 import type { TStreamEpoch, TStreamLive } from "./create-do-module.gen";
 import __audit_do from "./audit";
-import __session_do from "./session";
+import __auth_do from "./auth";
+import __testm_do from "./testm";
 
-export type TDoModuleId = "audit" | "session";
+export type TDoModuleId = "audit" | "auth" | "testm";
 
 export type DoCollectionRow<
   TModule extends TDoModuleId,
@@ -24,9 +25,13 @@ export type DoCollectionRow<
     ? TName extends keyof (typeof __audit_do)["collections"]
       ? z.output<(typeof __audit_do)["collections"][TName]["Schema"]> & object
       : never
-  : TModule extends "session"
-    ? TName extends keyof (typeof __session_do)["collections"]
-      ? z.output<(typeof __session_do)["collections"][TName]["Schema"]> & object
+  : TModule extends "auth"
+    ? TName extends keyof (typeof __auth_do)["collections"]
+      ? z.output<(typeof __auth_do)["collections"][TName]["Schema"]> & object
+      : never
+  : TModule extends "testm"
+    ? TName extends keyof (typeof __testm_do)["collections"]
+      ? z.output<(typeof __testm_do)["collections"][TName]["Schema"]> & object
       : never
   : never;
 
@@ -38,87 +43,84 @@ export type DoCollectionSchema<
     ? TName extends keyof (typeof __audit_do)["collections"]
       ? (typeof __audit_do)["collections"][TName]["Schema"]
       : never
-  : TModule extends "session"
-    ? TName extends keyof (typeof __session_do)["collections"]
-      ? (typeof __session_do)["collections"][TName]["Schema"]
+  : TModule extends "auth"
+    ? TName extends keyof (typeof __auth_do)["collections"]
+      ? (typeof __auth_do)["collections"][TName]["Schema"]
+      : never
+  : TModule extends "testm"
+    ? TName extends keyof (typeof __testm_do)["collections"]
+      ? (typeof __testm_do)["collections"][TName]["Schema"]
       : never
   : never;
 
-export const AuditDoSchema = __audit_do.collections.audit.Schema;
-export const AuditDoMeta = {
-  name: __audit_do.collections.audit.name,
+export const SecurityDoSchema = __audit_do.collections.security.Schema;
+export const SecurityDoMeta = {
+  name: __audit_do.collections.security.name,
   streamModule: __audit_do.moduleId,
   streamEpoch: __audit_do.streamEpoch,
   streamLive: __audit_do.streamLive,
   streamPersist: __audit_do.streamPersist,
-  type: __audit_do.collections.audit.type,
-  primaryKey: __audit_do.collections.audit.primaryKey,
-  indexes: __audit_do.collections.audit.indexes,
+  type: __audit_do.collections.security.type,
+  primaryKey: __audit_do.collections.security.primaryKey,
+  indexes: __audit_do.collections.security.indexes,
 } as const;
 
-export const UsersDoSchema = __session_do.collections.users.Schema;
-export const UsersDoMeta = {
-  name: __session_do.collections.users.name,
-  streamModule: __session_do.moduleId,
-  streamEpoch: __session_do.streamEpoch,
-  streamLive: __session_do.streamLive,
-  streamPersist: __session_do.streamPersist,
-  type: __session_do.collections.users.type,
-  primaryKey: __session_do.collections.users.primaryKey,
-  indexes: __session_do.collections.users.indexes,
+export const UserDoSchema = __auth_do.collections.user.Schema;
+export const UserDoMeta = {
+  name: __auth_do.collections.user.name,
+  streamModule: __auth_do.moduleId,
+  streamEpoch: __auth_do.streamEpoch,
+  streamLive: __auth_do.streamLive,
+  streamPersist: __auth_do.streamPersist,
+  type: __auth_do.collections.user.type,
+  primaryKey: __auth_do.collections.user.primaryKey,
+  indexes: __auth_do.collections.user.indexes,
 } as const;
 
-export const PresenceDoSchema = __session_do.collections.presence.Schema;
+export const PresenceDoSchema = __testm_do.collections.presence.Schema;
 export const PresenceDoMeta = {
-  name: __session_do.collections.presence.name,
-  streamModule: __session_do.moduleId,
-  streamEpoch: __session_do.streamEpoch,
-  streamLive: __session_do.streamLive,
-  streamPersist: __session_do.streamPersist,
-  type: __session_do.collections.presence.type,
-  primaryKey: __session_do.collections.presence.primaryKey,
-  indexes: __session_do.collections.presence.indexes,
-} as const;
-
-export const TypingDoSchema = __session_do.collections.typing.Schema;
-export const TypingDoMeta = {
-  name: __session_do.collections.typing.name,
-  streamModule: __session_do.moduleId,
-  streamEpoch: __session_do.streamEpoch,
-  streamLive: __session_do.streamLive,
-  streamPersist: __session_do.streamPersist,
-  type: __session_do.collections.typing.type,
-  primaryKey: __session_do.collections.typing.primaryKey,
-  indexes: __session_do.collections.typing.indexes,
+  name: __testm_do.collections.presence.name,
+  streamModule: __testm_do.moduleId,
+  streamEpoch: __testm_do.streamEpoch,
+  streamLive: __testm_do.streamLive,
+  streamPersist: __testm_do.streamPersist,
+  type: __testm_do.collections.presence.type,
+  primaryKey: __testm_do.collections.presence.primaryKey,
+  indexes: __testm_do.collections.presence.indexes,
 } as const;
 
 export const DO_MODULE_EPOCH = {
   "audit": undefined,
-  "session": undefined,
+  "auth": undefined,
+  "testm": undefined,
 } as const satisfies Partial<Record<TDoModuleId, TStreamEpoch>>;
 
 export const DO_MODULE_LIVE = {
   "audit": "long-poll",
-  "session": "sse",
+  "auth": "long-poll",
+  "testm": "sse",
 } as const satisfies Record<TDoModuleId, TStreamLive>;
 
 export const DO_MODULE_PERSIST: Record<TDoModuleId, boolean> = {
   "audit": false,
-  "session": false,
+  "auth": false,
+  "testm": false,
 };
 
 export const DO_MODULES = {
   "audit": __audit_do,
-  "session": __session_do,
+  "auth": __auth_do,
+  "testm": __testm_do,
 } as const;
 
 export const DO_MODULE_STATE = {
   "audit": {
-    audit: { schema: __audit_do.collections.audit.Schema, type: __audit_do.collections.audit.type, primaryKey: __audit_do.collections.audit.primaryKey },
+    security: { schema: __audit_do.collections.security.Schema, type: __audit_do.collections.security.type, primaryKey: __audit_do.collections.security.primaryKey },
   },
-  "session": {
-    users: { schema: __session_do.collections.users.Schema, type: __session_do.collections.users.type, primaryKey: __session_do.collections.users.primaryKey },
-    presence: { schema: __session_do.collections.presence.Schema, type: __session_do.collections.presence.type, primaryKey: __session_do.collections.presence.primaryKey },
-    typing: { schema: __session_do.collections.typing.Schema, type: __session_do.collections.typing.type, primaryKey: __session_do.collections.typing.primaryKey },
+  "auth": {
+    user: { schema: __auth_do.collections.user.Schema, type: __auth_do.collections.user.type, primaryKey: __auth_do.collections.user.primaryKey },
+  },
+  "testm": {
+    presence: { schema: __testm_do.collections.presence.Schema, type: __testm_do.collections.presence.type, primaryKey: __testm_do.collections.presence.primaryKey },
   },
 } as const;
