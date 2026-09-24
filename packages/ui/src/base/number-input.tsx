@@ -1,7 +1,8 @@
 import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { NumericFormat } from "react-number-format";
+import { ChevronDown, ChevronUp } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "./button";
 import { Input } from "./input";
 import type { Ref } from "react";
@@ -138,7 +139,7 @@ export const NumberInput = ({
           onClick={handleIncrement}
           disabled={value === max}
         >
-          <ChevronUp size={15} />
+          <HugeiconsIcon icon={ChevronUp} className="size-4" aria-hidden />
         </Button>
         <Button
           aria-label="Decrease value"
@@ -147,7 +148,7 @@ export const NumberInput = ({
           onClick={handleDecrement}
           disabled={value === min}
         >
-          <ChevronDown size={15} />
+          <HugeiconsIcon icon={ChevronDown} className="size-4" aria-hidden />
         </Button>
       </div>
     </div>

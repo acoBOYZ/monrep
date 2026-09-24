@@ -1,7 +1,8 @@
 import { Children, isValidElement } from "react";
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
+import { XIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { XIcon } from "lucide-react";
 import type { ComponentProps, ComponentPropsWithRef } from "react";
 
 export const Sheet = (props: ComponentProps<typeof SheetPrimitive.Root>) => (
@@ -99,7 +100,11 @@ export const SheetContent = ({
       >
         {children}
         <SheetPrimitive.Close className="absolute top-4 right-4 cursor-pointer rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none data-open:bg-secondary">
-          <XIcon className="size-5 transition-transform hover:rotate-90" />
+          <HugeiconsIcon
+            icon={XIcon}
+            className="size-5 transition-transform hover:rotate-90"
+            aria-hidden
+          />
           <span className="sr-only">Close</span>
         </SheetPrimitive.Close>
       </SheetPrimitive.Popup>

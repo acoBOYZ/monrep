@@ -1,5 +1,6 @@
+import { Circle } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { Circle } from "lucide-react";
 import type { ComponentPropsWithRef } from "react";
 
 type LabelProps = Omit<ComponentPropsWithRef<"label">, "htmlFor"> & {
@@ -37,7 +38,13 @@ export const RequiredLabel = ({
     >
       {children}
 
-      {required && <Circle className="size-1.5 fill-current text-destructive" aria-hidden="true" />}
+      {required && (
+        <HugeiconsIcon
+          icon={Circle}
+          className="size-1.5 fill-current text-destructive"
+          aria-hidden
+        />
+      )}
     </Label>
   );
 };

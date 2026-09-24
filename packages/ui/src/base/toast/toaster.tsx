@@ -1,5 +1,6 @@
 import { useCallback } from "react";
-import { X } from "lucide-react";
+import { XIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Toaster as Sonner, toast as sonnerToast } from "sonner";
 // import { useEnvStoreWithKey } from "@react/shell";
 import type { ComponentProps, ReactNode } from "react";
@@ -43,7 +44,11 @@ export function CustomToast(props: CustomToastProps) {
           className="absolute top-2 right-2 cursor-pointer rounded-lg p-1 opacity-30 transition-opacity group-hover:opacity-100 hover:bg-muted-foreground/10"
           aria-label="Dismiss"
         >
-          <X className="size-4 transition-transform hover:rotate-90" />
+          <HugeiconsIcon
+            icon={XIcon}
+            className="size-4 transition-transform hover:rotate-90"
+            aria-hidden
+          />
         </button>
       )}
 

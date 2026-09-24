@@ -1,6 +1,7 @@
+import { XIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
 import { cva } from "class-variance-authority";
-import { X } from "lucide-react";
 import { Button } from "./button";
 import type { HTMLAttributes } from "react";
 import type { VariantProps } from "class-variance-authority";
@@ -231,7 +232,11 @@ function Alert({
           data-slot="alert-close"
           className={cn("group size-4 shrink-0")}
         >
-          <X className="size-4 opacity-60 group-hover:opacity-100" />
+          <HugeiconsIcon
+            icon={XIcon}
+            className="size-4 opacity-60 group-hover:opacity-100"
+            aria-hidden
+          />
         </Button>
       )}
     </div>

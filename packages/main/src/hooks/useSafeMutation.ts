@@ -1,5 +1,5 @@
-import { SchemaValidationError } from "@tanstack/react-db";
 import { toast } from "@monrep/ui/base";
+import { SchemaValidationError } from "@tanstack/react-db";
 
 function toastUpsertError(error: unknown) {
   if (error instanceof SchemaValidationError) {
@@ -16,5 +16,5 @@ export const useSafeMutation = () => {
     } catch (error) {
       toastUpsertError(error);
     }
-  }
+  };
 };

@@ -1,6 +1,12 @@
 import { Select as SelectPrimitive } from "@base-ui/react/select";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  ChevronsDownIcon,
+} from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon, ChevronsUpDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
 type SelectValueType<TValue, TMultiple extends boolean | undefined> = TMultiple extends true
@@ -52,7 +58,13 @@ export const SelectTrigger = ({ className, children, ...props }: SelectPrimitive
   >
     {children}
     <SelectPrimitive.Icon
-      render={<ChevronsUpDownIcon className="pointer-events-none size-4 opacity-50" />}
+      render={
+        <HugeiconsIcon
+          icon={ChevronsDownIcon}
+          className="pointer-events-none size-4 opacity-50"
+          aria-hidden
+        />
+      }
     />
   </SelectPrimitive.Trigger>
 );
@@ -65,7 +77,7 @@ export const SelectScrollUpButton = ({
     className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
-    <ChevronUpIcon />
+    <HugeiconsIcon icon={ChevronUpIcon} className="size-4" aria-hidden />
   </SelectPrimitive.ScrollUpArrow>
 );
 
@@ -77,7 +89,7 @@ export const SelectScrollDownButton = ({
     className={cn("flex cursor-default items-center justify-center py-1", className)}
     {...props}
   >
-    <ChevronDownIcon />
+    <HugeiconsIcon icon={ChevronDownIcon} className="size-4" aria-hidden />
   </SelectPrimitive.ScrollDownArrow>
 );
 
@@ -147,7 +159,7 @@ export const SelectItem = ({
     <SelectPrimitive.ItemIndicator
       render={
         <span className="pointer-events-none absolute right-2 flex size-3.5 items-center justify-center">
-          <CheckIcon className="size-4" />
+          <HugeiconsIcon icon={CheckIcon} className="size-4" aria-hidden />
         </span>
       }
     />

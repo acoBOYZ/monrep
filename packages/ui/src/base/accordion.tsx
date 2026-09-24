@@ -1,6 +1,7 @@
 import { Accordion as AccordionPrimitive } from "@base-ui/react";
+import { ChevronRight } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { ChevronRightIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 
 function Accordion({ ...props }: ComponentProps<typeof AccordionPrimitive.Root>) {
@@ -27,14 +28,19 @@ function AccordionTrigger({
       <AccordionPrimitive.Trigger
         data-slot="accordion-trigger"
         className={cn(
-          "flex flex-1 items-center justify-between gap-0 rounded-md py-4 text-left text-sm font-semibold transition-none outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-90",
+          "flex flex-1 items-center justify-between gap-0 rounded-md py-4",
+          "text-left text-sm font-semibold transition-none outline-none",
+          "focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+          "disabled:pointer-events-none disabled:opacity-50",
+          "[&[data-state=open]>svg]:rotate-90",
           "cursor-pointer",
           className,
         )}
         {...props}
       >
         {children}
-        <ChevronRightIcon
+        <HugeiconsIcon
+          icon={ChevronRight}
           size={16}
           className="pointer-events-none mr-1 shrink-0 opacity-60 transition-transform"
           aria-hidden="true"
