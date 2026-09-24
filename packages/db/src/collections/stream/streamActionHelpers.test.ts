@@ -127,6 +127,38 @@ describe("createUpsertStreamAction", () => {
     expect(db.appended[0]?.value).toEqual({ userId: "u1", status: "away" });
   });
 
+  test("does not wipe optional fields on update when caller omits them", async () => {
+    const createdAtSchema = z.object({
+      userId: z.string(),
+      status: z.string(),
+      createdAt: z.string().optional(),
+    });
+
+    type CreatedAtRow = z.infer<typeof createdAtSchema>;
+
+    const createdAtCollection = createMockCollection<CreatedAtRow>();
+    const db = createMockDb();
+
+    const action = createUpsertStreamAction<CreatedAtRow>({
+      db,
+      helpers: schema.presence,
+      collection: createdAtCollection,
+      primaryKey: "userId",
+      schema: createdAtSchema,
+      insertGens: {
+        createdAt: () => "t-insert",
+      },
+      updateGens: null,
+    });
+
+    action.onMutate({ userId: "u1", status: "online" });
+    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert");
+
+    // Simulate a partial upsert that omits createdAt (e.g. rename payload).
+    action.onMutate({ userId: "u1", status: "away" });
+    expect(createdAtCollection.rows.get("u1")?.createdAt).toBe("t-insert");
+  });
+
   test("rejects so TanStack DB can roll the optimistic row back", () => {
     const collection = createMockCollection<Row>();
     const db = createMockDb({ failAppend: true });
