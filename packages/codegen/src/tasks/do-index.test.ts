@@ -36,6 +36,45 @@ export default createDoModule("session")({
 });
 `;
 
+const sessionDoColSource = `
+import { z } from "zod";
+import { createDoModule, doTable } from "./create-do-module.gen";
+
+export default createDoModule("session")({
+  streamLive: "sse",
+  streamPersist: false,
+  collections: {
+    users: doTable({
+      type: "users",
+      primaryKey: "id",
+      schema: {
+        id: z.string(),
+        name: z.string(),
+      },
+      onInsert: ({ ctx }) => ({
+        id: ctx.ulid,
+      }),
+    }),
+    presence: doTable({
+      type: "presence",
+      primaryKey: "userId",
+      indexes: ["userId"],
+      schema: {
+        userId: z.string(),
+        name: z.string().optional(),
+      },
+    }),
+    typing: doTable({
+      type: "typing",
+      primaryKey: "userId",
+      schema: {
+        userId: z.string(),
+      },
+    }),
+  },
+});
+`;
+
 describe("parseDoModuleSource", () => {
   test("extracts module flags and nested collections", () => {
     const parsed = parseDoModuleSource(sessionSource, "session");
@@ -45,8 +84,28 @@ describe("parseDoModuleSource", () => {
       streamLive: "sse",
       streamPersist: false,
       collections: [
-        { name: "presence", type: "presence", primaryKey: "userId" },
-        { name: "typing", type: "typing", primaryKey: "userId" },
+        { name: "presence", type: "presence", primaryKey: "userId", indexes: [] },
+        { name: "typing", type: "typing", primaryKey: "userId", indexes: [] },
+      ],
+    });
+  });
+
+  test("unwraps doTable({ ... }) collection props", () => {
+    const parsed = parseDoModuleSource(sessionDoColSource, "session");
+    expect(parsed).toEqual({
+      moduleId: "session",
+      streamEpoch: null,
+      streamLive: "sse",
+      streamPersist: false,
+      collections: [
+        { name: "users", type: "users", primaryKey: "id", indexes: [] },
+        {
+          name: "presence",
+          type: "presence",
+          primaryKey: "userId",
+          indexes: ["userId"],
+        },
+        { name: "typing", type: "typing", primaryKey: "userId", indexes: [] },
       ],
     });
   });

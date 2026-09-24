@@ -13,7 +13,7 @@ import { paths } from "../paths";
 import type { ParsedDoModule } from "../lib/parse-do-module";
 
 const INDEX = "index.gen.ts";
-const CREATE_IMPORT = `import { createDoModule } from "./create-do-module.gen";`;
+const CREATE_IMPORT = `import { createDoModule, doTable } from "./create-do-module.gen";`;
 const IGNORE = new Set(["index.ts", INDEX, "create-do-module.gen.ts"]);
 
 const isDoModule = (name: string) =>
@@ -28,16 +28,31 @@ function normalizeCreate(fileName: string, source: string): string | null {
   return source.replace(pattern, `createDoModule("${expectedName}")`);
 }
 
+function scaffoldDoModule(base: string): string {
+  return `import { z } from "zod";
+${CREATE_IMPORT}
+
+export default createDoModule("${base}")({
+  collections: {
+    ${base}: doTable({
+      type: "${base}",
+      primaryKey: "id",
+      schema: {
+        id: z.string(),
+      },
+    }),
+  },
+});
+`;
+}
+
 async function syncFile(filePath: string): Promise<void> {
   const fileName = path.basename(filePath);
   if (!isDoModule(fileName) || !existsSync(filePath)) return;
   const source = await Bun.file(filePath).text();
   if (source.trim() === "") {
     const base = path.basename(fileName, ".ts");
-    await Bun.write(
-      filePath,
-      `import { z } from "zod";\n${CREATE_IMPORT}\n\nexport default createDoModule("${base}")({\n  collections: {\n    ${base}: {\n      type: "${base}",\n      primaryKey: "id",\n      schema: {\n        id: z.string(),\n      },\n    },\n  },\n});\n`,
-    );
+    await Bun.write(filePath, scaffoldDoModule(base));
     logScaffolded(filePath);
     return;
   }

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createStateSchema } from "@durable-streams/state/db";
+import { SchemaValidationError } from "@tanstack/react-db";
 import { z } from "zod";
 import {
   appendStreamEvent,
@@ -15,8 +16,19 @@ const rowSchema = z.object({
 
 type Row = z.infer<typeof rowSchema>;
 
+const ulidRowSchema = z.object({
+  userId: z.ulid(),
+  status: z.string(),
+});
+
+type UlidRow = z.infer<typeof ulidRowSchema>;
+
 const schema = createStateSchema({
   presence: { schema: rowSchema, type: "presence", primaryKey: "userId" },
+});
+
+const ulidSchema = createStateSchema({
+  presence: { schema: ulidRowSchema, type: "presence", primaryKey: "userId" },
 });
 
 type AppendBody = Uint8Array | string | Promise<Uint8Array | string>;
@@ -43,15 +55,15 @@ const createMockDb = (options?: { failAppend?: boolean; failAwait?: boolean }) =
   };
 };
 
-const createMockCollection = () => {
-  const rows = new Map<string, Row>();
+const createMockCollection = <T extends { userId: string }>() => {
+  const rows = new Map<string, T>();
   return {
     rows,
     has: (key: string) => rows.has(key),
-    insert: (value: Row) => {
+    insert: (value: T) => {
       rows.set(value.userId, value);
     },
-    update: (key: string, callback: (draft: Row) => void) => {
+    update: (key: string, callback: (draft: T) => void) => {
       const current = rows.get(key);
       if (!current) throw new Error(`missing ${key}`);
       const draft = { ...current };
@@ -94,13 +106,14 @@ describe("appendStreamEvent", () => {
 
 describe("createUpsertStreamAction", () => {
   test("inserts missing rows, updates existing rows, and appends an upsert", async () => {
-    const collection = createMockCollection();
+    const collection = createMockCollection<Row>();
     const db = createMockDb();
     const action = createUpsertStreamAction<Row>({
       db,
       helpers: schema.presence,
       collection,
       primaryKey: "userId",
+      schema: rowSchema,
     });
 
     action.onMutate({ userId: "u1", status: "online" });
@@ -115,24 +128,68 @@ describe("createUpsertStreamAction", () => {
   });
 
   test("rejects so TanStack DB can roll the optimistic row back", () => {
-    const collection = createMockCollection();
+    const collection = createMockCollection<Row>();
     const db = createMockDb({ failAppend: true });
     const action = createUpsertStreamAction<Row>({
       db,
       helpers: schema.presence,
       collection,
       primaryKey: "userId",
+      schema: rowSchema,
     });
 
     return expect(action.mutationFn({ userId: "u1", status: "online" }, undefined)).rejects.toThrow(
       "append failed",
     );
   });
+
+  test("throws SchemaValidationError for invalid fields before insert", () => {
+    const collection = createMockCollection<UlidRow>();
+    const db = createMockDb();
+    const action = createUpsertStreamAction<UlidRow>({
+      db,
+      helpers: ulidSchema.presence,
+      collection,
+      primaryKey: "userId",
+      schema: ulidRowSchema,
+    });
+
+    expect(() => action.onMutate({ userId: "ada", status: "online" })).toThrow(
+      SchemaValidationError,
+    );
+    expect(collection.rows.size).toBe(0);
+    expect(db.appended).toHaveLength(0);
+  });
+
+  test("accepts valid ULID and insertGens-filled empty primary key", () => {
+    const collection = createMockCollection<UlidRow>();
+    const db = createMockDb();
+    const validUlid = "01ARZ3NDEKTSV4RRFFQ69G5FAV";
+    const action = createUpsertStreamAction<UlidRow>({
+      db,
+      helpers: ulidSchema.presence,
+      collection,
+      primaryKey: "userId",
+      schema: ulidRowSchema,
+      insertGens: {
+        userId: () => validUlid,
+      },
+    });
+
+    action.onMutate({ userId: validUlid, status: "online" });
+    expect(collection.rows.get(validUlid)).toEqual({
+      userId: validUlid,
+      status: "online",
+    });
+
+    action.onMutate({ userId: "", status: "away" });
+    expect(collection.rows.get(validUlid)?.status).toBe("away");
+  });
 });
 
 describe("createDeleteStreamAction", () => {
   test("deletes existing rows and no-ops for keys that are not loaded", async () => {
-    const collection = createMockCollection();
+    const collection = createMockCollection<Row>();
     collection.insert({ userId: "u1", status: "online" });
     const db = createMockDb();
     const action = createDeleteStreamAction<Row>({

@@ -1,4 +1,5 @@
 export * from "./smart-popover";
+export * from "./toast";
 export * from "./tooltip";
 export * from "./accordion";
 export * from "./alert-dialog";

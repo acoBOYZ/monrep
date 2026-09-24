@@ -12,12 +12,15 @@
 import type { z } from "zod";
 import type {
 	TDoModuleId,
+	AuditDoSchema,
 	PresenceDoSchema,
 	TypingDoSchema,
 	UsersDoSchema,
 } from "../do";
 
 export type { TDoModuleId };
+
+export type TAuditDo = z.infer<typeof AuditDoSchema>;
 
 export type TPresenceDo = z.infer<typeof PresenceDoSchema>;
 

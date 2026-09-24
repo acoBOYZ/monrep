@@ -1,3 +1,5 @@
+import { SchemaValidationError } from "@tanstack/react-db";
+import { applyDoWriteFields } from "./applyDoWriteFields";
 import type { DurableStream } from "@durable-streams/client";
 import type {
   ActionDefinition,
@@ -5,6 +7,8 @@ import type {
   CollectionWithHelpers,
   StreamDBMethods,
 } from "@durable-streams/state/db";
+import type { z } from "zod";
+import type { DoWriteFieldGens } from "./applyDoWriteFields";
 
 /** Only the StreamDB surface these helpers touch, still derived from package types. */
 type StreamPersistDb = Pick<StreamDBMethods, "utils"> & {
@@ -18,15 +22,44 @@ type LiveCollectionOps<TValue extends object> = {
   delete: (key: string) => unknown;
 };
 
+const peekPrimaryKey = <TValue extends object>(
+  value: TValue,
+  primaryKey: keyof TValue & string,
+): string | undefined => {
+  const raw = value[primaryKey];
+  if (typeof raw !== "string" || raw.length === 0) return;
+  return raw;
+};
+
 const readPrimaryKey = <TValue extends object>(
   value: TValue,
   primaryKey: keyof TValue & string,
 ): string => {
-  const raw = value[primaryKey];
-  if (typeof raw !== "string" || raw.length === 0) {
+  const key = peekPrimaryKey(value, primaryKey);
+  if (!key) {
     throw new Error(`Stream upsert requires a non-empty string primary key "${primaryKey}"`);
   }
-  return raw;
+  return key;
+};
+
+/** Parse after write gens; throw TanStack `SchemaValidationError` on failure. */
+export const parseDoWriteValue = <TValue extends object>(
+  schema: z.ZodType<TValue>,
+  value: TValue,
+  type: "insert" | "update",
+): TValue => {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) {
+    throw new SchemaValidationError(
+      type,
+      parsed.error.issues.map((issue) => ({
+        message: issue.message,
+        path: issue.path,
+      })),
+    );
+  }
+  Object.assign(value, parsed.data);
+  return value;
 };
 
 /** Append a typed Durable State event and wait until StreamDB observes its txid. */
@@ -44,25 +77,52 @@ export const appendStreamEvent = async <TValue>(
   await db.utils.awaitTxId(txid);
 };
 
+const prepareUpsertValue = <TValue extends object>(options: {
+  value: TValue;
+  primaryKey: keyof TValue & string;
+  collection: LiveCollectionOps<TValue>;
+  schema: z.ZodType<TValue>;
+  insertGens: DoWriteFieldGens | null | undefined;
+  updateGens: DoWriteFieldGens | null | undefined;
+}): { value: TValue; key: string; isUpdate: boolean } => {
+  const { value, primaryKey, collection, schema, insertGens, updateGens } = options;
+  const existingKey = peekPrimaryKey(value, primaryKey);
+  const isUpdate = existingKey !== undefined && collection.has(existingKey);
+  applyDoWriteFields(value, isUpdate ? updateGens : insertGens);
+  parseDoWriteValue(schema, value, isUpdate ? "update" : "insert");
+  return { value, key: readPrimaryKey(value, primaryKey), isUpdate };
+};
+
 export const createUpsertStreamAction = <TValue extends object>(options: {
   db: StreamPersistDb;
   helpers: CollectionWithHelpers<TValue>;
   collection: LiveCollectionOps<TValue>;
   primaryKey: keyof TValue & string;
+  schema: z.ZodType<TValue>;
+  insertGens?: DoWriteFieldGens | null;
+  updateGens?: DoWriteFieldGens | null;
 }): ActionDefinition<TValue> => {
-  const { db, helpers, collection, primaryKey } = options;
+  const { db, helpers, collection, primaryKey, schema, insertGens, updateGens } = options;
   return {
     onMutate: (value) => {
-      const key = readPrimaryKey(value, primaryKey);
-      if (collection.has(key)) {
-        collection.update(key, (draft) => {
-          Object.assign(draft, value);
+      const prepared = prepareUpsertValue({
+        value,
+        primaryKey,
+        collection,
+        schema,
+        insertGens,
+        updateGens,
+      });
+      if (prepared.isUpdate) {
+        collection.update(prepared.key, (draft) => {
+          Object.assign(draft, prepared.value);
         });
         return;
       }
-      collection.insert(value);
+      collection.insert(prepared.value);
     },
     mutationFn: async (value) => {
+      // Same object reference as onMutate — gens + schema parse already applied.
       await appendStreamEvent(db, helpers.upsert({ value }));
     },
   };

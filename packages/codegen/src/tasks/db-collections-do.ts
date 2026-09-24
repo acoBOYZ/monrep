@@ -60,7 +60,7 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
       const upsert = actionName("upsert", c.name);
       const del = actionName("delete", c.name);
       return [
-        `      ${upsert}: createUpsertStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name}, primaryKey: "${c.primaryKey}" }),`,
+        `      ${upsert}: createUpsertStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name}, primaryKey: "${c.primaryKey}", schema: DO_MODULES["${c.streamModule}"].collections.${c.name}.Schema, insertGens: DO_MODULES["${c.streamModule}"].collections.${c.name}.insertGens, updateGens: DO_MODULES["${c.streamModule}"].collections.${c.name}.updateGens }),`,
         `      ${del}: createDeleteStreamAction({ db, helpers: state.${c.name}, collection: db.collections.${c.name} }),`,
       ];
     });
@@ -108,6 +108,7 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
     'import { createDoStreamDB } from "./stream/createDoStreamDB";',
     'import { materializeDoOne } from "./stream/materializeDoOne";',
     'import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";',
+    'import { DO_MODULES } from "../do";',
     'import type { ActionDefinition } from "@durable-streams/state/db";',
     'import type { DbClient } from "@tanstack/react-db";',
     `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "../types";`,

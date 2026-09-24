@@ -24,14 +24,10 @@ export type GetDehydratedDbStateOptions = {
   baseUrl: string;
 };
 
-type ModuleSession<TModule extends TDoModuleId> = {
+type ModuleSession = {
   url: string;
-  db: DoStreamDb<TModule>;
+  db: DoStreamDb<TDoModuleId>;
   ready: Promise<void>;
-};
-
-type ModuleSessions = {
-  [TModule in TDoModuleId]?: ModuleSession<TModule>;
 };
 
 /**
@@ -44,7 +40,7 @@ export async function getDehydratedDbState(
 ): Promise<DehydratedDbState> {
   const { baseUrl } = options;
   const dbClient = new DbClient();
-  const modules: ModuleSessions = {};
+  const modules: Partial<Record<TDoModuleId, ModuleSession>> = {};
   const materialized = new Set<string>();
   const pending = new Set<Promise<void>>();
 
@@ -54,7 +50,7 @@ export async function getDehydratedDbState(
     const existing = modules[moduleId];
     if (existing) {
       await existing.ready;
-      return existing.db;
+      return existing.db as DoStreamDb<TModule>;
     }
 
     const url = streamModuleUrl(baseUrl, moduleId);
@@ -73,8 +69,7 @@ export async function getDehydratedDbState(
       delete modules[moduleId];
       throw error;
     });
-    const session: ModuleSession<TModule> = { url, db, ready };
-    modules[moduleId] = session;
+    modules[moduleId] = { url, db, ready };
     await ready;
     return db;
   };

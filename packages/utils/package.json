@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./graceful": "./src/graceful/index.ts"
+    "./graceful": "./src/graceful/index.ts",
+    "./ulid": "./src/ulid.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --singleThreaded",
@@ -18,7 +19,8 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "fastq": "^1.20.3",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "ulid": "^3.0.2"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

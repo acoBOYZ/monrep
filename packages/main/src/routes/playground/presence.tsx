@@ -4,6 +4,7 @@ import { useStreamDb } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useSafeMutation } from "@/hooks/useSafeMutation";
 
 export const Route = createFileRoute("/playground/presence")({
   component: PresencePlayground,
@@ -11,24 +12,28 @@ export const Route = createFileRoute("/playground/presence")({
 
 function PresencePlayground() {
   const { db, isReady } = useStreamDb("session");
+  const safeMutation = useSafeMutation();
   const live = useLiveQuery({
     query: (q) => q.from({ p: sessionPresenceCollection }).orderBy(({ p }) => p.userId, "asc"),
   });
   const rows = live.data;
 
   const [name, setName] = useState("Ada");
-  const [userId, setUserId] = useState("ada");
+  const [userId, setUserId] = useState("");
 
   const insertRow = () => {
-    if (!db || userId.length === 0) return;
-    void db.actions.upsertPresence({ userId, name });
-    setUserId(`user-${crypto.randomUUID().slice(0, 8)}`);
+    if (!db) return;
+    // Empty userId → onInsert fills ulid; omit audits so createdAt/updatedAt stamp.
+    safeMutation(() => db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }));
+    setUserId("");
   };
 
   const renameFirst = () => {
     const first = rows[0];
     if (!db || !first) return;
-    void db.actions.upsertPresence({ ...first, name: `${name}-edited` });
+    // Omit updatedAt so onUpdate can stamp a new value.
+    safeMutation(() => db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` }));
+      db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` });
   };
 
   const deleteFirst = () => {
@@ -38,7 +43,7 @@ function PresencePlayground() {
   };
 
   return (
-    <div className="mx-auto flex min-h-svh max-w-lg flex-col gap-4 bg-background p-6 text-foreground">
+    <div className="mx-auto flex min-h-svh max-w-xl flex-col gap-4 bg-background p-6 text-foreground">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-lg font-semibold tracking-tight">Presence playground</h1>
         <Link to="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
@@ -111,7 +116,10 @@ function PresencePlayground() {
               className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
             >
               <span className="font-medium">{row.name ?? "(unnamed)"}</span>
-              <span className="truncate font-mono text-xs text-muted-foreground">{row.userId}</span>
+              <span className="truncate font-mono text-xs text-muted-foreground">
+                {row.userId}
+                {row.updatedAt ? ` · ${row.updatedAt}` : ""}
+              </span>
             </li>
           ))
         )}
