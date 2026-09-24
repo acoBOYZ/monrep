@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /// <reference types="bun" />
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { readGitmodules } from "../utils/gitmodules";
 import { exitIfCi } from "../utils/is-ci";

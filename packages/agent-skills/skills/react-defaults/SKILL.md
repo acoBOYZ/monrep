@@ -2,9 +2,10 @@
 name: react-defaults
 description: >
   Default React and TypeScript standards for this monorepo—architecture, lean
-  size budgets, reuse-first workflow, useLiveQueries, accessibility, and quality
-  gates. Use for any React/TS UI work, refactors, new components or hooks, or
-  when the user mentions react-development, react-lean, or pre-commit checks.
+  size budgets, reuse-first workflow, useLiveQueries, accessibility, import house
+  style (separate type imports; fmt + lint --fix), and quality gates. Use for
+  any React/TS UI work, refactors, new components or hooks, or when the user
+  mentions react-development, react-lean, or pre-commit checks.
 metadata:
   type: core
   library: agent-skills
@@ -157,6 +158,25 @@ Minimize code while preserving behavior and UX unless the user asks otherwise. R
 4. Trim public API surface
 5. Re-run quality gates until clean
 
+## Imports (write correctly; polish enforces)
+
+Do **not** leave import style for “later.” Follow house style while adding code:
+
+- Top-level `import type { … }` only — never inline `import { type X }`
+- Statement/group order: oxfmt `sortImports` (`.oxfmtrc.jsonc`)
+- Named members `{ … }`: case-sensitive alphanumeric; **uppercase wins**
+  (`STREAM_MODULE_IDS, acquireStreamModule, releaseStreamModule`)
+- Never fmt or lint-fix `**/*.gen.ts` / `**/*.gen.*`
+
+After edits that touch imports:
+
+```bash
+bun run --cwd <package> fmt
+bun run --cwd <package> lint -- --fix
+```
+
+Full detail: load `@monrep/agent-skills#oxfmt`. Root `AGENTS.md` section **imports / polish (hard)** is authoritative.
+
 ## Quality gates (must pass)
 
 After editing code, run checks **scoped to the workspace package(s) you changed**. Script names live in root / package `package.json` (`typecheck`, `lint`, `fmt` / `fmtcheck`). React doctor is root-only: `bun run doctor`. Oxfmt polish details: load `@monrep/agent-skills#oxfmt`.
@@ -185,7 +205,25 @@ If you invoke `tsc` **directly** (not via turbo or a package `typecheck` script)
 tsc --noEmit --singleThreaded
 ```
 
-### 2. Lint changed code (oxlint)
+### 2. Format / polish (oxfmt)
+
+Root fan-out (all packages in parallel via turbo):
+
+```bash
+bun run fmtcheck   # check what would change
+bun run fmt        # apply polish (includes import statement/group sort)
+```
+
+Single package:
+
+```bash
+bun run --cwd apps/web fmtcheck
+bun run --cwd apps/web fmt
+```
+
+Polish only — not a substitute for typecheck/lint/doctor. Do not skip; do not rewrite root `fmt` / `fmtcheck`. Full skill: `@monrep/agent-skills#oxfmt`.
+
+### 3. Lint changed code (oxlint)
 
 Root `bun lint` is `turbo run lint`. Package `lint` runs oxlint with root `.oxlintrc.json` (`typeAware: true`, `--threads=1` — turbo already parallelizes packages). Doctor does **not** re-adopt that config.
 
@@ -201,23 +239,13 @@ Or from the changed package:
 bun run lint
 ```
 
-### 3. Format / polish (oxfmt)
-
-Root fan-out (all packages in parallel via turbo):
+When imports may be dirty (new/reordered named members), autofix with package scripts:
 
 ```bash
-bun run fmtcheck   # check what would change
-bun run fmt        # apply polish
+bun run --cwd <package> lint -- --fix
 ```
 
-Single package:
-
-```bash
-bun run --cwd apps/web fmtcheck
-bun run --cwd apps/web fmt
-```
-
-Polish only — not a substitute for typecheck/lint/doctor. Do not skip; do not rewrite root `fmt` / `fmtcheck`. Full skill: `@monrep/agent-skills#oxfmt`.
+Do **not** lint-fix `**/*.gen.ts` / `**/*.gen.*`.
 
 ### 4. react-doctor (React-related changes only)
 
@@ -237,7 +265,7 @@ Config: root `doctor.config.ts` (`scope: "changed"` by default); per-workspace o
 
 ### Gate order
 
-1. `typecheck` → 2. `lint` → 3. `fmtcheck` / `fmt` → 4. `doctor` (if React-related). Re-run until all pass.
+1. `typecheck` → 2. `fmtcheck` / `fmt` → 3. `lint` (`-- --fix` if imports dirty) → 4. `doctor` (if React-related). Re-run until all pass.
 
 ## Final report (required for refactors / multi-file PRs)
 

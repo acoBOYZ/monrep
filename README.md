@@ -53,7 +53,7 @@ If you just cloned this: start from [ROADMAP.md](./ROADMAP.md) for “what exist
 bun install
 bun run codegen   # when you touch DO / stream schemas (watch mode activated by default on dev)
 bun run up        # upgrade bun, update all deps, sync upstreams if there any (stack helpers optional)
-bun run ok       # check all health checks are passing (typecheck, lint, react-doctor)
+bun run ok        # check all health checks are passing (typecheck, lint, react-doctor)
 bun run dev
 ```
 
@@ -72,9 +72,11 @@ Until that package is published, there is nothing to `curl | sh` yet. When it ex
 
 ## Contributing
 
-Issues and PRs welcome. Keep changes lean. If you touch generated files under `packages/db`, don’t hand-edit — change the source and run `bun run codegen`.
+Issues and PRs welcome. Keep changes lean.
 
-Agent / skill rules for this repo live in `AGENTS.md` if you’re coding with Cursor.
+Full rules (quality gates, import/polish house style, and **installing `/monrep` + Intent skills** for AI agents): **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
+
+Short version: don’t hand-edit generated files under `packages/db` — change the source and run `bun run codegen`. Agent hard rules live in [`AGENTS.md`](./AGENTS.md); if you code with Cursor, run `bun run skills:install` and keep the **monrep** skill in sync.
 
 ## License
 
