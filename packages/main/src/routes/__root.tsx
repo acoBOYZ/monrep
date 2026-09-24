@@ -12,7 +12,7 @@ export const Route = createRootRoute({
         name: "viewport",
         content: "width=device-width, initial-scale=1, viewport-fit=cover",
       },
-      { title: "monrep Rai" },
+      { title: "monrep" },
       {
         name: "description",
         content: "monrep agent surface — embeddable in the web app AI panel.",
