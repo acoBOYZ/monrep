@@ -1,5 +1,5 @@
 {
-  "projectName": "rai",
+  "projectName": "monrep",
   "mode": "file-router",
   "typescript": true,
   "packageManager": "bun",
