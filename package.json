@@ -55,7 +55,7 @@
     "ci:install": "bun install --frozen-lockfile",
     "ci:assert-clean": "git diff --exit-code",
     "docker:gc": "docker builder prune -f",
-    "build:main": "NODE_ENV=production REACT_COMPILER=false TURBO_TELEMETRY_DISABLED=1 turbo run build --filter=@monrep/main --only --ui stream",
+    "build:main": "NODE_ENV=production REACT_COMPILER=true TURBO_TELEMETRY_DISABLED=1 turbo run build --filter=@monrep/main --only --ui stream",
     "deploy:main": "bun run --cwd packages/main deploy",
     "cf-typegen:main": "bun run --cwd packages/main cf-typegen",
     "skills:sync-versions": "bun scripts/skills/sync-versions.ts",
