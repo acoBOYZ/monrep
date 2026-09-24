@@ -11,7 +11,7 @@ Legend: `[ ]` todo · `[~]` in progress · `[x]` done
 Work that makes the control plane possible without lying about “production ready.”
 
 - [x] Monorepo shell (Bun, Turbo, packages)
-- [x] Web app package (`packages/main`) — TanStack Start playground
+- [x] Web app package (`packages/main`). TanStack Start playground
 - [x] Stream / DO module codegen (`createDoModule`, live collections)
 - [x] Realtime stream path solid enough for dashboard live UI
 - [x] Control plane app shape clear (auth, orgs/servers list, no product Postgres required)
@@ -81,7 +81,7 @@ Feel like CF / Vercel for **your** servers.
 ## How we use this file
 
 1. When you finish something, flip `[ ]` → `[x]` (or `[~]` while it’s half done).  
-2. New big ideas go in the right section — don’t invent a second roadmap.  
+2. New big ideas go in the right section. Don’t invent a second roadmap.  
 3. README stays the pitch; **this file stays the truth of progress**.
 
 Last intent: fleet control plane + Linux agent + live web. Everything else is detail.

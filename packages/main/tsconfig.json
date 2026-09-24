@@ -1,7 +1,7 @@
 {
   "extends": "./../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["ESNext", "ES2023.Array", "DOM", "DOM.Iterable", "WebWorker"],
+    "lib": ["ESNext", "ESNext.Temporal", "ES2023.Array", "DOM", "DOM.Iterable", "WebWorker"],
     "target": "ESNext",
     "types": ["vite/client", "node"],
     "paths": {

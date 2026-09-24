@@ -10,9 +10,18 @@ export { toBigIntSafe, toNumberSafe, type IntLike } from "./bigint";
 export { cn } from "./cn";
 export { filterMap } from "./filterMap";
 export {
+  formatCalendarDate,
+  formatChatListDate,
+  formatTime,
+  toDateTimeAttr,
+  toZonedDateTime,
+  type CalendarDateLabels,
+  type DateInput,
+} from "./formatTime";
+export {
+  getArchitecture,
   getOS,
   getOSFromUserAgent,
-  getArchitecture,
   isAppleWebKit,
   type OS,
   type OSArch,

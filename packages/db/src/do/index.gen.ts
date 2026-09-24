@@ -89,10 +89,34 @@ export const PresenceDoMeta = {
   indexes: __testm_do.collections.presence.indexes,
 } as const;
 
+export const MessageDoSchema = __testm_do.collections.message.Schema;
+export const MessageDoMeta = {
+  name: __testm_do.collections.message.name,
+  streamModule: __testm_do.moduleId,
+  streamEpoch: __testm_do.streamEpoch,
+  streamLive: __testm_do.streamLive,
+  streamPersist: __testm_do.streamPersist,
+  type: __testm_do.collections.message.name,
+  primaryKey: __testm_do.collections.message.primaryKey,
+  indexes: __testm_do.collections.message.indexes,
+} as const;
+
+export const TypingDoSchema = __testm_do.collections.typing.Schema;
+export const TypingDoMeta = {
+  name: __testm_do.collections.typing.name,
+  streamModule: __testm_do.moduleId,
+  streamEpoch: __testm_do.streamEpoch,
+  streamLive: __testm_do.streamLive,
+  streamPersist: __testm_do.streamPersist,
+  type: __testm_do.collections.typing.name,
+  primaryKey: __testm_do.collections.typing.primaryKey,
+  indexes: __testm_do.collections.typing.indexes,
+} as const;
+
 export const DO_MODULE_EPOCH = {
   "audit": undefined,
   "auth": undefined,
-  "testm": undefined,
+  "testm": "utc-hour",
 } as const satisfies Partial<Record<TDoModuleId, TStreamEpoch>>;
 
 export const DO_MODULE_LIVE = {
@@ -133,6 +157,16 @@ export const DO_MODULE_STATE = {
       schema: __testm_do.collections.presence.Schema, 
       type: __testm_do.collections.presence.name, 
       primaryKey: __testm_do.collections.presence.primaryKey 
+    },
+    message: { 
+      schema: __testm_do.collections.message.Schema, 
+      type: __testm_do.collections.message.name, 
+      primaryKey: __testm_do.collections.message.primaryKey 
+    },
+    typing: { 
+      schema: __testm_do.collections.typing.Schema, 
+      type: __testm_do.collections.typing.name, 
+      primaryKey: __testm_do.collections.typing.primaryKey 
     },
   },
 } as const;

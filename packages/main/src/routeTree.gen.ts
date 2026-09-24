@@ -15,6 +15,9 @@ import { Route as AuthenticatedPlaygroundRouteRouteImport } from './routes/_auth
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAdminRouteImport } from './routes/_public/admin'
 import { Route as AuthenticatedPlaygroundPresenceRouteImport } from './routes/_authenticated/playground/presence'
+import { Route as AuthenticatedPlaygroundStreamsRouteImport } from './routes/_authenticated/playground/streams'
+import { Route as AuthenticatedServersIndexRouteImport } from './routes/_authenticated/servers/index'
+import { Route as AuthenticatedServersNewRouteImport } from './routes/_authenticated/servers/new'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -46,18 +49,41 @@ const AuthenticatedPlaygroundPresenceRoute =
     path: '/presence',
     getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
   } as any)
+const AuthenticatedPlaygroundStreamsRoute =
+  AuthenticatedPlaygroundStreamsRouteImport.update({
+    id: '/streams',
+    path: '/streams',
+    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
+  } as any)
+const AuthenticatedServersIndexRoute =
+  AuthenticatedServersIndexRouteImport.update({
+    id: '/servers/',
+    path: '/servers/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedServersNewRoute = AuthenticatedServersNewRouteImport.update({
+  id: '/servers/new',
+  path: '/servers/new',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
   '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
   '/admin': typeof PublicAdminRoute
   '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
+  '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/servers/new': typeof AuthenticatedServersNewRoute
+  '/servers/': typeof AuthenticatedServersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
   '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
   '/admin': typeof PublicAdminRoute
   '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
+  '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/servers/new': typeof AuthenticatedServersNewRoute
+  '/servers': typeof AuthenticatedServersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -67,12 +93,29 @@ export interface FileRoutesById {
   '/_public/admin': typeof PublicAdminRoute
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
+  '/_authenticated/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/_authenticated/servers/new': typeof AuthenticatedServersNewRoute
+  '/_authenticated/servers/': typeof AuthenticatedServersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/playground' | '/admin' | '/playground/presence'
+  fullPaths:
+    | '/'
+    | '/playground'
+    | '/admin'
+    | '/playground/presence'
+    | '/playground/streams'
+    | '/servers/new'
+    | '/servers/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/playground' | '/admin' | '/playground/presence'
+  to:
+    | '/'
+    | '/playground'
+    | '/admin'
+    | '/playground/presence'
+    | '/playground/streams'
+    | '/servers/new'
+    | '/servers'
   id:
     | '__root__'
     | '/_authenticated'
@@ -81,6 +124,9 @@ export interface FileRouteTypes {
     | '/_public/admin'
     | '/_public/'
     | '/_authenticated/playground/presence'
+    | '/_authenticated/playground/streams'
+    | '/_authenticated/servers/new'
+    | '/_authenticated/servers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,16 +178,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlaygroundPresenceRouteImport
       parentRoute: typeof AuthenticatedPlaygroundRouteRoute
     }
+    '/_authenticated/playground/streams': {
+      id: '/_authenticated/playground/streams'
+      path: '/streams'
+      fullPath: '/playground/streams'
+      preLoaderRoute: typeof AuthenticatedPlaygroundStreamsRouteImport
+      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
+    }
+    '/_authenticated/servers/': {
+      id: '/_authenticated/servers/'
+      path: '/servers'
+      fullPath: '/servers/'
+      preLoaderRoute: typeof AuthenticatedServersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/servers/new': {
+      id: '/_authenticated/servers/new'
+      path: '/servers/new'
+      fullPath: '/servers/new'
+      preLoaderRoute: typeof AuthenticatedServersNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedPlaygroundRouteRouteChildren {
   AuthenticatedPlaygroundPresenceRoute: typeof AuthenticatedPlaygroundPresenceRoute
+  AuthenticatedPlaygroundStreamsRoute: typeof AuthenticatedPlaygroundStreamsRoute
 }
 
 const AuthenticatedPlaygroundRouteRouteChildren: AuthenticatedPlaygroundRouteRouteChildren =
   {
     AuthenticatedPlaygroundPresenceRoute: AuthenticatedPlaygroundPresenceRoute,
+    AuthenticatedPlaygroundStreamsRoute: AuthenticatedPlaygroundStreamsRoute,
   }
 
 const AuthenticatedPlaygroundRouteRouteWithChildren =
@@ -151,11 +220,15 @@ const AuthenticatedPlaygroundRouteRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedPlaygroundRouteRoute: typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  AuthenticatedServersNewRoute: typeof AuthenticatedServersNewRoute
+  AuthenticatedServersIndexRoute: typeof AuthenticatedServersIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlaygroundRouteRoute:
     AuthenticatedPlaygroundRouteRouteWithChildren,
+  AuthenticatedServersNewRoute: AuthenticatedServersNewRoute,
+  AuthenticatedServersIndexRoute: AuthenticatedServersIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

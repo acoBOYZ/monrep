@@ -30,7 +30,7 @@ jobs:
           RELEASE_NOTES_FILE: ${{ runner.temp }}/release-notes.md
         run: |
           if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "skip $TAG_NAME — release already exists"
+            echo "skip $TAG_NAME. Release already exists"
             exit 0
           fi
           bun run release:notes

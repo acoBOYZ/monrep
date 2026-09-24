@@ -26,7 +26,7 @@
     "@monrep/hooks": "workspace:^",
     "@monrep/utils": "workspace:^",
     "@ncdai/react-wheel-picker": "^1.2.3",
-    "@tanstack/react-hotkeys": "^0.11.0",
+    "@tanstack/react-hotkeys": "^0.12.0",
     "@tanstack/react-store": "^0.11.1",
     "class-variance-authority": "^0.7.1",
     "input-otp": "^1.5.0",

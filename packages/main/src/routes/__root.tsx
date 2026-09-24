@@ -2,6 +2,7 @@ import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-r
 import appCss from "../tailwind.css?url";
 import type { ReactNode } from "react";
 import { App } from "@/App";
+import { THEME_BOOTSTRAP } from "@/components/shell/themeBootstrap";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createRootRoute({
       },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
+    scripts: [{ children: THEME_BOOTSTRAP }],
   }),
   component: RootComponent,
   shellComponent: RootDocument,
