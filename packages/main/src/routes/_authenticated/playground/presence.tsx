@@ -2,15 +2,17 @@ import { useState } from "react";
 import { useStreamDb } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useSafeMutation } from "@/hooks/useSafeMutation";
+import { logoutFn } from "@/server/auth/functions";
 
-export const Route = createFileRoute("/playground/presence")({
+export const Route = createFileRoute("/_authenticated/playground/presence")({
   component: PresencePlayground,
 });
 
 function PresencePlayground() {
-  const { db, isReady } = useStreamDb("session");
+  const navigate = useNavigate();
+  const { db, isReady } = useStreamDb("testm");
   const safeMutation = useSafeMutation();
   const live = useLiveQuery({
     query: (q) => {
@@ -25,7 +27,6 @@ function PresencePlayground() {
 
   const insertRow = () => {
     if (!db) return;
-    // Empty userId → onInsert fills ulid; omit audits so createdAt/updatedAt stamp.
     safeMutation(() =>
       db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }),
     );
@@ -35,7 +36,6 @@ function PresencePlayground() {
   const renameFirst = () => {
     const first = rows[0];
     if (!db || !first) return;
-    // Omit updatedAt so onUpdate can stamp a new value.
     safeMutation(() => db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` }));
   };
 
@@ -45,19 +45,33 @@ function PresencePlayground() {
     void db.actions.deletePresence(first.userId);
   };
 
+  const signOut = async () => {
+    await logoutFn();
+    await navigate({ to: "/admin" });
+  };
+
   return (
     <div className="mx-auto flex min-h-svh max-w-xl flex-col gap-4 bg-background p-6 text-foreground">
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-lg font-semibold tracking-tight">Presence playground</h1>
-        <Link to="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-          Home
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+            Home
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Live query on <code className="rounded bg-muted px-1">db.collections.presence</code>{" "}
-        (StreamDB). Mutations via <code className="rounded bg-muted px-1">db.actions</code>. Open
-        two tabs to verify realtime.
+        Live query on <code className="rounded bg-muted px-1">db.collections.presence</code> (
+        <code className="rounded bg-muted px-1">testm</code>). Mutations via{" "}
+        <code className="rounded bg-muted px-1">db.actions</code>.
       </p>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border border-border/60 p-3 text-xs">

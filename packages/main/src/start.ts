@@ -1,5 +1,5 @@
 import "zod/compile";
-import { createMiddleware, createStart } from "@tanstack/react-start";
+import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
 
 const CANONICAL_HOST = "app.monrep.com";
 
@@ -11,6 +11,8 @@ const FRAME_ANCESTORS = [
   "https://app.monrep.com",
   "http://localhost:5273",
   "http://127.0.0.1:5273",
+  "https://localhost:5273",
+  "https://127.0.0.1:5273",
 ].join(" ");
 
 const SECURITY_HEADERS = [
@@ -24,6 +26,10 @@ const SECURITY_HEADERS = [
   ["Content-Security-Policy", `frame-ancestors ${FRAME_ANCESTORS}`],
 ] as const;
 
+const csrfMiddleware = createCsrfMiddleware({
+  filter: (ctx) => ctx.handlerType === "serverFn",
+});
+
 const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => {
   const result = await next();
 
@@ -36,7 +42,7 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => 
 
 export const startInstance = createStart(() => {
   return {
-    requestMiddleware: [securityHeadersMiddleware],
+    requestMiddleware: [csrfMiddleware, securityHeadersMiddleware],
   };
 });
 

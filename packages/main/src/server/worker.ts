@@ -1,24 +1,44 @@
 import { StreamObject } from "@durable-streams/server-cloudflare";
 import { isStreamsPath } from "@monrep/db/stream/paths";
-import { publicStreamsHandler } from "@monrep/db/stream/streams.server";
+import { createPublicStreamsHandler } from "@monrep/db/stream/streams.server";
 import startHandler from "@tanstack/react-start/server-entry";
+import { AuthEnvSchema } from "./auth/schemas";
+import { resolveSessionFromRequest } from "./auth/session";
 
 /*
- * Worker entry (minimal — Vite/wrangler introspect exports):
- * - Browser live (long-poll by default, or SSE when the shape says so) → public `/_streams/...`
- *   via publicStreamsHandler (unbuffered DO response).
- * - Everything else → TanStack Start.
- *
- * Writes go through the generated StreamDB actions on this same route.
+ * Worker entry:
+ * - `/_streams/*` → Durable Streams (session cookie)
+ * - Everything else → TanStack Start
  */
 
 export { StreamObject };
 
+type StreamsEnv = Env & {
+  ADMIN_EMAIL?: string;
+  ADMIN_PASSWORD?: string;
+  SESSION_SECRET?: string;
+};
+
+const streamsHandler = createPublicStreamsHandler<StreamsEnv>({
+  auth: async (request, env) => {
+    const parsed = AuthEnvSchema.pick({ SESSION_SECRET: true }).safeParse(env);
+    if (!parsed.success) {
+      return new Response("Server misconfigured", { status: 500 });
+    }
+    const { SESSION_SECRET: secret } = parsed.data;
+
+    const session = await resolveSessionFromRequest(request, secret);
+    if (session) return undefined;
+
+    return new Response("Unauthorized", { status: 401 });
+  },
+});
+
 export default {
-  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: StreamsEnv, _ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
     if (isStreamsPath(pathname)) {
-      return publicStreamsHandler(request, env);
+      return streamsHandler(request, env);
     }
     return startHandler.fetch(request);
   },

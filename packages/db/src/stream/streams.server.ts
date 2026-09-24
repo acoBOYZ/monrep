@@ -1,4 +1,7 @@
 import { createStreamsHandler } from "@durable-streams/server-cloudflare";
+import type { DefaultAuthEnv, StreamsHandlerOptions } from "@durable-streams/server-cloudflare";
 
-/** Public Worker routes: optional AUTH_TOKEN bearer auth (open when unset). */
-export const publicStreamsHandler = createStreamsHandler();
+/** Worker routes for `/_streams/*`. Pass `auth` to gate browser/server access. */
+export const createPublicStreamsHandler = <E extends DefaultAuthEnv = DefaultAuthEnv>(
+  options?: StreamsHandlerOptions<E>,
+) => createStreamsHandler(options);

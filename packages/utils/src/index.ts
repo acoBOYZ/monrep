@@ -1,4 +1,11 @@
-export { toBase64, fromBase64, base64ToBytes } from "./base64";
+export {
+  base64ToBytes,
+  bytesToBase64,
+  fromBase64,
+  fromBase64Url,
+  toBase64,
+  toBase64Url,
+} from "./base64";
 export { toBigIntSafe, toNumberSafe, type IntLike } from "./bigint";
 export { cn } from "./cn";
 export { filterMap } from "./filterMap";
@@ -26,4 +33,5 @@ export {
 } from "./search";
 export { timeLogger } from "./timeLogger";
 export { toArray } from "./toArray";
+export { tryCatch } from "./tryCatch";
 export { slugify, slugifySoft, createSlugifier } from "./url";

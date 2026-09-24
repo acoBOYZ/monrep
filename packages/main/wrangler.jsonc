@@ -30,5 +30,9 @@
   "dev": {
     "inspector_port": 9329,
     "local_protocol": "https"
+  },
+  // Overridden by `.dev.vars` locally / secrets in prod.
+  "vars": {
+    "ADMIN_EMAIL": "admin@monrep.com"
   }
 }
