@@ -3,7 +3,7 @@
 tanstackIntent:
   - id: "@monrep/agent-skills#react-defaults"
     run: "bunx @tanstack/intent@latest load @monrep/agent-skills#react-defaults"
-    for: "Default React and TypeScript standards for this monorepo—architecture, lean size budgets, reuse-first workflow, useLiveQueries, accessibility, and quality gates. Use for any React/TS UI work, refactors, new components or hooks, or when the user mentions react-development, react-lean, or pre-commit checks."
+    for: "Default React and TypeScript standards for this monorepo—architecture, lean size budgets, reuse-first workflow, useLiveQueries, accessibility, import house style (separate type imports; fmt + lint --fix), and quality gates. Use for any React/TS UI work, refactors, new components or hooks, or when the user mentions react-development, react-lean, or pre-commit checks."
   - id: "@monrep/agent-skills#react-doctor"
     run: "bunx @tanstack/intent@latest load @monrep/agent-skills#react-doctor"
     for: "Run after making React changes to catch issues early. Use when reviewing code, finishing a feature, or fixing bugs in a React project."
@@ -15,7 +15,7 @@ tanstackIntent:
     for: "Electric/codegen pipeline (when restored)—schemas, migrate, codegen, collections under packages/db (@monrep/db). Load before editing **/*.sql, packages/db/**, or codegen scripts. Not for pure UI polish; use #tanstack-db for live-query API details after the hub."
   - id: "@monrep/agent-skills#oxfmt"
     run: "bunx @tanstack/intent@latest load @monrep/agent-skills#oxfmt"
-    for: "Oxfmt polish only—readable formatting via turbo fmt/fmtcheck. Use after edits, before commit, or when the user mentions fmt, fmtcheck, oxfmt, polish, or formatting. Not a substitute for typecheck, lint, or react-doctor."
+    for: "Oxfmt polish plus import house style—fmt/fmtcheck, statement sort via .oxfmtrc sortImports, then lint --fix for named members. Use after edits, before commit, or when the user mentions fmt, fmtcheck, oxfmt, polish, formatting, or import order. Not a substitute for typecheck or react-doctor."
   - id: "@monrep/agent-skills#rust-defaults"
     run: "bunx @tanstack/intent@latest load @monrep/agent-skills#rust-defaults"
     for: "Default Rust quality gates for all first-party Rust crates in this monorepo (e.g. packages/whatsapp-rust, services/voice, future crates)—rustfmt, clippy, cargo check, miri, doctor:rust (rust-doctor CLI). Use for any Cargo.toml/src under those crates, voip/voice, or when the user mentions rust, rustwa, voice, clippy, doctor:rust, or rust-doctor. Never edit upstream/. Never run package build as a quality gate."
@@ -68,6 +68,18 @@ tanstackIntent:
 - Polish only (`oxfmt`). Root: `bun run fmtcheck` (what would change) then `bun run fmt` (`turbo`, all packages in parallel).
 - One package: `bun run --cwd <package> fmtcheck` / `bun run --cwd <package> fmt` (or `bun run fmt` inside that package).
 - Do **not** skip polish; do **not** rewrite root `fmt` / `fmtcheck`; do not invent one-off format commands that bypass package scripts.
+
+## imports / polish (hard)
+
+- Always use **top-level** `import type { … }` — never inline `import { type X }`. Matches `.oxlintrc` `prefer-type-imports` + `prefer-top-level`.
+- When adding imports, follow house order **while writing** so fmt/lint stay clean:
+  - **Statements / groups:** oxfmt `sortImports` (root [`.oxfmtrc.jsonc`](.oxfmtrc.jsonc)).
+  - **Named members `{ … }`:** case-sensitive alphanumeric — **uppercase wins** (e.g. `STREAM_MODULE_IDS, acquireStreamModule, releaseStreamModule`). Enforced by oxlint `eslint/sort-imports` (`ignoreDeclarationSort: true`, `ignoreCase: false`).
+- After TS/TSX edits (scoped to the package you changed):
+  1. `bun run --cwd <package> fmt`
+  2. `bun run --cwd <package> lint -- --fix` (member reorder lives here — oxfmt does **not** sort `{ … }` members)
+- Do **not** fmt or lint-fix `**/*.gen.ts` / `**/*.gen.*` — leave generated alone (already ignored / rule-off in configs).
+- Do not invent one-off format/lint commands that bypass package scripts. Full polish detail: load `@monrep/agent-skills#oxfmt`.
 
 ## react-doctor (hard)
 
