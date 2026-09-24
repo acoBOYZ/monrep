@@ -114,8 +114,11 @@ export const createUpsertStreamAction = <TValue extends object>(options: {
         updateGens,
       });
       if (prepared.isUpdate) {
+        // Partial → live, then live → payload so mutationFn appends a full row
+        // (StreamDB replaces on upsert; omitted audits like createdAt must survive).
         collection.update(prepared.key, (draft) => {
           Object.assign(draft, prepared.value);
+          Object.assign(prepared.value, draft);
         });
         return;
       }
