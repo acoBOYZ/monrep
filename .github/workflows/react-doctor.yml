@@ -11,8 +11,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   # Scans `main` on every push to track the health-score trend and catch regressions that slipped past PR review.
-  push:
-    branches: ["main"]
+  # push:
+  #   branches: ["main"]
 
 permissions:
   contents: read
