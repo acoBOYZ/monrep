@@ -2,13 +2,8 @@ import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-r
 import appCss from "../tailwind.css?url";
 import type { ReactNode } from "react";
 import { App } from "@/App";
-import { getRootDehydratedDbState } from "@/server/getRootDehydratedDbState";
 
 export const Route = createRootRoute({
-  loader: async () => {
-    const dehydratedDbState = await getRootDehydratedDbState();
-    return { dehydratedDbState };
-  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -29,10 +24,8 @@ export const Route = createRootRoute({
 });
 
 function RootComponent() {
-  const { dehydratedDbState } = Route.useLoaderData();
-
   return (
-    <App dehydratedDbState={dehydratedDbState}>
+    <App>
       <Outlet />
     </App>
   );

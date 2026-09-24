@@ -42,8 +42,14 @@ pnpm-debug.log*
 .tree
 trace
 
-# secrets
+# secrets / local TLS (Vite HTTPS — see bun run setup:dev)
 *.crt
+certs/*.key
+certs/*.csr
+certs/*.srl
+certs/*.pem
+certs/*.cnf
+!certs/.gitkeep
 
 # Bun
 .bundle

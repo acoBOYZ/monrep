@@ -14,16 +14,16 @@ Package: [`packages/db`](./) · imports: `@monrep/db`, `@monrep/db/do`, `@monrep
 one file in src/do/     = one stream module (one URL, one connection)
   └── collections.*     = many shapes on that same stream
         ↓ codegen (registry)
-  doCollection(mod,name) = SSR + useLiveQuery descriptor
-  createDoStreamDB       = transport + upsert/delete actions
+  createDoStreamDB      = transport + upsert/delete actions
         ↓ browser
   StreamDbHost          = acquire modules → streamDbStore
-  DbProvider / hydrate  = SSR snapshot on shared descriptors
-  useLiveQuery(desc)    = paint hydrate → sync mirrors StreamDB → handoff
-  useStreamDb(id)       = actions (mutations) once stream ready
+  useStreamDb(id)       = db.collections + db.actions once ready
+  useLiveQuery(db.col)  = live read on StreamDB collections directly
 ```
 
 Example: `session.ts` can hold `presence`, `typing`, `users` together. Same live transport, same offset, same connection.
+
+There is **no** second TanStack mirror (`doCollection` / `createDoCollectionSync`). StreamDB already materializes TanStack collections — query those.
 
 ---
 
@@ -34,7 +34,7 @@ Example: `session.ts` can hold `presence`, `typing`, `users` together. Same live
 | [`src/do/*.ts`](./src/do/) | Hand-authored modules (`createDoModule`) — **edit these** |
 | [`src/do/create-do-module.gen.ts`](./src/do/create-do-module.gen.ts) | Factory (from codegen template) |
 | [`src/do/index.gen.ts`](./src/do/index.gen.ts) | `TDoModuleId`, `DO_MODULES`, `*DoSchema`, `DO_MODULE_LIVE` / `PERSIST` |
-| [`src/collections/collections.do.gen.ts`](./src/collections/collections.do.gen.ts) | Registry: `doCollection(...)` + factory map |
+| [`src/collections/collections.do.gen.ts`](./src/collections/collections.do.gen.ts) | `DO_MODULE_DB_FACTORIES` + per-module `create*StreamDB` |
 | [`src/types/index.gen.ts`](./src/types/index.gen.ts) | `TPresenceDo`, … |
 | [`src/stream/`](./src/stream/) | Host, acquire, paths, Worker handler |
 
@@ -80,23 +80,24 @@ export default createDoModule("session")({
     typing: doTable({
       type: "typing",
       primaryKey: "userId",
+      indexes: ["userId"],
       schema: {
         userId: z.string(),
+        isTyping: z.boolean(),
+        updatedAt: z.string().optional(),
       },
+      onInsert: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
+      onUpdate: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
     }),
   },
 });
 ```
 
-Flags (`streamLive`, `streamEpoch`, `streamPersist`) sit **once** on the module. Adding another shape = another key under `collections`, not another file with the same module id.
-
-Then:
-
-```bash
-bun run codegen
-```
-
-You get things like `PresenceDoSchema`, `TPresenceDo`, `DO_MODULE_DB_FACTORIES["session"]`, actions `upsertPresence` / `deletePresence`.
+Then: `bun run codegen`.
 
 ---
 
@@ -105,15 +106,15 @@ You get things like `PresenceDoSchema`, `TPresenceDo`, `DO_MODULE_DB_FACTORIES["
 Once at the app root (see `packages/main`):
 
 ```tsx
-// packages/main/src/routes/__root.tsx
+// packages/main/src/App.tsx
 import { StreamDbHost } from "@monrep/db/stream";
 
-function RootComponent() {
+export function App({ children }) {
   return (
-    <Fragment>
-      <Outlet />
+    <>
+      {children}
       <StreamDbHost />
-    <Fragment>
+    </>
   );
 }
 ```
@@ -135,25 +136,27 @@ Browser URL: `origin/_streams/<moduleId>` ([`browserStreamUrl`](./src/stream/pat
 
 ## Client: read + write
 
+Query StreamDB collections directly. Disable the live query until `db` is ready (`return null` from the query factory).
+
 ```tsx
-import { sessionPresenceCollection } from "@monrep/db/collections";
 import { useStreamDb } from "@monrep/db/stream";
 import { SchemaValidationError, useLiveQuery } from "@tanstack/react-db";
 
 function PresencePlayground() {
   const { db, isReady } = useStreamDb("session");
 
-  // Shared descriptor → SSR hydrate paint, then StreamDB mirror handoff
   const live = useLiveQuery({
-    query: (q) =>
-      q.from({ p: sessionPresenceCollection }).orderBy(({ p }) => p.userId, "asc"),
+    query: (q) => {
+      if (!db) return null;
+      return q.from({ p: db.collections.presence }).orderBy(({ p }) => p.userId, "asc");
+    },
   });
 
   const insert = () => {
     if (!db) return;
     // Omit audits — `onInsert` fills createdAt/updatedAt (and userId if empty).
     // Stream upserts parse the table schema and throw `SchemaValidationError` on failure
-    // (catch + optional `toast.error` — see playground).
+    // (catch + optional `toast.error` — see playground / useSafeMutation).
     try {
       db.actions.upsertPresence({ userId: "", name: "Ada" });
     } catch (error) {
@@ -176,6 +179,24 @@ function PresencePlayground() {
 Full playground: [`packages/main/src/routes/playground/presence.tsx`](../main/src/routes/playground/presence.tsx).
 
 Open two tabs — both share the same stream; upserts show up live.
+
+---
+
+## SSR
+
+**Stream modules: no dehydrate.** First paint waits until `useStreamDb` is ready, then `useLiveQuery` on `db.collections.*`. That is intentional — lean and correct for ephemeral realtime (presence, typing).
+
+TanStack SSR (`dehydrate` / `HydrationBoundary`) only applies to collections owned by a request/browser `DbClient` via `collectionOptions` descriptors. StreamDB instances are not on that client, so hydrate cannot paint the same live query.
+
+**Do not** reintroduce a StreamDB → TanStack mirror sync (`doCollection` / `createDoCollectionSync`). That dual path caused `DuplicateKeySyncError`.
+
+**When SSR is worth building:** the first collection that is truly `collectionOptions` on `DbClient` (likely Electric/SQL):
+
+1. Per-request `new DbClient()` → `preload()` or `preloadLiveQuery(...)` → `dehydrate()`
+2. Browser: `DbProvider` + `HydrationBoundary` (app already keeps an empty `DbClient` for this)
+3. Optional later: `@tanstack/react-router-with-db` + `useLiveSuspenseQuery` for Start streaming
+
+A stream collection can join that recipe only if **reads** move onto the same descriptor (single owner) — not a second forever-sync mirror.
 
 ---
 

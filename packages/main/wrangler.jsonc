@@ -28,6 +28,7 @@
     }
   },
   "dev": {
-    "inspector_port": 9329
+    "inspector_port": 9329,
+    "local_protocol": "https"
   }
 }

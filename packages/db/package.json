@@ -8,7 +8,6 @@
     ".": "./src/index.ts",
     "./do": "./src/do/index.ts",
     "./collections": "./src/collections/index.ts",
-    "./hydration": "./src/hydration/index.ts",
     "./types": "./src/types/index.ts",
     "./stream": "./src/stream/index.ts",
     "./stream/paths": "./src/stream/paths.ts",

@@ -20,9 +20,6 @@ type CollectionEntry = {
 const actionName = (op: "upsert" | "delete", collectionName: string): string =>
   `${op}${pascal(collectionName)}`;
 
-const collectionOptionsExportName = (moduleId: string, collectionName: string): string =>
-  `${moduleId}${pascal(collectionName)}Collection`;
-
 export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): string {
   const byModule = new Map<string, Array<CollectionEntry>>();
   for (const entry of entries) {
@@ -33,26 +30,6 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
 
   const moduleIds = [...byModule.keys()].sort((a, b) => a.localeCompare(b));
   const sharedTypeNames = entries.map((c) => `T${c.exportName}Do`);
-
-  const collectionOptionBlocks = entries.flatMap((c) => {
-    const exportName = collectionOptionsExportName(c.streamModule, c.name);
-    return [`export const ${exportName} = doCollection("${c.streamModule}", "${c.name}");`];
-  });
-
-  const doCollectionOptionsMap = [
-    "export const DO_COLLECTION_OPTIONS = {",
-    ...moduleIds.flatMap((moduleId) => {
-      const moduleEntries = byModule.get(moduleId)!;
-      return [
-        `  "${moduleId}": {`,
-        ...moduleEntries.map(
-          (c) => `    ${c.name}: ${collectionOptionsExportName(moduleId, c.name)},`,
-        ),
-        "  },",
-      ];
-    }),
-    "} as const;",
-  ];
 
   const factoryBlocks = moduleIds.flatMap((moduleId) => {
     const moduleEntries = byModule.get(moduleId)!;
@@ -89,32 +66,13 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
 
   const sharedTypeImports = ["TDoModuleId", ...sharedTypeNames];
 
-  const collectionExportNames = entries.map((c) =>
-    collectionOptionsExportName(c.streamModule, c.name),
-  );
-
-  const materializeCases = entries.map((c) => {
-    const exportName = collectionOptionsExportName(c.streamModule, c.name);
-    return `    case ${exportName}.id: return materializeDoOne(dbClient, ${exportName}, ensure, "${c.streamModule}", (db) => db.collections.${c.name});`;
-  });
-
-  const anyDoCollectionOptionsType =
-    collectionExportNames.length === 0
-      ? "export type AnyDoCollectionOptions = never;"
-      : `export type AnyDoCollectionOptions =\n${collectionExportNames.map((n) => `  | typeof ${n}`).join("\n")};`;
-
   return [
-    'import { doCollection } from "./stream/doCollection";',
     'import { createDoStreamDB } from "./stream/createDoStreamDB";',
-    'import { materializeDoOne } from "./stream/materializeDoOne";',
     'import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";',
     'import { DO_MODULES } from "../do";',
     'import type { ActionDefinition } from "@durable-streams/state/db";',
-    'import type { DbClient } from "@tanstack/react-db";',
     `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "../types";`,
-    'import type { CreateDoModuleDbOpts, DoStreamDb } from "./stream/types";',
-    "",
-    ...collectionOptionBlocks,
+    'import type { CreateDoModuleDbOpts } from "./stream/types";',
     "",
     ...factoryBlocks,
     "const DO_MODULE_DB_FACTORY_IMPL = {",
@@ -124,22 +82,6 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
     "export const DO_MODULE_DB_FACTORIES: {",
     "  [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => ReturnType<(typeof DO_MODULE_DB_FACTORY_IMPL)[TModule]>;",
     "} = DO_MODULE_DB_FACTORY_IMPL;",
-    "",
-    "export async function materializeDoCollection(",
-    "  dbClient: DbClient,",
-    "  options: AnyDoCollectionOptions,",
-    "  ensure: <TModule extends TDoModuleId>(moduleId: TModule) => Promise<DoStreamDb<TModule>>,",
-    "): Promise<void> {",
-    "  switch (options.id) {",
-    ...materializeCases,
-    "  }",
-    "}",
-    "",
-    ...doCollectionOptionsMap,
-    "",
-    "export type TDoCollectionOptions = typeof DO_COLLECTION_OPTIONS;",
-    "",
-    anyDoCollectionOptionsType,
     "",
     "export type TDoModuleActionDefinitions = {",
     ...actionDefinitionBlocks,

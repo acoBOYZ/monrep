@@ -1,29 +1,48 @@
-import { resolve } from 'node:path';
-import react, { reactCompilerPreset } from '@vitejs/plugin-react';
-import babel from '@rolldown/plugin-babel'
-import { tanstackStart } from '@tanstack/react-start/plugin/vite';
-import { cloudflare } from '@cloudflare/vite-plugin';
-import { analyzer } from 'vite-bundle-analyzer';
-import { defineConfig } from 'vite';
-import tailwindcss from '@tailwindcss/vite';
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { cloudflare } from "@cloudflare/vite-plugin";
+import babel from "@rolldown/plugin-babel";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+import { analyzer } from "vite-bundle-analyzer";
+import type { ServerOptions as HttpsServerOptions } from "node:https";
 
 const DOMAIN = "https://rai.monrep.com";
 
+const CERT_DIR = resolve(import.meta.dirname, "../../certs");
+const VITE_KEY = resolve(CERT_DIR, "vite-dev.key");
+const VITE_CERT = resolve(CERT_DIR, "vite-dev.crt");
+
+function resolveDevHttps(): HttpsServerOptions | undefined {
+  if (!existsSync(VITE_KEY) || !existsSync(VITE_CERT)) {
+    console.warn("[vite] missing certs/vite-dev.{key,crt} — HTTP only. Run: bun run setup:dev");
+    return undefined;
+  }
+  return {
+    key: readFileSync(VITE_KEY),
+    cert: readFileSync(VITE_CERT),
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
-  const isDebug = mode === 'debug' || mode === 'development';
-  const isCompiler = process.env.REACT_COMPILER === 'true';
+  const isDebug = mode === "debug" || mode === "development";
+  const isCompiler = process.env.REACT_COMPILER === "true";
   const useOxc = !isProduction && isCompiler;
   // TODO: Remove it when oxc native react compiler is stable.
   const useBabel = isProduction && isCompiler;
+  const https = !isProduction ? resolveDevHttps() : undefined;
 
   return {
     server: {
       port: 5274,
+      ...(https ? { https } : {}),
     },
     plugins: [
       cloudflare({
-        viteEnvironment: { name: 'ssr' },
+        viteEnvironment: { name: "ssr" },
         inspectorPort: false,
       }),
       tailwindcss(),
@@ -34,14 +53,14 @@ export default defineConfig(({ mode }) => {
         },
         pages: [
           {
-            path: '/',
+            path: "/",
             sitemap: {
-              changefreq: 'monthly',
+              changefreq: "monthly",
               priority: 1,
               alternateRefs: [
-                { hreflang: 'en', href: DOMAIN },
-                { hreflang: 'tr', href: DOMAIN },
-                { hreflang: 'x-default', href: DOMAIN },
+                { hreflang: "en", href: DOMAIN },
+                { hreflang: "tr", href: DOMAIN },
+                { hreflang: "x-default", href: DOMAIN },
               ],
             },
           },
@@ -49,12 +68,12 @@ export default defineConfig(({ mode }) => {
       }),
       react({ compiler: useOxc }),
       useBabel && babel({ presets: [reactCompilerPreset()] }),
-      isDebug && analyzer({ analyzerMode: 'static', openAnalyzer: true }),
+      isDebug && analyzer({ analyzerMode: "static", openAnalyzer: true }),
     ],
     resolve: {
       tsconfigPaths: true,
       alias: {
-        tslib: 'tslib/tslib.es6.js',
+        tslib: "tslib/tslib.es6.js",
         "@": resolve(import.meta.dirname, "./src"),
         "@monrep/db": resolve(import.meta.dirname, "../db/src"),
         "@monrep/hooks": resolve(import.meta.dirname, "../hooks/src"),
@@ -62,5 +81,5 @@ export default defineConfig(({ mode }) => {
         "@monrep/utils": resolve(import.meta.dirname, "../utils/src"),
       },
     },
-  }
+  };
 });
