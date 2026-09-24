@@ -1,0 +1,53 @@
+name: Bug report
+description: Something is broken or unexpected
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue. Search existing issues first.
+        Prefer a minimal repro (public repo or StackBlitz) when you can.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: Clear, concise description of what went wrong.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. …
+        2. …
+        3. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: repro
+    attributes:
+      label: Repro link (optional)
+      description: Public git repo or StackBlitz URL if available.
+      placeholder: https://…
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      value: |
+        - Package / area: [e.g. @monrep/main, streams, auth]
+        - OS: [e.g. macOS]
+        - Browser (if UI): [e.g. Chrome 131]
+        - Bun / Node: [e.g. bun 1.4.2]
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Logs, screenshots, or related PRs.

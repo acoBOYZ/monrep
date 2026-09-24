@@ -1,0 +1,29 @@
+name: Feature request
+description: Propose an improvement or new capability
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the problem you want solved before the solution.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or missing today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How you imagine it working.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
