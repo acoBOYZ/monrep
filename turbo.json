@@ -140,7 +140,7 @@
       "persistent": false
     },
     "fmt": {
-      "cache": false,
+      "cache": true,
       "inputs": [
         "src/**/*.{ts,tsx,css,scss,md}",
         ".oxfmtrc.jsonc",
