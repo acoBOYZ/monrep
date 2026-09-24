@@ -49,28 +49,41 @@ File name **must** match the module id (`session.ts` → `"session"`).
 ```ts
 // packages/db/src/do/session.ts
 import { z } from "zod";
-import { createDoModule } from "./create-do-module.gen";
+import { createDoModule, doTable } from "./create-do-module.gen";
 
 export default createDoModule("session")({
   streamLive: "sse",          // or omit → "long-poll"
   streamPersist: false,       // true → sessionStorage resume across reloads
   // streamEpoch: "utc-hour", // optional rolling stream id window
   collections: {
-    presence: {
+    presence: doTable({
       type: "presence",
       primaryKey: "userId",
+      indexes: ["userId"],
       schema: {
         userId: z.string(),
         name: z.string().optional(),
+        createdAt: z.string().optional(),
+        updatedAt: z.string().optional(),
       },
-    },
-    typing: {
+      // Keys must be schema fields; values are generator refs (not called here).
+      // Fills only when the caller left the field unset (`undefined` / `null` / `""`).
+      onInsert: ({ ctx }) => ({
+        userId: ctx.ulid,
+        createdAt: ctx.now,
+        updatedAt: ctx.now,
+      }),
+      onUpdate: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
+    }),
+    typing: doTable({
       type: "typing",
       primaryKey: "userId",
       schema: {
         userId: z.string(),
       },
-    },
+    }),
   },
 });
 ```
@@ -125,7 +138,7 @@ Browser URL: `origin/_streams/<moduleId>` ([`browserStreamUrl`](./src/stream/pat
 ```tsx
 import { sessionPresenceCollection } from "@monrep/db/collections";
 import { useStreamDb } from "@monrep/db/stream";
-import { useLiveQuery } from "@tanstack/react-db";
+import { SchemaValidationError, useLiveQuery } from "@tanstack/react-db";
 
 function PresencePlayground() {
   const { db, isReady } = useStreamDb("session");
@@ -138,7 +151,17 @@ function PresencePlayground() {
 
   const insert = () => {
     if (!db) return;
-    void db.actions.upsertPresence({ userId: "ada", name: "Ada" });
+    // Omit audits — `onInsert` fills createdAt/updatedAt (and userId if empty).
+    // Stream upserts parse the table schema and throw `SchemaValidationError` on failure
+    // (catch + optional `toast.error` — see playground).
+    try {
+      db.actions.upsertPresence({ userId: "", name: "Ada" });
+    } catch (error) {
+      if (error instanceof SchemaValidationError) {
+        // toast.error(error.message)
+        console.error(error);
+      }
+    }
   };
 
   const remove = (userId: string) => {
@@ -167,7 +190,7 @@ Open two tabs — both share the same stream; upserts show up live.
 | **`streamPersist: true`** | Resume key `stream-resume:<moduleId>`. Survives reload in that tab. Only turn on when you need it — less storage chatter, clearer privacy. |
 | **In-tab offset always** | Even without persist, the live consumer advances offset for the lifetime of the session. |
 | **Host acquires all modules** | Today every module opens when the app mounts. Keep the module list small until we add lazy acquire. |
-| **Actions append events** | Upsert/delete append to the stream; StreamDB materializes collections. Not a replacement for huge analytical history — use epochs / GC when streams should roll. |
+| **Actions append events** | Upsert/delete append to the stream; StreamDB materializes collections. `onInsert` / `onUpdate` gens fill unset fields (shared `applyDoWriteFields` — same helper future RPC middleware will call). |
 
 Rule of thumb for the control plane: **few modules**, **many collections inside**, SSE only where the UI is actually live.
 

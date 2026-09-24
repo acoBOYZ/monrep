@@ -25,6 +25,7 @@
     "@durable-streams/client": "^0.2.7",
     "@durable-streams/server-cloudflare": "^0.1.1",
     "@durable-streams/state": "^0.3.2",
+    "@monrep/utils": "workspace:^",
     "@tanstack/react-db": "^0.4.1",
     "@tanstack/react-store": "^0.11.1",
     "zod": "^4.6.5"

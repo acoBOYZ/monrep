@@ -175,11 +175,12 @@ export function listCollectionNames(collectionsBody: string): Array<string> {
 }
 
 function collectionBodyFor(collectionsBody: string, name: string): string | null {
-  const re = new RegExp(`(?:^|[\\s,{])${name}\\s*:\\s*\\{`);
+  // Bare `{ ... }` or schema-helper wrap: `doTable({ ... })`.
+  const re = new RegExp(`(?:^|[\\s,{])${name}\\s*:\\s*(?:doTable\\s*\\(\\s*)?\\{`);
   const hit = re.exec(collectionsBody);
   if (!hit) return null;
-  const open = collectionsBody.indexOf("{", hit.index);
-  if (open < 0) return null;
+  const open = hit.index + hit[0].length - 1;
+  if (collectionsBody[open] !== "{") return null;
   return sliceBalancedObject(collectionsBody, open);
 }
 

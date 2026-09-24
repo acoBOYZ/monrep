@@ -82,5 +82,5 @@ MIT — see `package.json`.
 
 ---
 
-Built by [Ahmet Cevdet Öztürk](https://github.com/monrep).  
+Built by [Ahmet Cevdet Öztürk](https://github.com/acoBOYZ).  
 Questions or ideas → open an issue, or say hi in a PR.

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { StreamDbHost } from "@monrep/db/stream";
-import { SmartPopoverHost, TooltipHost } from "@monrep/ui/base";
+import { SmartPopoverHost, TooltipHost, Toaster } from "@monrep/ui/base";
 import { DbClient, DbProvider, HydrationBoundary } from "@tanstack/react-db";
 import type { ReactNode } from "react";
 import type { DehydratedDbState } from "@tanstack/react-db";
@@ -22,6 +22,7 @@ export function App({ dehydratedDbState, children }: Props) {
         <StreamDbHost />
         <SmartPopoverHost />
         <TooltipHost />
+        <Toaster />
       </HydrationBoundary>
     </DbProvider>
   );

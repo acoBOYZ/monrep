@@ -1,25 +1,32 @@
 import { createStateSchema, createStreamDB } from "@durable-streams/state/db";
 import { DO_MODULE_LIVE, DO_MODULE_STATE } from "../../do";
 import type { ActionDefinition, StateSchema, StreamDB } from "@durable-streams/state/db";
+import type { TDoModuleId } from "../../types";
 import type { CreateDoModuleDbOpts } from "./types";
 
-type SessionState = (typeof DO_MODULE_STATE)["session"];
+type ModuleState<TModule extends TDoModuleId> = (typeof DO_MODULE_STATE)[TModule];
 
 /**
  * StreamDB factory. Gen supplies a typed actions callback.
  */
-export const createDoStreamDB = <TActions extends Record<string, ActionDefinition>>(
-  moduleId: "session",
+export const createDoStreamDB = <
+  TModule extends TDoModuleId,
+  TActions extends Record<string, ActionDefinition>,
+>(
+  moduleId: TModule,
   opts: CreateDoModuleDbOpts,
-  actions: (ctx: { db: StreamDB<SessionState>; state: StateSchema<SessionState> }) => TActions,
+  actions: (ctx: {
+    db: StreamDB<ModuleState<TModule>>;
+    state: StateSchema<ModuleState<TModule>>;
+  }) => TActions,
 ) => {
-  const state = createStateSchema(DO_MODULE_STATE.session);
+  const state = createStateSchema(DO_MODULE_STATE[moduleId]) as StateSchema<ModuleState<TModule>>;
   return createStreamDB({
     stream: opts.stream,
     onBatch: opts.onBatch,
     onBeforeBatch: opts.onBeforeBatch,
     state,
     live: opts.live ?? DO_MODULE_LIVE[moduleId],
-    actions: ({ db }) => actions({ db, state }),
+    actions: ({ db }) => actions({ db: db as StreamDB<ModuleState<TModule>>, state }),
   });
 };
