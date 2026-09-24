@@ -9,13 +9,10 @@
 //
 // Edit instead: DO schema files under packages/db/src/do/
 
-import { doCollection } from "./stream/doCollection";
 import { createDoStreamDB } from "./stream/createDoStreamDB";
-import { materializeDoOne } from "./stream/materializeDoOne";
 import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";
 import { DO_MODULES } from "../do";
 import type { ActionDefinition } from "@durable-streams/state/db";
-import type { DbClient } from "@tanstack/react-db";
 import type {
 	TDoModuleId,
 	TAuditDo,
@@ -23,12 +20,7 @@ import type {
 	TTypingDo,
 	TUsersDo
 } from "../types";
-import type { CreateDoModuleDbOpts, DoStreamDb } from "./stream/types";
-
-export const auditAuditCollection = doCollection("audit", "audit");
-export const sessionPresenceCollection = doCollection("session", "presence");
-export const sessionTypingCollection = doCollection("session", "typing");
-export const sessionUsersCollection = doCollection("session", "users");
+import type { CreateDoModuleDbOpts } from "./stream/types";
 
 const createAuditStreamDB = (opts: CreateDoModuleDbOpts) =>
   createDoStreamDB("audit", opts, ({ db, state }) => ({
@@ -54,38 +46,6 @@ const DO_MODULE_DB_FACTORY_IMPL = {
 export const DO_MODULE_DB_FACTORIES: {
   [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => ReturnType<(typeof DO_MODULE_DB_FACTORY_IMPL)[TModule]>;
 } = DO_MODULE_DB_FACTORY_IMPL;
-
-export async function materializeDoCollection(
-  dbClient: DbClient,
-  options: AnyDoCollectionOptions,
-  ensure: <TModule extends TDoModuleId>(moduleId: TModule) => Promise<DoStreamDb<TModule>>,
-): Promise<void> {
-  switch (options.id) {
-    case auditAuditCollection.id: return materializeDoOne(dbClient, auditAuditCollection, ensure, "audit", (db) => db.collections.audit);
-    case sessionPresenceCollection.id: return materializeDoOne(dbClient, sessionPresenceCollection, ensure, "session", (db) => db.collections.presence);
-    case sessionTypingCollection.id: return materializeDoOne(dbClient, sessionTypingCollection, ensure, "session", (db) => db.collections.typing);
-    case sessionUsersCollection.id: return materializeDoOne(dbClient, sessionUsersCollection, ensure, "session", (db) => db.collections.users);
-  }
-}
-
-export const DO_COLLECTION_OPTIONS = {
-  "audit": {
-    audit: auditAuditCollection,
-  },
-  "session": {
-    presence: sessionPresenceCollection,
-    typing: sessionTypingCollection,
-    users: sessionUsersCollection,
-  },
-} as const;
-
-export type TDoCollectionOptions = typeof DO_COLLECTION_OPTIONS;
-
-export type AnyDoCollectionOptions =
-  | typeof auditAuditCollection
-  | typeof sessionPresenceCollection
-  | typeof sessionTypingCollection
-  | typeof sessionUsersCollection;
 
 export type TDoModuleActionDefinitions = {
   "audit": {

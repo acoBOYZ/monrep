@@ -1,29 +1,25 @@
 import { useState } from "react";
 import { StreamDbHost } from "@monrep/db/stream";
 import { SmartPopoverHost, Toaster, TooltipHost } from "@monrep/ui/base";
-import { DbClient, DbProvider, HydrationBoundary } from "@tanstack/react-db";
+import { DbClient, DbProvider } from "@tanstack/react-db";
 import type { ReactNode } from "react";
-import type { DehydratedDbState } from "@tanstack/react-db";
 
 type Props = {
-  dehydratedDbState: DehydratedDbState;
   children: ReactNode;
 };
 
-export function App({ dehydratedDbState, children }: Props) {
+export function App({ children }: Props) {
   const [dbClient] = useState(() => new DbClient());
 
   return (
     <DbProvider client={dbClient}>
-      <HydrationBoundary state={dehydratedDbState}>
-        {children}
+      {children}
 
-        {/* Hosts */}
-        <StreamDbHost />
-        <SmartPopoverHost />
-        <TooltipHost />
-        <Toaster />
-      </HydrationBoundary>
+      {/* Hosts */}
+      <StreamDbHost />
+      <SmartPopoverHost />
+      <TooltipHost />
+      <Toaster />
     </DbProvider>
   );
 }

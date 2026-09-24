@@ -8,11 +8,10 @@ export * from "./collections.do.gen";
 export { applyDoWriteFields, isDoWriteFieldUnset } from "./stream/applyDoWriteFields";
 export type { DoWriteFieldGens } from "./stream/applyDoWriteFields";
 export type { CreateDoModuleDbOpts, DoStreamDb } from "./stream/types";
-export { createDoCollectionSync } from "./stream/createDoCollectionSync";
-export { doCollection } from "./stream/doCollection";
 export { createDoStreamDB } from "./stream/createDoStreamDB";
 export {
   appendStreamEvent,
   createDeleteStreamAction,
   createUpsertStreamAction,
+  parseDoWriteValue,
 } from "./stream/streamActionHelpers";

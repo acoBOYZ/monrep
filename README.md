@@ -49,15 +49,18 @@ If you just cloned this: start from [ROADMAP.md](./ROADMAP.md) for “what exist
 
 ## Local (dev)
 
+HTTPS on Vite matters for StreamDB: browsers cap ~6 concurrent HTTP/1.1 sockets per host; TLS brings HTTP/2 multiplexing so many live stream requests don’t queue.
+
 ```bash
 bun install
-bun run codegen   # when you touch DO / stream schemas (watch mode activated by default on dev)
-bun run up        # upgrade bun, update all deps, sync upstreams if there any (stack helpers optional)
-bun run ok        # check all health checks are passing (typecheck, lint, react-doctor)
-bun run dev
+bun run setup:dev   # openssl local CA + leaf under certs/ (skips if already there; trusts root on macOS)
+bun run codegen     # when you touch DO / stream schemas
+bun run up          # upgrade bun, update deps, sync upstreams (optional)
+bun run ok          # typecheck, lint, react-doctor
+bun run dev         # https://localhost:5274 (falls back to http if certs missing)
 ```
 
-Need Bun. Exact ports and env files will settle as the agent + control plane land — don’t treat this section as production install docs yet.
+Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb opens connections over 6 concurrent HTTP/1.1 sockets per host and http blocks after that.
 
 ## CLI (coming)
 

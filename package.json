@@ -28,6 +28,7 @@
   "scripts": {
     "codegen": "bun run --cwd packages/codegen codegen",
     "up": "bun scripts/stack/up-dev.ts",
+    "setup:dev": "bun scripts/stack/setup-dev.ts",
     "dev": "NODE_ENV=development turbo run dev --concurrency=20",
     "build": "turbo run build --ui tui",
     "addto": "bun scripts/pkg/add.ts",
