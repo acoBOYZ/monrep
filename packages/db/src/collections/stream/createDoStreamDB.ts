@@ -16,17 +16,17 @@ export const createDoStreamDB = <
   moduleId: TModule,
   opts: CreateDoModuleDbOpts,
   actions: (ctx: {
-    db: StreamDB<ModuleState<TModule>>;
+    db: StreamDB<StateSchema<ModuleState<TModule>>>;
     state: StateSchema<ModuleState<TModule>>;
   }) => TActions,
 ) => {
-  const state = createStateSchema(DO_MODULE_STATE[moduleId]) as StateSchema<ModuleState<TModule>>;
+  const state = createStateSchema(DO_MODULE_STATE[moduleId]);
   return createStreamDB({
     stream: opts.stream,
     onBatch: opts.onBatch,
     onBeforeBatch: opts.onBeforeBatch,
     state,
     live: opts.live ?? DO_MODULE_LIVE[moduleId],
-    actions: ({ db }) => actions({ db: db as StreamDB<ModuleState<TModule>>, state }),
+    actions: ({ db }) => actions({ db, state }),
   });
 };

@@ -88,7 +88,7 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
     ...factoryBlocks,
     "const DO_MODULE_DB_FACTORY_IMPL = {",
     ...moduleIds.map((moduleId) => `  "${moduleId}": create${pascal(moduleId)}StreamDB,`),
-    "} as const satisfies { [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => unknown; };",
+    "}",
     "",
     "export const DO_MODULE_DB_FACTORIES: {",
     "  [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => ReturnType<(typeof DO_MODULE_DB_FACTORY_IMPL)[TModule]>;",
