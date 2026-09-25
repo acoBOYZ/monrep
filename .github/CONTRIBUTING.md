@@ -33,7 +33,10 @@ Prefer conventional commit / PR titles:
 | `fix:`             | Bug Fixes                                                      |
 | `perf:`            | Performance                                                    |
 | `docs:`            | Documentation                                                  |
-| `chore:` / `ci:`   | Usually skipped or Miscellaneous                               |
+| `chore:` / `ci:`   | Miscellaneous Tasks                                            |
+| *(no / other prefix)* | Miscellaneous Tasks (still included; prefer a real prefix)  |
+
+CI release jobs set `GITHUB_TOKEN` so git-cliff can attach `by @user` and `in #PR` (and New Contributors). Locally, `bun run release:changelog` / `release:notes` reuse `GITHUB_TOKEN`, `GH_TOKEN`, or `gh auth token` when available.
 
 ### Cut a release
 

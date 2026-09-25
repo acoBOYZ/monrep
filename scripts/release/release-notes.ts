@@ -2,8 +2,11 @@
 /// <reference types="bun" />
 
 import { runGitCliff } from "git-cliff";
+import { ensureGithubToken } from "./github-token";
 import { writeOutput } from "./output";
 import { REPO_ROOT } from "./paths";
+
+ensureGithubToken();
 
 const { stdout } = await runGitCliff(
   { latest: true, strip: "header" },
