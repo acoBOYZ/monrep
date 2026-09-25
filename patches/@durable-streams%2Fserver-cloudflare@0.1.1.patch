@@ -1,0 +1,42 @@
+diff --git a/node_modules/@durable-streams/server-cloudflare/.bun-tag-21e471385760e52 b/.bun-tag-21e471385760e52
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 9a4a61b0b62394c3990fb09d82bcdeef47c5159b..800b267ea609a32395a51e9ad25069abc84b65fa 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -562,7 +562,7 @@ var SqliteStore = class {
+ * Must be comfortably under the conformance suite's 5s per-test budget
+ * while longer than the ~500ms its delivery tests need (see NOTES.md).
+ */
+-const LONG_POLL_TIMEOUT_MS = 2e3;
++const LONG_POLL_TIMEOUT_MS = 20e3;
+ /**
+ * Maximum accepted request body. DO SQLite caps a single value at 2MB;
+ * larger bodies get the protocol's 413 (the conformance suite accepts
+diff --git a/dist/index.js b/dist/index.js
+index df3bb1309b6b43ff11a621b266ba73de76ad3f0d..d4f77fb8a5e45dfcbb8ef6a0674086dd0fdc8c72 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -538,7 +538,7 @@ var SqliteStore = class {
+ * Must be comfortably under the conformance suite's 5s per-test budget
+ * while longer than the ~500ms its delivery tests need (see NOTES.md).
+ */
+-const LONG_POLL_TIMEOUT_MS = 2e3;
++const LONG_POLL_TIMEOUT_MS = 20e3;
+ /**
+ * Maximum accepted request body. DO SQLite caps a single value at 2MB;
+ * larger bodies get the protocol's 413 (the conformance suite accepts
+diff --git a/src/stream-object.ts b/src/stream-object.ts
+index 549bf2eed6a2554ac52a6995d13ed7699515db3c..bdd00a0116a3b6e511ed7d18b3671b37f8fb068e 100644
+--- a/src/stream-object.ts
++++ b/src/stream-object.ts
+@@ -56,7 +56,7 @@ import type { ClosedBy, ReadBatch, StoredMessage, StreamMeta } from "./store"
+  * Must be comfortably under the conformance suite's 5s per-test budget
+  * while longer than the ~500ms its delivery tests need (see NOTES.md).
+  */
+-const LONG_POLL_TIMEOUT_MS = 2000
++const LONG_POLL_TIMEOUT_MS = 20_000
+ 
+ /**
+  * Maximum accepted request body. DO SQLite caps a single value at 2MB;

@@ -90,5 +90,7 @@
     "typescript": "^7.0.2"
   },
   "overrides": {},
-  "patchedDependencies": {}
+  "patchedDependencies": {
+    "@durable-streams/server-cloudflare@0.1.1": "patches/@durable-streams%2Fserver-cloudflare@0.1.1.patch"
+  }
 }

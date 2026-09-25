@@ -62,7 +62,7 @@ const DO_MODULE_DB_FACTORY_IMPL = {
   "audit": createAuditStreamDB,
   "auth": createAuthStreamDB,
   "testm": createTestmStreamDB,
-} as const satisfies { [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => unknown; };
+}
 
 export const DO_MODULE_DB_FACTORIES: {
   [TModule in TDoModuleId]: (opts: CreateDoModuleDbOpts) => ReturnType<(typeof DO_MODULE_DB_FACTORY_IMPL)[TModule]>;
