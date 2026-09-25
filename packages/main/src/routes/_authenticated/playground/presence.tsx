@@ -25,21 +25,19 @@ function PresencePlayground() {
 
   const insertRow = () => {
     if (!db) return;
-    safeMutation(() =>
-      db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }),
-    );
+    safeMutation(() => db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { name }));
     setUserId("");
   };
 
   const renameFirst = () => {
     const first = rows[0];
-    if (!db || !first) return;
+    if (!db || !first?.userId) return;
     safeMutation(() => db.actions.upsertPresence({ userId: first.userId, name: `${name}-edited` }));
   };
 
   const deleteFirst = () => {
     const first = rows[0];
-    if (!db || !first) return;
+    if (!db || !first?.userId) return;
     void db.actions.deletePresence(first.userId);
   };
 

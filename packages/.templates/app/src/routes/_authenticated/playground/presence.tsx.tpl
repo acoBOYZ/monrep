@@ -25,9 +25,7 @@ function PresencePlayground() {
 
   const insertRow = () => {
     if (!db) return;
-    safeMutation(() =>
-      db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { userId: "", name }),
-    );
+    safeMutation(() => db.actions.upsertPresence(userId.length > 0 ? { userId, name } : { name }));
     setUserId("");
   };
 

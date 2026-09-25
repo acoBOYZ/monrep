@@ -13,8 +13,10 @@ import type { z } from "zod";
 import type {
 	TDoModuleId,
 	MessageDoSchema,
+	PasskeyDoSchema,
 	PresenceDoSchema,
 	SecurityDoSchema,
+	TotpDoSchema,
 	TypingDoSchema,
 	UserDoSchema,
 } from "./do.gen";
@@ -23,9 +25,13 @@ export type { TDoModuleId };
 
 export type TMessageDo = z.infer<typeof MessageDoSchema>;
 
+export type TPasskeyDo = z.infer<typeof PasskeyDoSchema>;
+
 export type TPresenceDo = z.infer<typeof PresenceDoSchema>;
 
 export type TSecurityDo = z.infer<typeof SecurityDoSchema>;
+
+export type TTotpDo = z.infer<typeof TotpDoSchema>;
 
 export type TTypingDo = z.infer<typeof TypingDoSchema>;
 

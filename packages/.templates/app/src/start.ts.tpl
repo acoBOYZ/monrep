@@ -2,9 +2,7 @@ import "zod/compile";
 import "temporal-polyfill/global";
 import { createCsrfMiddleware, createMiddleware, createStart } from "@tanstack/react-start";
 
-const FRAME_ANCESTORS = ["'self'", "http://localhost:{{dev_port}}", "https://localhost:{{dev_port}}"].join(
-  " ",
-);
+const FRAME_ANCESTORS = ["'self'", "http://localhost:{{dev_port}}", "https://localhost:{{dev_port}}"].join(" ")
 
 const SECURITY_HEADERS = [
   ["X-Content-Type-Options", "nosniff"],

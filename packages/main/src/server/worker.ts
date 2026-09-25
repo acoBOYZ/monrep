@@ -24,13 +24,18 @@ type StreamsEnv = Env & {
 
 const streamsHandler = createPublicStreamsHandler<StreamsEnv>({
   auth: async (request, env) => {
-    const parsed = AuthEnvSchema.pick({ SESSION_SECRET: true }).safeParse(env);
+    const parsed = AuthEnvSchema.pick({
+      SESSION_SECRET: true,
+      AUTH_SESSION_COOKIE: true,
+    }).safeParse(env);
+
     if (!parsed.success) {
       return new Response("Server misconfigured", { status: 500 });
     }
-    const { SESSION_SECRET: secret } = parsed.data;
 
-    const session = await resolveSessionFromRequest(request, secret);
+    const { SESSION_SECRET: secret, AUTH_SESSION_COOKIE: cookieName } = parsed.data;
+
+    const session = await resolveSessionFromRequest(request, secret, cookieName);
     if (session) return undefined;
 
     return new Response("Unauthorized", { status: 401 });
