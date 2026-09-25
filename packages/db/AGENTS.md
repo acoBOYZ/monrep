@@ -8,9 +8,11 @@ Pipeline:
 
 1. Edit `packages/<app>/src/db/do/*.ts` (+ schemas as needed)
 2. `bun run codegen` or `bun run codegen -- --package <app>`
-3. Import `@/db/registry` once at app entry (binds gens into `@monrep/db`)
+3. Wire via `@/db/host`:
+   - Client: import `DOHost` (binds on module load) + mount `<DOHost />` as a stream host (not a provider)
+   - Worker / serverFn: call `bindDoApp()`
 
-Safe to delete `src/db/codegen/` and rerun codegen. Never hand-edit `*.gen.ts`.
+Safe to delete `src/db/codegen/` and rerun codegen. Never hand-edit `*.gen.ts` / `*.gen.tsx`.
 
 Second Worker: add `codegen.config.ts` (`doDir` + `outDir`) + `src/db/do` — codegen discovers it automatically.
 

@@ -2,9 +2,11 @@ import { StreamObject } from "@durable-streams/server-cloudflare";
 import { isStreamsPath } from "@monrep/db/stream/paths";
 import { createPublicStreamsHandler } from "@monrep/db/stream/streams.server";
 import startHandler from "@tanstack/react-start/server-entry";
-import "@/db/registry";
 import { AuthEnvSchema } from "./auth/schemas";
 import { resolveSessionFromRequest } from "./auth/session";
+import { bindDoApp } from "@/db/host";
+
+bindDoApp();
 
 /*
  * Worker entry:

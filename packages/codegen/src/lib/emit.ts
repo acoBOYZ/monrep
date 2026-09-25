@@ -7,7 +7,7 @@ const TASK_LABEL: Record<TaskId, string> = {
   doIndex: "DO schema index",
   doTypes: "DO row types",
   dbCollectionsDo: "DO TanStack DB collections",
-  emitRegistry: "DO registry bind",
+  emitHost: "DOHost + bindDoApp",
   emitUseStreamDb: "typed useStreamDb hook",
   ensureBarrels: "public db barrels",
 };

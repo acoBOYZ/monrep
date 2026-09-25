@@ -22,7 +22,7 @@ src/db/
   schemas/          # HAND → rbac, capabilities
   do/               # HAND → createDoModule("…") files
   codegen/          # GEN → safe to delete; regenerate with bun run codegen
-  registry.ts       # barrel → codegen/registry.gen (bind)
+  host.ts           # barrel → DOHost + bindDoApp
   useStreamDb.ts    # barrel → typed hook
   collections.ts    # barrel → factories
   types.ts          # barrel → T*Do types
@@ -34,13 +34,23 @@ Never import `@/db/codegen/*` or `*.gen.ts` in app code.
 
 1. Edit `src/db/do/*.ts` and/or `src/db/schemas/`
 2. `bun run codegen` (or `-- --package main`)
-3. Ensure entry imports bind once:
+3. Wire the catalog:
 
-```ts
-import "@/db/registry";
+**Client** — import + mount the host (not a provider). Importing `DOHost` runs `bindDoApp()` at module load so hooks like `useStreamsReady` see a bound catalog; `<DOHost />` only acquires streams.
+
+```tsx
+import { DOHost } from "@/db/host";
+
+<DOHost />
 ```
 
-Used from `_authenticated.tsx`, `server/worker.ts`, and server stream writes.
+**Worker / serverFn** — call `bindDoApp()` once (avoids pulling the React host into the isolate):
+
+```ts
+import { bindDoApp } from "@/db/host";
+
+bindDoApp();
+```
 
 ### Examples
 
@@ -66,9 +76,11 @@ function Presence() {
 #### Server write via factory
 
 ```ts
+import { bindDoApp } from "@/db/host";
 import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 import type { TUserDo } from "@/db/types";
-import "@/db/registry";
+
+bindDoApp();
 
 const db = DO_MODULE_DB_FACTORIES.auth({ stream });
 await db.preload();
@@ -85,7 +97,7 @@ await db.preload();
 
 ```bash
 rm -rf packages/main/src/db/codegen
-# optional: rm packages/main/src/db/{registry,useStreamDb,collections,types}.ts
+# optional: rm packages/main/src/db/{host,useStreamDb,collections,types}.ts
 bun run codegen -- --package main
 ```
 

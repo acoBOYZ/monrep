@@ -14,7 +14,7 @@ const LOADERS: Record<TaskId, () => Promise<Runner>> = {
   doIndex: async () => (await import("./tasks/do-index")).runDoIndex,
   doTypes: async () => (await import("./tasks/do-types")).runDoTypes,
   dbCollectionsDo: async () => (await import("./tasks/db-collections-do")).runDbCollectionsDo,
-  emitRegistry: async () => (await import("./tasks/emit-registry")).runEmitRegistry,
+  emitHost: async () => (await import("./tasks/emit-host")).runEmitHost,
   emitUseStreamDb: async () => (await import("./tasks/emit-use-stream-db")).runEmitUseStreamDb,
   ensureBarrels: async () => (await import("./tasks/ensure-barrels")).runEnsureBarrels,
 };

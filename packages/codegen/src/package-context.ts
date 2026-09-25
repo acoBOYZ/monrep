@@ -14,7 +14,7 @@ export type ResolvedPackagePaths = {
   doGen: string;
   typesGen: string;
   collectionsGen: string;
-  registryGen: string;
+  hostGen: string;
   useStreamDbGen: string;
 };
 
@@ -65,7 +65,7 @@ export function resolvePackagePaths(
     doGen: path.join(outDir, "do.gen.ts"),
     typesGen: path.join(outDir, "types.gen.ts"),
     collectionsGen: path.join(outDir, "collections.gen.ts"),
-    registryGen: path.join(outDir, "registry.gen.ts"),
+    hostGen: path.join(outDir, "host.gen.tsx"),
     useStreamDbGen: path.join(outDir, "useStreamDb.gen.ts"),
   };
 }

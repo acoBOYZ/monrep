@@ -14,6 +14,7 @@ const initialEpochs = (): Record<string, string> => {
   return next;
 };
 
+/** Library host: acquire stream modules (catalog must already be bound). Apps mount `<DOHost />`. */
 export function StreamDbHost() {
   const [epochs, setEpochs] = useState(initialEpochs);
 
