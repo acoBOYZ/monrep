@@ -2,6 +2,14 @@
 
 Issues and PRs welcome. Keep changes lean and scoped.
 
+## Scaffold a Worker app
+
+```bash
+bun run create:app <name>
+```
+
+Creates `packages/<name>` from [`packages/.templates/app`](../packages/.templates/app) (simple login + playground + DO catalog). Name must be unique under `packages/` and not reserved (`main`, `db`, …).
+
 ## Before you open a PR
 
 1. Prefer one concern per PR.
