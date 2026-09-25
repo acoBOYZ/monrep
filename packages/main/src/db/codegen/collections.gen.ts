@@ -21,8 +21,10 @@ import type { CreateDoModuleDbOpts } from "@monrep/db/collections";
 import type {
 	TDoModuleId,
 	TMessageDo,
+	TPasskeyDo,
 	TPresenceDo,
 	TSecurityDo,
+	TTotpDo,
 	TTypingDo,
 	TUserDo
 } from "./types.gen";
@@ -38,9 +40,16 @@ const createAuditStreamDB = (opts: CreateDoModuleDbOpts) => {
 
 const createAuthStreamDB = (opts: CreateDoModuleDbOpts) => {
   const sdb = createDoStreamDB(DO_MODULE_STATE["auth"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["auth"] }, ({ db, state }) => ({
+      upsertPasskey: createUpsertStreamAction({ db, helpers: state.passkey, collection: db.collections.passkey, primaryKey: "id", schema: DO_MODULES["auth"].collections.passkey.Schema, insertGens: DO_MODULES["auth"].collections.passkey.insertGens, updateGens: DO_MODULES["auth"].collections.passkey.updateGens }),
+      deletePasskey: createDeleteStreamAction({ db, helpers: state.passkey, collection: db.collections.passkey }),
+      upsertTotp: createUpsertStreamAction({ db, helpers: state.totp, collection: db.collections.totp, primaryKey: "userId", schema: DO_MODULES["auth"].collections.totp.Schema, insertGens: DO_MODULES["auth"].collections.totp.insertGens, updateGens: DO_MODULES["auth"].collections.totp.updateGens }),
+      deleteTotp: createDeleteStreamAction({ db, helpers: state.totp, collection: db.collections.totp }),
       upsertUser: createUpsertStreamAction({ db, helpers: state.user, collection: db.collections.user, primaryKey: "id", schema: DO_MODULES["auth"].collections.user.Schema, insertGens: DO_MODULES["auth"].collections.user.insertGens, updateGens: DO_MODULES["auth"].collections.user.updateGens }),
       deleteUser: createDeleteStreamAction({ db, helpers: state.user, collection: db.collections.user }),
   }));
+  sdb.collections.passkey.createIndex((r) => r.userId, { indexType: BasicIndex });
+  sdb.collections.passkey.createIndex((r) => r.credentialId, { indexType: BasicIndex });
+  sdb.collections.totp.createIndex((r) => r.userId, { indexType: BasicIndex });
   sdb.collections.user.createIndex((r) => r.email, { indexType: BasicIndex });
   return sdb;
 };
@@ -77,6 +86,10 @@ export type TDoModuleActionDefinitions = {
     deleteSecurity: ActionDefinition<string>;
   };
   "auth": {
+    upsertPasskey: ActionDefinition<TPasskeyDo>;
+    deletePasskey: ActionDefinition<string>;
+    upsertTotp: ActionDefinition<TTotpDo>;
+    deleteTotp: ActionDefinition<string>;
     upsertUser: ActionDefinition<TUserDo>;
     deleteUser: ActionDefinition<string>;
   };

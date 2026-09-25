@@ -77,6 +77,30 @@ export const UserDoMeta = {
   indexes: __auth_do.collections.user.indexes,
 } as const;
 
+export const TotpDoSchema = __auth_do.collections.totp.Schema;
+export const TotpDoMeta = {
+  name: __auth_do.collections.totp.name,
+  streamModule: __auth_do.moduleId,
+  streamEpoch: __auth_do.streamEpoch,
+  streamLive: __auth_do.streamLive,
+  streamPersist: __auth_do.streamPersist,
+  type: __auth_do.collections.totp.name,
+  primaryKey: __auth_do.collections.totp.primaryKey,
+  indexes: __auth_do.collections.totp.indexes,
+} as const;
+
+export const PasskeyDoSchema = __auth_do.collections.passkey.Schema;
+export const PasskeyDoMeta = {
+  name: __auth_do.collections.passkey.name,
+  streamModule: __auth_do.moduleId,
+  streamEpoch: __auth_do.streamEpoch,
+  streamLive: __auth_do.streamLive,
+  streamPersist: __auth_do.streamPersist,
+  type: __auth_do.collections.passkey.name,
+  primaryKey: __auth_do.collections.passkey.primaryKey,
+  indexes: __auth_do.collections.passkey.indexes,
+} as const;
+
 export const PresenceDoSchema = __testm_do.collections.presence.Schema;
 export const PresenceDoMeta = {
   name: __testm_do.collections.presence.name,
@@ -150,6 +174,16 @@ export const DO_MODULE_STATE = {
       schema: __auth_do.collections.user.Schema, 
       type: __auth_do.collections.user.name, 
       primaryKey: __auth_do.collections.user.primaryKey 
+    },
+    totp: { 
+      schema: __auth_do.collections.totp.Schema, 
+      type: __auth_do.collections.totp.name, 
+      primaryKey: __auth_do.collections.totp.primaryKey 
+    },
+    passkey: { 
+      schema: __auth_do.collections.passkey.Schema, 
+      type: __auth_do.collections.passkey.name, 
+      primaryKey: __auth_do.collections.passkey.primaryKey 
     },
   },
   "testm": {

@@ -26,6 +26,7 @@ export {
   type OS,
   type OSArch,
 } from "./getOs";
+export { readCookieValue, signHmacJson, verifyHmacJson, type HmacSafeParse } from "./hmacJson";
 export { mergeRefs } from "./mergeRefs";
 export { isPrimitive, primitiveString, unknownString } from "./primitive";
 export { toSafeDate } from "./safeDate";

@@ -10,7 +10,7 @@ export default createDoModule("testm")({
       primaryKey: "userId",
       indexes: ["userId"],
       schema: {
-        userId: z.ulid(),
+        userId: z.ulid().optional(),
         name: z.string().optional(),
         createdAt: z.string().optional(),
         updatedAt: z.string().optional(),
