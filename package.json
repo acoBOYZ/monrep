@@ -4,7 +4,7 @@
   "type": "module",
   "author": "Ahmet Cevdet ÖZTÜRK",
   "description": "A monorepo template built with Bun, Hono, Vite, and React",
-  "homepage": "https://github.com/monrep",
+  "homepage": "https://github.com/acoBOYZ/monrep",
   "keywords": [
     "bun",
     "hono",
@@ -76,7 +76,7 @@
     "@tanstack/eslint-plugin-router": "^1.162.0",
     "@tanstack/intent": "^0.4.0",
     "@types/bun": "^1.4.2",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "bun-scan": "^1.1.2",
     "git-cliff": "^2.14.2",
     "knip": "^6.38.0",

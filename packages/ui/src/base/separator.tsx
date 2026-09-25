@@ -28,7 +28,7 @@ export function TextSeparator({ text, className, ...props }: TextSeparatorProps)
   return (
     <div className={cn("flex items-center gap-4", className)} {...props}>
       <Separator className="flex-1" />
-      <span className="text-md whitespace-nowrap">{text}</span>
+      <span className="text-xs whitespace-nowrap text-cool">{text}</span>
       <Separator className="flex-1" />
     </div>
   );

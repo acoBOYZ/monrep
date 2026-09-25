@@ -1,4 +1,4 @@
-import { RotateCcw } from "@hugeicons/core-free-icons";
+import { ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CopyableButton } from "@monrep/ui/base";
 import type { ComponentProps } from "react";
@@ -50,7 +50,7 @@ export function ErrorState({ error, reset }: ComponentProps<ErrorRouteComponent>
           onClick={reset}
           className="mt-3 inline-flex text-sm text-blue-500 hover:underline"
         >
-          <HugeiconsIcon icon={RotateCcw} size={16} aria-hidden />
+          <HugeiconsIcon icon={ArrowReloadHorizontalIcon} size={16} aria-hidden />
           Try again
         </Button>
       </div>

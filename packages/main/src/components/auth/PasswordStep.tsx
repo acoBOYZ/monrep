@@ -1,4 +1,4 @@
-import { Button, Input, PasswordInput } from "@monrep/ui/base";
+import { Button, Input, PasswordInput, TextSeparator } from "@monrep/ui/base";
 import { TurnstileWidget } from "./TurnstileWidget";
 import type { SubmitEvent } from "react";
 
@@ -12,6 +12,7 @@ type PasswordStepProps = {
   onPasswordChange: (value: string) => void;
   onTurnstileToken: (token: string) => void;
   onSubmit: () => void;
+  onUsePasskey?: () => void;
 };
 
 export function PasswordStep({
@@ -24,6 +25,7 @@ export function PasswordStep({
   onPasswordChange,
   onTurnstileToken,
   onSubmit,
+  onUsePasskey,
 }: PasswordStepProps) {
   const handlePasswordFormSubmit = (event: SubmitEvent) => {
     event.preventDefault();
@@ -32,7 +34,7 @@ export function PasswordStep({
 
   return (
     <form onSubmit={handlePasswordFormSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-xs font-medium">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
         Email
         <Input
           type="email"
@@ -43,7 +45,7 @@ export function PasswordStep({
           placeholder="admin@monrep.com"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-xs font-medium">
+      <label className="flex flex-col gap-1.5 text-sm font-medium">
         Password
         <PasswordInput
           autoComplete="current-password"
@@ -54,9 +56,23 @@ export function PasswordStep({
         />
       </label>
       <TurnstileWidget siteKey={turnstileSiteKey} onToken={onTurnstileToken} />
-      <Button type="submit" disabled={pending || !turnstileToken} className="mt-1 w-full">
-        {pending ? "Signing in…" : "Sign in"}
+      <Button type="submit" disabled={pending || !turnstileToken} className="w-full">
+        {pending ? "Signing in…" : "Login"}
       </Button>
+      {onUsePasskey ? (
+        <>
+          <TextSeparator text="Or" />
+          <Button
+            type="button"
+            variant="outline"
+            disabled={pending}
+            className="w-full"
+            onClick={onUsePasskey}
+          >
+            Continue with passkey
+          </Button>
+        </>
+      ) : null}
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import { Link, createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
+import { LogoLink } from "@/components/LogoLink";
 import { PasskeyEnrollStep } from "@/components/auth/PasskeyEnrollStep";
 import { PasskeyStep } from "@/components/auth/PasskeyStep";
 import { PasswordStep } from "@/components/auth/PasswordStep";
@@ -44,18 +45,17 @@ function AdminLoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden bg-background px-6 text-foreground">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.35_0.04_250/0.35),transparent_55%),radial-gradient(ellipse_at_bottom,oklch(0.28_0.03_80/0.25),transparent_50%)]"
-      />
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <p className="text-3xl font-semibold tracking-tight">monrep</p>
-          <p className="mt-2 text-sm text-muted-foreground">Admin sign-in</p>
-        </div>
+    <main className="flex min-h-svh flex-col items-center justify-center bg-background px-6 text-foreground">
+      <div className="w-full max-w-sm">
+        <header className="mb-8 flex flex-col items-center gap-6">
+          <LogoLink />
+          <div className="text-center">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Welcome to monrep</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Admin sign-in</p>
+          </div>
+        </header>
 
-        <div className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card/80 p-6 shadow-sm backdrop-blur-sm">
+        <div className="flex flex-col gap-4">
           {flow.step === "passkey" ? (
             <PasskeyStep
               email={flow.email}
@@ -77,6 +77,7 @@ function AdminLoginPage() {
               onPasswordChange={flow.setPassword}
               onTurnstileToken={flow.setTurnstileToken}
               onSubmit={() => void flow.submitPassword()}
+              onUsePasskey={flow.canUsePasskey ? () => flow.setStep("passkey") : undefined}
             />
           ) : null}
 
@@ -110,7 +111,7 @@ function AdminLoginPage() {
           ) : null}
         </div>
 
-        <p className="mt-6 text-center text-xs text-muted-foreground">
+        <p className="mt-8 text-center text-xs text-muted-foreground">
           <Link to="/" className="underline-offset-4 hover:underline">
             Back to home
           </Link>

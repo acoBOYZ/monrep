@@ -53,6 +53,7 @@ export function useAdminLoginFlow(onAuthed: () => void | Promise<void>) {
   const [otpauth, setOtpauth] = useState("");
   const [totpSecret, setTotpSecret] = useState("");
   const [hasPasskeys, setHasPasskeys] = useState(false);
+  const [platformOk, setPlatformOk] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -60,6 +61,7 @@ export function useAdminLoginFlow(onAuthed: () => void | Promise<void>) {
       setTurnstileSiteKey(config.turnstileSiteKey);
       setEmail(config.adminEmailHint);
       const platform = await platformPasskeyOk();
+      setPlatformOk(platform);
       if (!platform) {
         setStep("password");
         return;
@@ -244,6 +246,7 @@ export function useAdminLoginFlow(onAuthed: () => void | Promise<void>) {
     setTotpCode,
     otpauth,
     totpSecret,
+    canUsePasskey: platformOk && hasPasskeys,
     setStep,
     submitPassword,
     startPasskeyLogin,

@@ -1,5 +1,5 @@
 import { useTransition } from "react";
-import { Button } from "@monrep/ui/base";
+import { Button, TextSeparator } from "@monrep/ui/base";
 import { startAuthentication } from "@simplewebauthn/browser";
 import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 
@@ -31,7 +31,7 @@ export function PasskeyStep({
   const disabled = pending || localPending;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <p className="text-center text-sm text-muted-foreground">Sign in as {email}</p>
       <Button
         type="button"
@@ -41,9 +41,10 @@ export function PasskeyStep({
       >
         {disabled ? "Waiting for passkey…" : "Continue with passkey"}
       </Button>
+      <TextSeparator text="Or" />
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         disabled={disabled}
         className="w-full"
         onClick={onFallbackPassword}
