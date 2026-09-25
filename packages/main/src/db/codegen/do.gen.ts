@@ -1,19 +1,19 @@
-// @generated — AUTO-GENERATED FILE. DO NOT EDIT.
+// @generated: [AUTO-GENERATED] FILE. DO NOT EDIT.
 //
 // Generator : @monrep/codegen (DO schema index)
 // Task      : doIndex
-// Source    : packages/db/src/do/*.ts
+// Source    : DO modules under packages/main/src/db/do (package main)
 //
-// Regenerate: bun run codegen
-// Watch     : bun run --cwd packages/codegen watch
+// Regenerate: bun run codegen [-- --package <name>]
+// Watch     : bun run --cwd packages/codegen watch [-- --package <name>]
 //
-// Edit instead: DO schema files under packages/db/src/do/
+// Edit instead: DO modules under packages/main/src/db/do (package main)
 
 import type { z } from "zod";
-import type { TStreamEpoch, TStreamLive } from "./create-do-module.gen";
-import __audit_do from "./audit";
-import __auth_do from "./auth";
-import __testm_do from "./testm";
+import type { TStreamEpoch, TStreamLive } from "@monrep/db/module";
+import __audit_do from "../do/audit";
+import __auth_do from "../do/auth";
+import __testm_do from "../do/testm";
 
 export type TDoModuleId = "audit" | "auth" | "testm";
 

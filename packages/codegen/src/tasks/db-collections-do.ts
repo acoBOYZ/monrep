@@ -5,7 +5,7 @@ import { pascal } from "../lib/naming";
 import { parseDoModuleSource } from "../lib/parse-do-module";
 import { paths } from "../paths";
 
-const IGNORE = new Set(["index.ts", "index.gen.ts", "create-do-module.gen.ts"]);
+const IGNORE = new Set(["index.ts"]);
 
 const isDoModule = (name: string) =>
   name.endsWith(".ts") && !name.endsWith(".d.ts") && !IGNORE.has(name) && !name.endsWith(".gen.ts");
@@ -50,7 +50,7 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
     );
     return [
       `const create${pascal(moduleId)}StreamDB = (opts: CreateDoModuleDbOpts) => {`,
-      `  const sdb = createDoStreamDB("${moduleId}", opts, ({ db, state }) => ({`,
+      `  const sdb = createDoStreamDB(DO_MODULE_STATE["${moduleId}"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["${moduleId}"] }, ({ db, state }) => ({`,
       ...actionLines,
       "  }));",
       ...indexLines,
@@ -78,12 +78,15 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
 
   return [
     'import { BasicIndex } from "@tanstack/react-db";',
-    'import { DO_MODULES } from "../do";',
-    'import { createDoStreamDB } from "./stream/createDoStreamDB";',
-    'import { createDeleteStreamAction, createUpsertStreamAction } from "./stream/streamActionHelpers";',
+    "import {",
+    "  createDeleteStreamAction,",
+    "  createDoStreamDB,",
+    "  createUpsertStreamAction,",
+    '} from "@monrep/db/collections";',
+    'import { DO_MODULE_LIVE, DO_MODULE_STATE, DO_MODULES } from "./do.gen";',
     'import type { ActionDefinition } from "@durable-streams/state/db";',
-    `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "../types";`,
-    'import type { CreateDoModuleDbOpts } from "./stream/types";',
+    'import type { CreateDoModuleDbOpts } from "@monrep/db/collections";',
+    `import type {\n\t${sharedTypeImports.join(",\n\t")}\n} from "./types.gen";`,
     "",
     ...factoryBlocks,
     "const DO_MODULE_DB_FACTORY_IMPL = {",
@@ -101,7 +104,7 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
 }
 
 export async function runDbCollectionsDo(): Promise<void> {
-  const names = (await readdir(paths.dbDoDir, { withFileTypes: true }))
+  const names = (await readdir(paths.doDir, { withFileTypes: true }))
     .filter((e) => e.isFile() && isDoModule(e.name))
     .map((e) => e.name)
     .sort((a, b) => a.localeCompare(b));
@@ -109,7 +112,7 @@ export async function runDbCollectionsDo(): Promise<void> {
   const collectionEntries: Array<CollectionEntry> = [];
   for (const n of names) {
     const base = path.basename(n, ".ts");
-    const source = await Bun.file(path.join(paths.dbDoDir, n)).text();
+    const source = await Bun.file(path.join(paths.doDir, n)).text();
     const parsed = parseDoModuleSource(source, base);
     if (!parsed) continue;
     for (const c of parsed.collections) {
@@ -125,7 +128,7 @@ export async function runDbCollectionsDo(): Promise<void> {
   collectionEntries.sort((a, b) => a.name.localeCompare(b.name));
 
   await writeIfChanged(
-    paths.dbCollectionsDoGen,
+    paths.collectionsGen,
     `${buildDbCollectionsDoSource(collectionEntries).trimEnd()}\n`,
     "dbCollectionsDo",
   );

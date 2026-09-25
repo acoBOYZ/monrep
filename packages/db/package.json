@@ -6,10 +6,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./do": "./src/do/index.ts",
-    "./schemas": "./src/schemas/index.ts",
+    "./module": "./src/module.ts",
+    "./registry": "./src/registry.ts",
     "./collections": "./src/collections/index.ts",
-    "./types": "./src/types/index.ts",
     "./stream": "./src/stream/index.ts",
     "./stream/paths": "./src/stream/paths.ts",
     "./stream/ensureStream": "./src/stream/ensureStream.ts",

@@ -1,13 +1,13 @@
-// @generated — AUTO-GENERATED FILE. DO NOT EDIT.
+// @generated: [AUTO-GENERATED] FILE. DO NOT EDIT.
 //
 // Generator : @monrep/codegen (DO row types)
 // Task      : doTypes
-// Source    : packages/db/src/do/*.ts
+// Source    : DO modules under packages/main/src/db/do (package main)
 //
-// Regenerate: bun run codegen
-// Watch     : bun run --cwd packages/codegen watch
+// Regenerate: bun run codegen [-- --package <name>]
+// Watch     : bun run --cwd packages/codegen watch [-- --package <name>]
 //
-// Edit instead: DO schema files under packages/db/src/do/
+// Edit instead: DO modules under packages/main/src/db/do (package main)
 
 import type { z } from "zod";
 import type {
@@ -17,7 +17,7 @@ import type {
 	SecurityDoSchema,
 	TypingDoSchema,
 	UserDoSchema,
-} from "../do";
+} from "./do.gen";
 
 export type { TDoModuleId };
 

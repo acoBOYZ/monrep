@@ -12,9 +12,8 @@ import {
 import { paths } from "../paths";
 import type { ParsedDoModule } from "../lib/parse-do-module";
 
-const INDEX = "index.gen.ts";
-const CREATE_IMPORT = `import { createDoModule, doTable } from "./create-do-module.gen";`;
-const IGNORE = new Set(["index.ts", INDEX, "create-do-module.gen.ts"]);
+const CREATE_IMPORT = `import { createDoModule, doTable } from "@monrep/db/module";`;
+const IGNORE = new Set(["index.ts"]);
 
 const isDoModule = (name: string) =>
   name.endsWith(".ts") && !name.endsWith(".d.ts") && !IGNORE.has(name) && !name.endsWith(".gen.ts");
@@ -29,8 +28,8 @@ function normalizeCreate(fileName: string, source: string): string | null {
 }
 
 function scaffoldDoModule(base: string): string {
-  return `import { z } from "zod";
-${CREATE_IMPORT}
+  return `${CREATE_IMPORT}
+import { z } from "zod";
 
 export default createDoModule("${base}")({
   collections: {
@@ -61,7 +60,12 @@ async function syncFile(filePath: string): Promise<void> {
   }
 
   let next = source;
-  if (!/from\s*["']\.\/create-do-module\.gen["']/.test(next)) {
+  // Migrate old relative DSL import → @monrep/db/module
+  next = next.replace(
+    /import\s*\{([^}]*)\}\s*from\s*["']\.\/create-do-module\.gen["']\s*;?\n?/,
+    (_m, names: string) => `import {${names}} from "@monrep/db/module";\n`,
+  );
+  if (!/from\s*["']@monrep\/db\/module["']/.test(next)) {
     next = `${CREATE_IMPORT}\n${next}`;
   }
   next = normalizeCreate(fileName, next) ?? next;
@@ -89,7 +93,7 @@ export function doModuleEpochMap(
 }
 
 async function syncIndex(): Promise<void> {
-  const names = (await readdir(paths.dbDoDir, { withFileTypes: true }))
+  const names = (await readdir(paths.doDir, { withFileTypes: true }))
     .filter((e) => e.isFile() && isDoModule(e.name))
     .map((e) => e.name)
     .sort((a, b) => a.localeCompare(b));
@@ -97,7 +101,7 @@ async function syncIndex(): Promise<void> {
   const modules: Array<DoModuleFile> = await Promise.all(
     names.map(async (n) => {
       const base = path.basename(n, ".ts");
-      const source = await Bun.file(path.join(paths.dbDoDir, n)).text();
+      const source = await Bun.file(path.join(paths.doDir, n)).text();
       const parsed = parseDoModuleSource(source, base);
       if (!parsed) {
         throw new Error(
@@ -151,8 +155,8 @@ async function syncIndex(): Promise<void> {
 
   const lines = [
     'import type { z } from "zod";',
-    'import type { TStreamEpoch, TStreamLive } from "./create-do-module.gen";',
-    ...modules.map((m) => `import ${m.importName} from "./${m.base}";`),
+    'import type { TStreamEpoch, TStreamLive } from "@monrep/db/module";',
+    ...modules.map((m) => `import ${m.importName} from "../do/${m.base}";`),
     "",
     `export type TDoModuleId = ${moduleUnion || "never"};`,
     "",
@@ -215,14 +219,14 @@ async function syncIndex(): Promise<void> {
     "",
   ];
 
-  await writeIfChanged(paths.dbDoIndexGen, `${lines.join("\n").trimEnd()}\n`, "doIndex");
+  await writeIfChanged(paths.doGen, `${lines.join("\n").trimEnd()}\n`, "doIndex");
 }
 
 export async function runDoIndex(): Promise<void> {
-  const entries = await readdir(paths.dbDoDir, { withFileTypes: true }).catch(() => []);
+  const entries = await readdir(paths.doDir, { withFileTypes: true }).catch(() => []);
   const files = entries
     .filter((e) => e.isFile() && isDoModule(e.name))
-    .map((e) => path.join(paths.dbDoDir, e.name));
+    .map((e) => path.join(paths.doDir, e.name));
   await Promise.all(files.map(syncFile));
   await syncIndex();
 }

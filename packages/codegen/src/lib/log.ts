@@ -1,7 +1,8 @@
 import path from "node:path";
-import { ROOT } from "../paths";
+import { getActiveTarget } from "../package-context";
+import { ROOT } from "../root";
 
-/** Tiny ANSI helpers — no deps. Respects NO_COLOR. */
+/** Tiny ANSI helpers. No deps. Respects NO_COLOR. */
 const useColor = process.env.NO_COLOR == null;
 
 const wrap =
@@ -16,7 +17,13 @@ const cyan = wrap("\x1b[36m");
 const yellow = wrap("\x1b[33m");
 const magenta = wrap("\x1b[35m");
 
-const prefix = dim("[codegen]");
+let packageTag = "";
+
+export const setLogPackage = (name: string | null): void => {
+  packageTag = name && name.length > 0 ? `:${name}` : "";
+};
+
+const prefix = (): string => dim(`[@monrep/codegen${packageTag}]`);
 
 let lastLoggedAt = performance.now();
 
@@ -33,7 +40,7 @@ const lineCost = (): string => {
   return yellow(`${ms}ms`);
 };
 
-/** Workspace-relative display + OSC-8 link so Cursor/VS Code can open on click. */
+/** Workspace relative display + OSC-8 link so Cursor/VS Code can open on click. */
 export const linkPath = (filePath: string): string => {
   const abs = path.resolve(filePath);
   const rel = path.relative(ROOT, abs);
@@ -43,21 +50,34 @@ export const linkPath = (filePath: string): string => {
 };
 
 export const logUpdated = (filePath: string): void => {
-  console.log(`${prefix} ${green("✓")} ${cyan("updated")} ${linkPath(filePath)} ${lineCost()}`);
+  console.log(`${prefix()} ${green("✓")} ${cyan("updated")} ${linkPath(filePath)} ${lineCost()}`);
 };
 
 export const logScaffolded = (filePath: string): void => {
-  console.log(`${prefix} ${magenta("+")} ${cyan("scaffold")} ${linkPath(filePath)} ${lineCost()}`);
+  console.log(
+    `${prefix()} ${magenta("+")} ${cyan("scaffold")} ${linkPath(filePath)} ${lineCost()}`,
+  );
 };
 
 export const logDone = (ms: number): void => {
-  console.log(`${prefix} ${green(bold("done"))} ${yellow(`${ms}ms`)}`);
+  console.log(`${prefix()} ${green(bold("done"))} ${yellow(`${ms}ms`)}`);
 };
 
 export const logWatch = (message: string): void => {
-  console.log(`${prefix} ${magenta("watch")} ${message}`);
+  console.log(`${prefix()} ${magenta("watch")} ${message}`);
 };
 
 export const logInfo = (message: string): void => {
-  console.log(`${prefix} ${message}`);
+  console.log(`${prefix()} ${message}`);
+};
+
+/** Edit instead of path for generated headers (active package doDir). */
+export const activeDoEditHint = (): string => {
+  try {
+    const { packageName, paths } = getActiveTarget();
+    const rel = path.relative(ROOT, paths.doDir);
+    return `DO modules under ${rel} (package ${packageName})`;
+  } catch {
+    return "DO modules under the package doDir from codegen.config.ts";
+  }
 };

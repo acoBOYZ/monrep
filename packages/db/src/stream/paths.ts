@@ -1,6 +1,5 @@
-import { DO_MODULE_EPOCH } from "../do";
-import type { TStreamEpoch } from "../do/create-do-module.gen";
-import type { TDoModuleId } from "../types";
+import { getDoRegistry } from "../registry";
+import type { TStreamEpoch } from "../module";
 
 /** Public Worker mount for Durable Streams. Worker routing imports this constant. */
 export const STREAMS_PATH_PREFIX = "/_streams";
@@ -83,26 +82,26 @@ export function getExpiresAtByEpoch(epoch: TStreamEpoch, now: Date): Date {
   }
 }
 
-/** Logical client path — always `/_streams/<moduleId>` (no bucket). */
+/** Logical client path. Always `/_streams/<moduleId>` (no bucket). */
 export function streamPath(moduleId: string): string {
   return `${STREAMS_PATH_PREFIX}/${moduleId}`;
 }
 
-/** Physical DO name path — appends ISO label when the module has an epoch. */
+/** Physical DO name path. Appends ISO label when the module has an epoch. */
 export function physicalStreamPath(moduleId: string, now = new Date()): string {
-  const epoch = DO_MODULE_EPOCH[moduleId as TDoModuleId];
+  const epoch = getDoRegistry().epoch[moduleId];
   if (!epoch) return streamPath(moduleId);
   return `${streamPath(moduleId)}/${getEpochLabel(epoch, now)}`;
 }
 
 /** Current epoch label for a module, or `null` when immortal. */
 export function moduleEpochLabel(moduleId: string, now = new Date()): string | null {
-  const epoch = DO_MODULE_EPOCH[moduleId as TDoModuleId];
+  const epoch = getDoRegistry().epoch[moduleId];
   if (!epoch) return null;
   return getEpochLabel(epoch, now);
 }
 
-/** Absolute stream URL for a module (logical — browser or server). */
+/** Absolute stream URL for a module (logical, browser or server). */
 export function streamModuleUrl(baseUrl: string, moduleId: string): string {
   const origin = baseUrl.replace(/\/$/, "");
   return `${origin}${streamPath(moduleId)}`;

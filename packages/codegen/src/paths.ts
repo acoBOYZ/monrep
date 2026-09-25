@@ -1,15 +1,41 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { getActiveTarget } from "./package-context";
+import { CODEGEN_ROOT, ROOT } from "./root";
 
-const PKG_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-export const ROOT = path.resolve(PKG_ROOT, "../..");
+export { CODEGEN_ROOT, ROOT };
 
+/** Active package paths (throws if CLI did not set a target). */
 export const paths = {
-  codegenRoot: PKG_ROOT,
-  createDoModuleTemplate: path.join(PKG_ROOT, "templates/create-do-module.gen.ts.tpl"),
-  dbDoDir: path.join(ROOT, "packages/db/src/do"),
-  dbDoCreateModule: path.join(ROOT, "packages/db/src/do/create-do-module.gen.ts"),
-  dbDoIndexGen: path.join(ROOT, "packages/db/src/do/index.gen.ts"),
-  dbTypesIndexGen: path.join(ROOT, "packages/db/src/types/index.gen.ts"),
-  dbCollectionsDoGen: path.join(ROOT, "packages/db/src/collections/collections.do.gen.ts"),
+  get codegenRoot() {
+    return CODEGEN_ROOT;
+  },
+  get packageRoot() {
+    return getActiveTarget().paths.packageRoot;
+  },
+  get packageName() {
+    return getActiveTarget().packageName;
+  },
+  get doDir() {
+    return getActiveTarget().paths.doDir;
+  },
+  get outDir() {
+    return getActiveTarget().paths.outDir;
+  },
+  get dbRoot() {
+    return getActiveTarget().paths.dbRoot;
+  },
+  get doGen() {
+    return getActiveTarget().paths.doGen;
+  },
+  get typesGen() {
+    return getActiveTarget().paths.typesGen;
+  },
+  get collectionsGen() {
+    return getActiveTarget().paths.collectionsGen;
+  },
+  get registryGen() {
+    return getActiveTarget().paths.registryGen;
+  },
+  get useStreamDbGen() {
+    return getActiveTarget().paths.useStreamDbGen;
+  },
 } as const;

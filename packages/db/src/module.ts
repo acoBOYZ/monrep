@@ -1,16 +1,5 @@
-// @generated — AUTO-GENERATED FILE. DO NOT EDIT.
-//
-// Generator : @monrep/codegen (createDoModule factory)
-// Task      : doCreateSchema
-// Source    : packages/codegen/templates/create-do-module.gen.ts.tpl
-//
-// Regenerate: bun run codegen
-// Watch     : bun run --cwd packages/codegen watch
-//
-// Edit instead: packages/codegen/templates/create-do-module.gen.ts.tpl
-
-import { z } from "zod";
 import { nextUlid } from "@monrep/utils/ulid";
+import { z } from "zod";
 
 /** Rolling Durable Stream id window. Omit = immortal stream, never GC. */
 export type TStreamEpoch = "utc-day" | "utc-hour";

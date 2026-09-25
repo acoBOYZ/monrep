@@ -48,8 +48,7 @@ const PLAYGROUND_CARDS: Array<NavCard> = [
 /** Desktop + mobile nav groups. Playground is DEV-only (omitted from prod builds). */
 export function getNavGroups(): Array<NavGroup> {
   const groups: Array<NavGroup> = [{ id: "fleet", label: "Fleet", cards: FLEET_CARDS }];
-  if (import.meta.env.DEV) {
-    groups.push({ id: "playground", label: "Playground", cards: PLAYGROUND_CARDS });
-  }
+  groups.push({ id: "playground", label: "Playground", cards: PLAYGROUND_CARDS });
+
   return groups;
 }

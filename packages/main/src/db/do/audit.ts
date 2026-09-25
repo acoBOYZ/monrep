@@ -1,5 +1,5 @@
+import { createDoModule, doTable } from "@monrep/db/module";
 import { z } from "zod";
-import { createDoModule, doTable } from "./create-do-module.gen";
 
 export default createDoModule("audit")({
   streamLive: "long-poll",

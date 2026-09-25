@@ -1,6 +1,6 @@
+import { createDoModule, doTable } from "@monrep/db/module";
 import { z } from "zod";
 import { CapabilitySchema, RoleSchema } from "../schemas";
-import { createDoModule, doTable } from "./create-do-module.gen";
 
 export default createDoModule("auth")({
   streamLive: "long-poll",
