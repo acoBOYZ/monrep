@@ -25,13 +25,13 @@ export function TotpEnrollStep({
   };
 
   return (
-    <form onSubmit={handleTotpEnrollSubmit} className="flex flex-col items-center gap-4">
+    <form onSubmit={handleTotpEnrollSubmit} className="flex flex-col items-center gap-5">
       <p className="text-center text-sm text-muted-foreground">
-        Scan with Google Authenticator (or any TOTP app), then enter the code.
+        Scan with your authenticator app, then enter the code.
       </p>
       <TotpQr otpauth={otpauth} />
       <p className="text-center font-mono text-xs break-all text-muted-foreground">{secret}</p>
-      <label className="flex w-full flex-col gap-1.5 text-xs font-medium">
+      <label className="flex w-full flex-col gap-1.5 text-sm font-medium">
         Authenticator code
         <Input
           inputMode="numeric"

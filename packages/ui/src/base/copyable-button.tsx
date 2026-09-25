@@ -2,16 +2,52 @@ import { Check, Copy } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCopy } from "@monrep/hooks";
 import { cn } from "@monrep/utils";
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 
 export interface CopyableButtonProps {
   text: string;
-  variant?: "icon" | "inline";
+  /** `icon` = end affordance; `inline` = chip; `block` = children are the click target. */
+  variant?: "icon" | "inline" | "block";
   disabled?: boolean;
   copiedDuration?: number;
   onCopied?: (text: string) => void;
   className?: string;
+  /** Required for `block` — full surface that triggers copy. */
+  children?: ReactNode;
+  /**
+   * Controlled pending. When set with `onCopy`, parent owns clipboard state
+   * (e.g. shared `useCopy` across multiple triggers).
+   */
+  isPending?: boolean;
+  onCopy?: (text: string) => void;
 }
+
+const CopyStatusIcon = ({ isPending, size }: { isPending: boolean; size: number }) => (
+  <span className={cn("relative shrink-0", size <= 12 ? "size-3" : "size-4")}>
+    <span
+      className={cn(
+        "absolute inset-0 flex items-center justify-center transition-all",
+        isPending ? "scale-100 opacity-100" : "scale-0 opacity-0",
+      )}
+    >
+      <HugeiconsIcon
+        icon={Check}
+        strokeWidth={2}
+        className="text-success"
+        size={size}
+        aria-hidden
+      />
+    </span>
+    <span
+      className={cn(
+        "absolute inset-0 flex items-center justify-center transition-all",
+        isPending ? "scale-0 opacity-0" : "scale-100 opacity-100",
+      )}
+    >
+      <HugeiconsIcon icon={Copy} strokeWidth={2} size={size} aria-hidden />
+    </span>
+  </span>
+);
 
 export const CopyableButton = ({
   text,
@@ -20,16 +56,26 @@ export const CopyableButton = ({
   copiedDuration = 666,
   onCopied,
   className,
+  children,
+  isPending: isPendingControlled,
+  onCopy,
 }: CopyableButtonProps) => {
-  const { isPending, handleCopy } = useCopy(copiedDuration);
+  const copy = useCopy(copiedDuration);
+  const isControlled = isPendingControlled !== undefined && onCopy !== undefined;
+  const isPending = isControlled ? isPendingControlled : copy.isPending;
+  const isBlock = variant === "block";
   const isInline = variant === "inline";
   const iconSize = isInline ? 12 : 16;
 
   const handleCopyAction = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    event.stopPropagation();
+    if (!isBlock) event.stopPropagation();
     if (isPending) return;
-    handleCopy(text);
+    if (isControlled) {
+      onCopy(text);
+    } else {
+      copy.handleCopy(text);
+    }
     onCopied?.(text);
   };
 
@@ -41,33 +87,25 @@ export const CopyableButton = ({
         "transition-[color,box-shadow] outline-none focus-visible:ring-[3px]",
         "focus-visible:border-ring focus-visible:ring-ring/50",
         disabled ? "pointer-events-none cursor-not-allowed opacity-50" : "",
-        isInline
-          ? "inline-flex max-w-[min(100%,16rem)] items-center gap-1 rounded-md border border-border bg-muted/30 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-medium text-foreground hover:bg-muted/50"
-          : "absolute inset-y-0 inset-e-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 hover:text-foreground focus:z-10",
+        isBlock
+          ? "group relative flex w-full cursor-pointer items-stretch text-left"
+          : isInline
+            ? "inline-flex max-w-[min(100%,16rem)] items-center gap-1 rounded-md border border-border bg-muted/30 px-1.5 py-0.5 align-baseline text-[0.8125rem] leading-none font-medium text-foreground hover:bg-muted/50"
+            : "absolute inset-y-0 inset-e-0 flex h-full w-9 items-center justify-center rounded-e-md text-muted-foreground/80 hover:text-foreground focus:z-10",
         className,
       )}
       aria-label={isPending ? "Copied" : "Copy to clipboard"}
       disabled={disabled || isPending}
     >
+      {isBlock ? children : null}
       {isInline ? <span className="min-w-0 truncate">{text}</span> : null}
-      <span className={cn("relative shrink-0", isInline ? "size-3" : "size-4")}>
-        <span
-          className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all",
-            isPending ? "scale-100 opacity-100" : "scale-0 opacity-0",
-          )}
-        >
-          <HugeiconsIcon icon={Check} className="stroke-emerald-500" size={iconSize} aria-hidden />
+      {isBlock ? (
+        <span className="pointer-events-none absolute inset-y-0 inset-e-0 flex w-9 items-center justify-center opacity-80 group-hover:opacity-100">
+          <CopyStatusIcon isPending={isPending} size={iconSize} />
         </span>
-        <span
-          className={cn(
-            "absolute inset-0 flex items-center justify-center transition-all",
-            isPending ? "scale-0 opacity-0" : "scale-100 opacity-100",
-          )}
-        >
-          <HugeiconsIcon icon={Copy} size={iconSize} aria-hidden />
-        </span>
-      </span>
+      ) : (
+        <CopyStatusIcon isPending={isPending} size={iconSize} />
+      )}
     </button>
   );
 };

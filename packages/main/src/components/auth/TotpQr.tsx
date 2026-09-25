@@ -6,7 +6,6 @@ type TotpQrProps = {
   className?: string;
 };
 
-/** Tiny SVG QR from otpauth URI (no network). */
 export function TotpQr({ otpauth, className }: TotpQrProps) {
   const { size, data } = encode(otpauth, { ecc: "M" });
   const cells: Array<ReactNode> = [];
