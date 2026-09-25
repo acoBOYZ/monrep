@@ -1,26 +1,24 @@
 import { DurableStreamError, FetchError } from "@durable-streams/client";
-import { DO_MODULE_DB_FACTORIES } from "../collections";
-import { DO_MODULE_PERSIST } from "../do";
+import { getDoRegistry, getStreamModuleIds } from "../registry";
 import { ensureStream } from "./ensureStream";
 import { STREAM_EPOCH_HEADER, browserStreamUrl, moduleEpochLabel } from "./paths";
 import type { DoStreamDb } from "../collections/stream/types";
-import type { TDoModuleId } from "../types";
 
-type StreamSession<TModule extends TDoModuleId = TDoModuleId> = {
-  moduleId: TModule;
+type StreamSession = {
+  moduleId: string;
   /** Server clock label; immortal modules use `""`. */
   epoch: string;
-  db: DoStreamDb<TModule>;
+  db: DoStreamDb;
   ready: Promise<void>;
   refCount: number;
 };
 
-const sessions = new Map<TDoModuleId, StreamSession>();
-const gates = new Map<TDoModuleId, Promise<void>>();
+const sessions = new Map<string, StreamSession>();
+const gates = new Map<string, Promise<void>>();
 const epochListeners = new Map<string, Set<(epoch: string) => void>>();
 
 export const subscribeStreamEpoch = (
-  moduleId: TDoModuleId,
+  moduleId: string,
   listener: (epoch: string) => void,
 ): (() => void) => {
   const set = epochListeners.get(moduleId) ?? new Set();
@@ -33,7 +31,7 @@ export const subscribeStreamEpoch = (
 };
 
 /** Local clock guess until `x-stream-epoch` arrives. Immortal modules stay `""`. */
-export const streamEpochLabel = (moduleId: TDoModuleId, now = new Date()): string =>
+export const streamEpochLabel = (moduleId: string, now = new Date()): string =>
   moduleEpochLabel(moduleId, now) ?? "";
 
 const resumeKey = (moduleId: string) => `stream-resume:${moduleId}`;
@@ -75,7 +73,7 @@ const isGoneError = (error: Error): boolean => {
   return false;
 };
 
-const withGate = <T>(moduleId: TDoModuleId, fn: () => Promise<T>): Promise<T> => {
+const withGate = <T>(moduleId: string, fn: () => Promise<T>): Promise<T> => {
   const prev = gates.get(moduleId) ?? Promise.resolve();
   const run = prev.then(fn, fn);
   gates.set(
@@ -96,16 +94,21 @@ const flattenPoisonedBatchItems = (items: ReadonlyArray<unknown>): Array<unknown
 
 const waitMacrotask = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
-const sameSession = (moduleId: TDoModuleId, epoch: string): boolean => {
+const sameSession = (moduleId: string, epoch: string): boolean => {
   const session = sessions.get(moduleId);
   return Boolean(session && session.epoch === epoch);
 };
 
-const openSession = async <TModule extends TDoModuleId>(
-  moduleId: TModule,
-  epoch: string,
-): Promise<StreamSession<TModule>> => {
-  const persist = DO_MODULE_PERSIST[moduleId];
+const openSession = async (moduleId: string, epoch: string): Promise<StreamSession> => {
+  const { persist, factories } = getDoRegistry();
+  const modulePersist = persist[moduleId] ?? false;
+  const factory = factories[moduleId];
+  if (!factory) {
+    throw new Error(
+      `@monrep/db: unknown DO module "${moduleId}" (not in bound registry.factories)`,
+    );
+  }
+
   let liveOffset: string | undefined;
   const handle = await ensureStream({
     url: browserStreamUrl(moduleId),
@@ -124,17 +127,17 @@ const openSession = async <TModule extends TDoModuleId>(
         return response;
       })) as typeof fetch,
     params: {
-      offset: () => liveOffset ?? (persist ? loadOffset(moduleId, epoch) : "-1"),
+      offset: () => liveOffset ?? (modulePersist ? loadOffset(moduleId, epoch) : "-1"),
     },
     onError: (error) => {
       if (!isGoneError(error)) return;
       liveOffset = undefined;
-      if (persist) clearOffset(moduleId, epoch);
+      if (modulePersist) clearOffset(moduleId, epoch);
       return { params: { offset: "-1" } };
     },
   });
 
-  const db = DO_MODULE_DB_FACTORIES[moduleId]({
+  const db = factory({
     stream: handle,
     onBeforeBatch(batch) {
       const flat = flattenPoisonedBatchItems(batch.items);
@@ -143,35 +146,35 @@ const openSession = async <TModule extends TDoModuleId>(
       mutable.splice(0, mutable.length, ...flat);
     },
     onBatch(batch) {
-      if (persist) saveOffset(moduleId, epoch, batch.offset);
+      if (modulePersist) saveOffset(moduleId, epoch, batch.offset);
     },
   });
 
-  const next = {
+  const next: StreamSession = {
     moduleId,
     epoch,
     db,
     ready: Promise.resolve(),
     refCount: 0,
-  } as StreamSession<TModule>;
+  };
 
-  next.ready = db.preload().catch((error: unknown) => {
-    if (sessions.get(moduleId) === next) {
-      sessions.delete(moduleId);
-      db.close();
-    }
-    throw error;
-  });
+  next.ready = db
+    .preload()
+    .then(() => undefined)
+    .catch((error: unknown) => {
+      if (sessions.get(moduleId) === next) {
+        sessions.delete(moduleId);
+        db.close();
+      }
+      throw error;
+    });
 
   sessions.set(moduleId, next);
   return next;
 };
 
-const acquireInner = async <TModule extends TDoModuleId>(
-  moduleId: TModule,
-  epoch: string,
-): Promise<StreamSession<TModule>> => {
-  const current = sessions.get(moduleId) as StreamSession<TModule> | undefined;
+const acquireInner = async (moduleId: string, epoch: string): Promise<StreamSession> => {
+  const current = sessions.get(moduleId);
   if (sameSession(moduleId, epoch) && current) {
     current.refCount += 1;
     await current.ready;
@@ -188,7 +191,7 @@ const acquireInner = async <TModule extends TDoModuleId>(
     sessions.delete(moduleId);
   }
 
-  const reused = sessions.get(moduleId) as StreamSession<TModule> | undefined;
+  const reused = sessions.get(moduleId);
   if (sameSession(moduleId, epoch) && reused) {
     reused.refCount += 1;
     await reused.ready;
@@ -202,16 +205,14 @@ const acquireInner = async <TModule extends TDoModuleId>(
 };
 
 /** Acquire (or reuse) a module StreamDB. Survives React StrictMode remount. */
-export const acquireStreamModule = <TModule extends TDoModuleId>(
-  moduleId: TModule,
-  epoch: string,
-): Promise<StreamSession<TModule>> => withGate(moduleId, () => acquireInner(moduleId, epoch));
+export const acquireStreamModule = (moduleId: string, epoch: string): Promise<StreamSession> =>
+  withGate(moduleId, () => acquireInner(moduleId, epoch));
 
 /**
  * Release a ref. Close is deferred one macrotask so StrictMode's
  * cleanup→remount can re-acquire without tearing down the live consumer.
  */
-export const releaseStreamModule = (moduleId: TDoModuleId, epoch: string): void => {
+export const releaseStreamModule = (moduleId: string, epoch: string): void => {
   const session = sessions.get(moduleId);
   if (!session || !sameSession(moduleId, epoch)) return;
   session.refCount -= 1;
@@ -224,4 +225,5 @@ export const releaseStreamModule = (moduleId: TDoModuleId, epoch: string): void 
   }, 0);
 };
 
-export const STREAM_MODULE_IDS = Object.keys(DO_MODULE_DB_FACTORIES) as Array<TDoModuleId>;
+/** Bound registry module ids. Call after `bindDoRegistry`. */
+export const getStreamModuleIdList = getStreamModuleIds;

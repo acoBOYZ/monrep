@@ -3,6 +3,7 @@ import { tryCatch } from "@monrep/utils";
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { Navbar } from "@/components/layouts/Navbar";
 import { PageLoader } from "@/components/pages/PageLoader";
+import "@/db/registry";
 import { requireSession } from "@/server/auth/functions";
 
 export const Route = createFileRoute("/_authenticated")({

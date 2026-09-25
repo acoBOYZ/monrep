@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useStreamDb } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSafeMutation } from "@/components/hooks/useSafeMutation";
+import { useStreamDb } from "@/db/useStreamDb";
 
 export const Route = createFileRoute("/_authenticated/playground/presence")({
   component: PresencePlayground,

@@ -17,11 +17,8 @@
 
     "paths": {
       "@monrep/db": ["./packages/db/src"],
-      "@monrep/db/do": ["./packages/db/src/do"],
-      "@monrep/db/collections": ["./packages/db/src/collections"],
-      "@monrep/db/types": ["./packages/db/src/types"],
-      "@monrep/db/stream": ["./packages/db/src/stream/index.ts"],
       "@monrep/db/*": ["./packages/db/src/*"],
+      "@monrep/codegen/*": ["./packages/codegen/src/*"],
       "@monrep/hooks": ["./packages/hooks/src"],
       "@monrep/ui": ["./packages/ui/src"],
       "@monrep/ui/*": ["./packages/ui/src/*"],

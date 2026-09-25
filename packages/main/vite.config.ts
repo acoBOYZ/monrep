@@ -47,7 +47,6 @@ export default defineConfig(({ mode }) => {
       }),
       tailwindcss(),
       tanstackStart({
-        router: (isProduction ? { routeFileIgnorePattern: "playground" } : {}),
         sitemap: {
           enabled: true,
           host: DOMAIN,

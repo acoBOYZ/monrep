@@ -1,44 +1,30 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { logUpdated } from "./log";
+import { activeDoEditHint, logUpdated } from "./log";
 import type { TaskId } from "../pipeline-graph";
 
-const TASK_META: Record<TaskId, { label: string; sources: Array<string>; editInstead: string }> = {
-  doCreateSchema: {
-    label: "createDoModule factory",
-    sources: ["packages/codegen/templates/create-do-module.gen.ts.tpl"],
-    editInstead: "packages/codegen/templates/create-do-module.gen.ts.tpl",
-  },
-  doIndex: {
-    label: "DO schema index",
-    sources: ["packages/db/src/do/*.ts"],
-    editInstead: "DO schema files under packages/db/src/do/",
-  },
-  doTypes: {
-    label: "DO row types",
-    sources: ["packages/db/src/do/*.ts"],
-    editInstead: "DO schema files under packages/db/src/do/",
-  },
-  dbCollectionsDo: {
-    label: "DO TanStack DB collections",
-    sources: ["packages/db/src/do/*.ts"],
-    editInstead: "DO schema files under packages/db/src/do/",
-  },
+const TASK_LABEL: Record<TaskId, string> = {
+  doIndex: "DO schema index",
+  doTypes: "DO row types",
+  dbCollectionsDo: "DO TanStack DB collections",
+  emitRegistry: "DO registry bind",
+  emitUseStreamDb: "typed useStreamDb hook",
+  ensureBarrels: "public db barrels",
 };
 
 export function generatedHeader(task: TaskId): string {
-  const meta = TASK_META[task];
+  const editInstead = activeDoEditHint();
   return [
-    "// @generated — AUTO-GENERATED FILE. DO NOT EDIT.",
+    "// @generated: [AUTO-GENERATED] FILE. DO NOT EDIT.",
     "//",
-    `// Generator : @monrep/codegen (${meta.label})`,
+    `// Generator : @monrep/codegen (${TASK_LABEL[task]})`,
     `// Task      : ${task}`,
-    ...meta.sources.map((source) => `// Source    : ${source}`),
+    `// Source    : ${editInstead}`,
     "//",
-    "// Regenerate: bun run codegen",
-    "// Watch     : bun run --cwd packages/codegen watch",
+    "// Regenerate: bun run codegen [-- --package <name>]",
+    "// Watch     : bun run --cwd packages/codegen watch [-- --package <name>]",
     "//",
-    `// Edit instead: ${meta.editInstead}`,
+    `// Edit instead: ${editInstead}`,
     "",
     "",
   ].join("\n");

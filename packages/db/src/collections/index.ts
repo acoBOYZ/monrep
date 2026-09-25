@@ -1,10 +1,9 @@
 /**
- * IMPORTANT — DO NOT REMOVE
+ * IMPORTANT: DO NOT REMOVE
  *
- * Entry for collections. Only re-exports gens + stream action helpers.
+ * Entry for collections helpers. App-specific DO factories live in the app package gens.
  */
 
-export * from "./collections.do.gen";
 export { applyDoWriteFields, isDoWriteFieldUnset } from "./stream/applyDoWriteFields";
 export type { DoWriteFieldGens } from "./stream/applyDoWriteFields";
 export type { CreateDoModuleDbOpts, DoStreamDb } from "./stream/types";

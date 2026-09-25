@@ -1,5 +1,5 @@
-import { CapabilitySchema, RoleSchema } from "@monrep/db/schemas";
 import { z } from "zod";
+import { CapabilitySchema, RoleSchema } from "@/db/schemas";
 
 export const DEFAULT_AUTH_REDIRECT = "/servers" as const;
 

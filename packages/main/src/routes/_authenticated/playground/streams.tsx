@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { moduleEpochLabel, useStreamDb } from "@monrep/db/stream";
+import { moduleEpochLabel } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
 import { cn, formatTime, toDateTimeAttr } from "@monrep/utils";
 import { nextUlid } from "@monrep/utils/ulid";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSafeMutation } from "@/components/hooks/useSafeMutation";
+import { useStreamDb } from "@/db/useStreamDb";
 
 export const Route = createFileRoute("/_authenticated/playground/streams")({
   component: StreamsPlayground,
@@ -105,7 +106,7 @@ function StreamsPlayground() {
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Streams</h1>
           <p className="mt-1 text-sm text-cool">
-            Live chat on <code className="rounded bg-muted px-1">testm</code> — same session as
+            Live chat on <code className="rounded bg-muted px-1">testm.</code> Same session as
             presence. Hour bucket rolls via <code className="rounded bg-muted px-1">utc-hour</code>.
           </p>
         </div>

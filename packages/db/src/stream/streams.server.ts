@@ -1,5 +1,5 @@
 import { createStreamsHandler } from "@durable-streams/server-cloudflare";
-import { DO_MODULE_EPOCH } from "../do";
+import { getDoRegistry } from "../registry";
 import {
   STREAM_EPOCH_HEADER,
   getEpochLabel,
@@ -9,14 +9,14 @@ import {
   streamModuleIdFromPath,
 } from "./paths";
 import type { DefaultAuthEnv, StreamsHandlerOptions } from "@durable-streams/server-cloudflare";
-import type { TDoModuleId } from "../types";
 
 type WaitUntilCtx = {
   waitUntil: (promise: Promise<unknown>) => void;
 };
 
-const isKnownModule = (moduleId: string): moduleId is TDoModuleId =>
-  Object.hasOwn(DO_MODULE_EPOCH, moduleId);
+const isKnownModule = (moduleId: string): boolean =>
+  Object.hasOwn(getDoRegistry().epoch, moduleId) ||
+  Object.hasOwn(getDoRegistry().factories, moduleId);
 
 /**
  * Worker routes for `/_streams/*`.
@@ -38,7 +38,7 @@ export const createPublicStreamsHandler = <E extends DefaultAuthEnv = DefaultAut
     }
 
     const now = new Date();
-    const epoch = DO_MODULE_EPOCH[moduleId];
+    const epoch = getDoRegistry().epoch[moduleId];
     const physical = physicalStreamPath(moduleId, now);
     const epochLabel = epoch ? getEpochLabel(epoch, now) : null;
 

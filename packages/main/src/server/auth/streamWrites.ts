@@ -1,17 +1,18 @@
-import { DO_MODULE_DB_FACTORIES } from "@monrep/db/collections";
 import { ensureStream } from "@monrep/db/stream/ensureStream";
 import { streamPath } from "@monrep/db/stream/paths";
 import { nextUlid } from "@monrep/utils/ulid";
 import { eq, queryOnce } from "@tanstack/react-db";
 import { env } from "cloudflare:workers";
 import { LoginAttemptSchema, UpsertAuthUserSchema } from "./schemas";
+import "@/db/registry";
 import type { DurableStream } from "@durable-streams/client";
-import type { TUserDo } from "@monrep/db/types";
 import type { LoginAttemptInput, UpsertAuthUserInput } from "./schemas";
+import type { TUserDo } from "@/db/types";
+import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 
 type ServerWriteModule = "audit" | "auth";
 
-/** In-process DO stub fetch — avoids Worker self-HTTP from serverFns. */
+/** In process DO stub fetch. Avoids Worker self-HTTP from serverFns. */
 const openServerStream = async (moduleId: ServerWriteModule): Promise<DurableStream> => {
   const pathname = streamPath(moduleId);
   const url = `https://streams.internal${pathname}`;

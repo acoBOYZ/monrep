@@ -1,9 +1,8 @@
 import { createStore } from "@tanstack/react-store";
 import type { DoStreamDb } from "../collections/stream/types";
-import type { TDoModuleId } from "../types";
 
 type TStreamDbStore = {
-  dbs: Partial<{ [TModule in TDoModuleId]: DoStreamDb<TModule> }>;
+  dbs: Record<string, DoStreamDb | undefined>;
 };
 
 export const initialState: TStreamDbStore = {

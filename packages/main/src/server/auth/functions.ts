@@ -1,4 +1,3 @@
-import { ROLE_CAPABILITIES, hasCapability } from "@monrep/db/schemas";
 import { tryCatch } from "@monrep/utils";
 import { createServerFn } from "@tanstack/react-start";
 import {
@@ -20,6 +19,7 @@ import {
 import { SESSION_COOKIE, SESSION_MAX_AGE_SEC, signSession, verifySession } from "./session";
 import { recordLoginAttempt, upsertAuthUser } from "./streamWrites";
 import type { PublicSession, SessionPayload } from "./schemas";
+import { ROLE_CAPABILITIES, hasCapability } from "@/db/schemas";
 
 const toPublicSession = (session: SessionPayload): PublicSession =>
   PublicSessionSchema.parse({
