@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/playground/presence")({
 });
 
 function PresencePlayground() {
-  const { db, isReady } = useStreamDb("testm");
+  const { db, isReady } = useStreamDb("demo");
   const safeMutation = useSafeMutation();
   const live = useLiveQuery({
     query: (q) => {
@@ -20,7 +20,7 @@ function PresencePlayground() {
   });
   const rows = live.data ?? [];
 
-  const [name, setName] = useState("Aco");
+  const [name, setName] = useState("Demo");
   const [userId, setUserId] = useState("");
 
   const insertRow = () => {
@@ -44,23 +44,12 @@ function PresencePlayground() {
   };
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-4 bg-background p-6 text-foreground">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold tracking-tight">Presence playground</h1>
-      </div>
-
+    <div className="mx-auto flex max-w-xl flex-col gap-4 p-6">
+      <h1 className="text-lg font-semibold tracking-tight">Presence playground</h1>
       <p className="text-xs text-muted-foreground">
-        Live query on <code className="rounded bg-muted px-1">db.collections.presence</code> (
-        <code className="rounded bg-muted px-1">testm</code>). Mutations via{" "}
-        <code className="rounded bg-muted px-1">db.actions</code>.
+        Live query on <code className="rounded bg-muted px-1">demo.presence</code> —{" "}
+        {isReady ? "live" : "connecting"} · {rows.length} rows
       </p>
-
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 rounded-md border border-border/60 p-3 text-xs">
-        <dt className="text-muted-foreground">Stream</dt>
-        <dd>{isReady ? "live" : "connecting"}</dd>
-        <dt className="text-muted-foreground">Rows</dt>
-        <dd>{rows.length}</dd>
-      </dl>
 
       <div className="flex flex-col gap-2">
         <label className="flex flex-col gap-1 text-xs">
@@ -80,47 +69,25 @@ function PresencePlayground() {
           />
         </label>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" size="sm" onClick={insertRow} disabled={!isReady}>
-            Insert
+          <Button type="button" size="sm" onClick={insertRow}>
+            Upsert
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="secondary"
-            onClick={renameFirst}
-            disabled={!isReady}
-          >
-            Update first
+          <Button type="button" size="sm" variant="secondary" onClick={renameFirst}>
+            Rename first
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="destructive"
-            onClick={deleteFirst}
-            disabled={!isReady}
-          >
+          <Button type="button" size="sm" variant="destructive" onClick={deleteFirst}>
             Delete first
           </Button>
         </div>
       </div>
 
-      <ul className="divide-y divide-border/60 overflow-hidden rounded-md border border-border/60">
-        {rows.length === 0 ? (
-          <li className="px-3 py-4 text-sm text-muted-foreground">No presence rows yet.</li>
-        ) : (
-          rows.map((row) => (
-            <li
-              key={row.userId}
-              className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
-            >
-              <span className="font-medium">{row.name ?? "(unnamed)"}</span>
-              <span className="truncate font-mono text-xs text-muted-foreground">
-                {row.userId}
-                {row.updatedAt ? ` · ${row.updatedAt}` : ""}
-              </span>
-            </li>
-          ))
-        )}
+      <ul className="divide-y divide-border/60 rounded-md border border-border/60 text-sm">
+        {rows.map((row) => (
+          <li key={row.userId} className="flex justify-between gap-2 px-3 py-2 font-mono text-xs">
+            <span>{row.userId}</span>
+            <span>{row.name ?? "—"}</span>
+          </li>
+        ))}
       </ul>
     </div>
   );

@@ -26,6 +26,7 @@
     "packages/*"
   ],
   "scripts": {
+    "create:app": "bun scripts/pkg/create-app.ts",
     "codegen": "bun run --cwd packages/codegen codegen",
     "up": "bun scripts/stack/up-dev.ts",
     "setup:dev": "bun scripts/stack/setup-dev.ts",
