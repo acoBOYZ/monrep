@@ -19,7 +19,9 @@ export const LogoLink = () => {
         className="size-5.5 shrink-0 text-primary"
         strokeWidth={2}
       />
-      <h1 className="text-xl leading-none font-semibold tracking-tight text-foreground -translate-y-0.5">monrep</h1>
+      <h1 className="-translate-y-0.5 text-xl leading-none font-semibold tracking-tight text-foreground">
+        monrep
+      </h1>
       <span aria-hidden="true" className="logo-wrapper__glare" />
     </Link>
   );
