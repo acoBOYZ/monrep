@@ -12,6 +12,7 @@ import {
 } from "@monrep/ui/base";
 import { cn } from "@monrep/utils";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { LogoLink } from "../LogoLink";
 import { SignOut } from "../SignOut";
 import { ThemeToggle } from "../ThemeToggle";
 import { getNavGroups } from "./navConfig";
@@ -88,9 +89,7 @@ export function Navbar({ children }: NavbarProps) {
         )}
       >
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <Link to="/servers" className="text-xl font-semibold tracking-tight text-foreground">
-            monrep
-          </Link>
+          <LogoLink />
 
           <div className="ml-2 hidden sm:block">
             <NavigationMenu delay={0}>

@@ -21,7 +21,7 @@ export function SignOut() {
       aria-label="Sign out"
       title="Sign out"
     >
-      <HugeiconsIcon icon={Logout} className="group-hover/so:text-destructive" />
+      <HugeiconsIcon icon={Logout} className="size-5 group-hover/so:text-primary" />
     </Button>
   );
 }

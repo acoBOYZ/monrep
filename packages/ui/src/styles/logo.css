@@ -1,0 +1,72 @@
+/* style.css */
+
+/* Common Styles */
+.logo-wrapper-light,
+.logo-wrapper-dark {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  padding-right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-wrapper-light img,
+.logo-wrapper-dark img {
+  display: block;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 0;
+}
+
+/* Animated sheen overlay */
+.logo-wrapper__glare {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.logo-wrapper__glare::before {
+  content: "";
+  position: absolute;
+  top: -20%; /* Adjusted to cover the skewed area */
+  left: -20%; /* Adjusted to cover the skewed area */
+  width: 140%; /* Increased to accommodate the skew */
+  height: 140%; /* Increased to accommodate the skew */
+  transform: translateX(100%) skewX(-20deg); /* Added skew transformation */
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 100%
+  );
+  transition: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Theme-Specific overlay gradients */
+
+/* Hover Effect */
+.logo-wrapper-light:hover .logo-wrapper__glare::before,
+.logo-wrapper-dark:hover .logo-wrapper__glare::before {
+  animation: slideSkeleton 0.75s forwards;
+}
+
+/* Keyframes */
+@keyframes slideSkeleton {
+  from {
+    transform: translateX(100%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(-100%) skewX(-20deg);
+  }
+}
