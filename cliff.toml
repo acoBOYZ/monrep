@@ -1,6 +1,10 @@
 # git-cliff configuration ~ https://git-cliff.org/docs/configuration
 # Conventional Commits -> Keep a Changelog style CHANGELOG.md
 
+[remote.github]
+owner = "acoBOYZ"
+repo = "monrep"
+
 [changelog]
 header = """
 # Changelog
@@ -19,9 +23,21 @@ body = """
 {% for commit in commits %}
 - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
 {% if commit.breaking %}[**breaking**] {% endif %}\
-{{ commit.message | upper_first }}\
+{{ commit.message | split(pat="\n") | first | trim | upper_first }}\
+{% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
+{% if commit.remote.pr_number %} in #{{ commit.remote.pr_number }}{% endif %}
 {% endfor %}
-{% endfor %}\n
+{% endfor %}\
+{%- if github -%}
+{% if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
+
+### New Contributors
+{% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
+- @{{ contributor.username }} made their first contribution\
+{%- if contributor.pr_number %} in #{{ contributor.pr_number }}{% endif %}
+{% endfor %}
+{% endif %}\
+{%- endif %}\n
 """
 trim = true
 render_always = true
@@ -33,7 +49,7 @@ breaking_always_bump_major = false
 
 [git]
 conventional_commits = true
-filter_unconventional = true
+filter_unconventional = false
 require_conventional = false
 split_commits = false
 commit_preprocessors = []
@@ -54,11 +70,13 @@ commit_parsers = [
   { message = "^chore|^ci", group = "<!-- 8 -->⚙️ Miscellaneous Tasks" },
   { body = ".*security", group = "<!-- 9 -->🛡️ Security" },
   { message = "^revert", group = "<!-- 10 -->◀️ Revert" },
-  { message = ".*", group = "<!-- 11 -->💼 Other" },
+  { message = ".*", group = "<!-- 8 -->⚙️ Miscellaneous Tasks" },
 ]
 filter_commits = false
 fail_on_unmatched_commit = false
-link_parsers = []
+link_parsers = [
+  { pattern = "#(\\d+)", href = "https://github.com/acoBOYZ/monrep/pull/$1" },
+]
 use_branch_tags = false
 topo_order = false
 topo_order_commits = true

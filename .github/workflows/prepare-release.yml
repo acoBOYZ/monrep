@@ -33,6 +33,8 @@ jobs:
         run: bun run release:set-version -- "$VERSION"
 
       - name: Generate changelog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: bun run release:changelog
 
       - name: Configure git user

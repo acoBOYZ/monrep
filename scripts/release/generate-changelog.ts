@@ -2,7 +2,10 @@
 /// <reference types="bun" />
 
 import { runGitCliff } from "git-cliff";
+import { ensureGithubToken } from "./github-token";
 import { REPO_ROOT } from "./paths";
+
+ensureGithubToken();
 
 const CHANGELOG_FILE = "CHANGELOG.md";
 
