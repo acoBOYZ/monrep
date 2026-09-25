@@ -53,7 +53,7 @@ export function bindDoRegistry(registry: DoRegistry): void {
 export function getDoRegistry(): DoRegistry {
   if (!bound) {
     throw new Error(
-      "@monrep/db: call bindDoRegistry(...) before using streams (see app src/db/registry.ts)",
+      "@monrep/db: bind the app DO catalog before using streams (import DOHost from @/db/host, or call bindDoApp() on the server)",
     );
   }
   return bound;

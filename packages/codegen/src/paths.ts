@@ -32,8 +32,8 @@ export const paths = {
   get collectionsGen() {
     return getActiveTarget().paths.collectionsGen;
   },
-  get registryGen() {
-    return getActiveTarget().paths.registryGen;
+  get hostGen() {
+    return getActiveTarget().paths.hostGen;
   },
   get useStreamDbGen() {
     return getActiveTarget().paths.useStreamDbGen;

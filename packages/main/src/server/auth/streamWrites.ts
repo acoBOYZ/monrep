@@ -4,11 +4,13 @@ import { nextUlid } from "@monrep/utils/ulid";
 import { eq, queryOnce } from "@tanstack/react-db";
 import { env } from "cloudflare:workers";
 import { LoginAttemptSchema, UpsertAuthUserSchema } from "./schemas";
-import "@/db/registry";
 import type { DurableStream } from "@durable-streams/client";
 import type { LoginAttemptInput, UpsertAuthUserInput } from "./schemas";
 import type { TUserDo } from "@/db/types";
 import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
+import { bindDoApp } from "@/db/host";
+
+bindDoApp();
 
 type ServerWriteModule = "audit" | "auth";
 

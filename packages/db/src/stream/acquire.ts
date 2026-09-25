@@ -225,5 +225,5 @@ export const releaseStreamModule = (moduleId: string, epoch: string): void => {
   }, 0);
 };
 
-/** Bound registry module ids. Call after `bindDoRegistry`. */
+/** Bound registry module ids. Requires prior bind (`@/db/host` / `bindDoApp`). */
 export const getStreamModuleIdList = getStreamModuleIds;

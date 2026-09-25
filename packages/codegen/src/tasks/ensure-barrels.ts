@@ -15,8 +15,8 @@ const BARREL_HEADER = `// @generated and managed by @monrep/codegen. Do not edit
 
 const BARRELS: Array<Barrel> = [
   {
-    fileName: "registry.ts",
-    body: `${BARREL_HEADER}import "./codegen/registry.gen";\n`,
+    fileName: "host.ts",
+    body: `${BARREL_HEADER}export { DOHost } from "./codegen/host.gen";\nexport { bindDoApp } from "./codegen/bind.gen";\n`,
   },
   {
     fileName: "useStreamDb.ts",
@@ -46,10 +46,11 @@ export function runEnsureBarrels(): void {
       // Upgrade bare/old scaffolds; leave unknown custom barrels alone.
       const isOurScaffold =
         cur.includes("managed by @monrep/codegen") ||
-        cur.trim() === 'import "./codegen/registry.gen";' ||
-        cur.trim() === 'export { useStreamDb } from "./codegen/useStreamDb.gen";' ||
-        cur.trim() === 'export * from "./codegen/collections.gen";' ||
-        cur.trim() === 'export * from "./codegen/types.gen";';
+        cur.includes('from "./codegen/host.gen"') ||
+        cur.includes('from "./codegen/useStreamDb.gen"') ||
+        cur.includes('from "./codegen/collections.gen"') ||
+        cur.includes('from "./codegen/types.gen"') ||
+        cur.includes('from "./codegen/registry.gen"');
       if (!isOurScaffold) continue;
       writeFileSync(filePath, barrel.body, "utf8");
       logUpdated(filePath);

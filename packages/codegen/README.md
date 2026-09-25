@@ -33,16 +33,19 @@ Fixed outputs under `outDir`:
 | `do.gen.ts` | `DO_MODULES`, epoch/live/persist/state |
 | `types.gen.ts` | `T*Do` row types |
 | `collections.gen.ts` | `DO_MODULE_DB_FACTORIES` |
-| `registry.gen.ts` | `bindDoRegistry(...)` |
+| `bind.gen.ts` | `DO_BINDINGS` + `bindDoApp` |
+| `host.gen.tsx` | `DOHost` + module-load `bindDoApp()` |
 | `useStreamDb.gen.ts` | typed `useStreamDb` |
 
-Public barrels next to `outDir` (created if missing, never overwritten): `registry.ts`, `useStreamDb.ts`, `collections.ts`, `types.ts`.
+Public barrels next to `outDir` (created if missing, never overwritten): `host.ts`, `useStreamDb.ts`, `collections.ts`, `types.ts`.
+
+`host.gen.tsx` calls `bindDoApp()` at module scope so importing `DOHost` binds before React hooks. `<DOHost />` is a stream **host** (acquires modules), not a context provider.
 
 ## Rules
 
-- Edit hand modules under `doDir` (+ app schemas). **Never** edit `*.gen.ts`.
+- Edit hand modules under `doDir` (+ app schemas). **Never** edit `*.gen.ts` / `*.gen.tsx`.
 - Safe to delete the entire `outDir` (e.g. `src/db/codegen/`). Rerun codegen to recreate gens + missing barrels.
-- App code imports barrels only (`@/db/registry`, `@/db/useStreamDb`, …). Never `@/db/codegen/*`.
+- App code imports barrels only (`@/db/host`, `@/db/useStreamDb`, …). Never `@/db/codegen/*`.
 - With `bun run --cwd packages/codegen watch`, deleting a public barrel under `dbRoot` recreates it via `ensureBarrels` (no full pipeline).
 
 ## Second Worker
@@ -50,4 +53,4 @@ Public barrels next to `outDir` (created if missing, never overwritten): `regist
 1. Add `packages/<name>/codegen.config.ts` (`doDir` + `outDir`)
 2. Add hand `src/db/do/*.ts` (+ schemas)
 3. `bun run codegen -- --package <name>`
-4. Import `@/db/registry` once at that Worker’s entry
+4. Client: `import { DOHost } from "@/db/host"` + mount `<DOHost />`. Server: `bindDoApp()` once.

@@ -1,7 +1,7 @@
 // @generated: [AUTO-GENERATED] FILE. DO NOT EDIT.
 //
-// Generator : @monrep/codegen (DO registry bind)
-// Task      : emitRegistry
+// Generator : @monrep/codegen (DOHost + bindDoApp)
+// Task      : emitHost
 // Source    : DO modules under packages/main/src/db/do (package main)
 //
 // Regenerate: bun run codegen [-- --package <name>]
@@ -18,13 +18,22 @@ import {
   DO_MODULE_PERSIST,
   DO_MODULE_STATE,
 } from "./do.gen";
+import type { DoRegistry } from "@monrep/db/registry";
 
-/** Bind app DO catalog into `@monrep/db` stream runtime. */
-bindDoRegistry({
+/** App DO catalog for this Worker (codegen). */
+export const DO_BINDINGS: DoRegistry = {
   epoch: DO_MODULE_EPOCH,
   persist: DO_MODULE_PERSIST,
   live: DO_MODULE_LIVE,
   state: DO_MODULE_STATE,
   modules: DO_MODULES,
   factories: DO_MODULE_DB_FACTORIES,
-});
+};
+
+/**
+ * Bind this Worker's DO catalog into `@monrep/db`.
+ * Use from Worker / serverFn entry (no React). Client bind happens via `host.gen` import.
+ */
+export function bindDoApp(): void {
+  bindDoRegistry(DO_BINDINGS);
+}

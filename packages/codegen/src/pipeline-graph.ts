@@ -2,7 +2,7 @@ export type TaskId =
   | "doIndex"
   | "doTypes"
   | "dbCollectionsDo"
-  | "emitRegistry"
+  | "emitHost"
   | "emitUseStreamDb"
   | "ensureBarrels";
 
@@ -10,7 +10,7 @@ export const PIPELINE: Array<TaskId> = [
   "doIndex",
   "doTypes",
   "dbCollectionsDo",
-  "emitRegistry",
+  "emitHost",
   "emitUseStreamDb",
   "ensureBarrels",
 ];
@@ -23,9 +23,9 @@ export const DEPENDS_ON: Record<TaskId, Array<TaskId>> = {
   doIndex: [],
   doTypes: ["doIndex"],
   dbCollectionsDo: ["doIndex", "doTypes"],
-  emitRegistry: ["dbCollectionsDo"],
+  emitHost: ["dbCollectionsDo"],
   emitUseStreamDb: ["dbCollectionsDo"],
-  ensureBarrels: ["emitRegistry", "emitUseStreamDb"],
+  ensureBarrels: ["emitHost", "emitUseStreamDb"],
 };
 
 export const downstreamOf = (from: TaskId): Array<TaskId> => {
