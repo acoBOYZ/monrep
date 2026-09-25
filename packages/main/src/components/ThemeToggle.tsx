@@ -29,11 +29,11 @@ export function ThemeToggle() {
       title={`Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.`}
     >
       {theme === "system" ? (
-        <HugeiconsIcon icon={Computer} />
+        <HugeiconsIcon icon={Computer} className="size-5" />
       ) : theme === "light" ? (
-        <HugeiconsIcon icon={Sun} />
+        <HugeiconsIcon icon={Sun} className="size-5" />
       ) : (
-        <HugeiconsIcon icon={Moon} />
+        <HugeiconsIcon icon={Moon} className="size-5" />
       )}
     </Button>
   );
