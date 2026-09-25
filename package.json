@@ -1,6 +1,6 @@
 {
   "name": "monrep-mono",
-  "version": "0.4.8",
+  "version": "0.5.0",
   "type": "module",
   "author": "Ahmet Cevdet ÖZTÜRK",
   "description": "A monorepo template built with Bun, Hono, Vite, and React",
