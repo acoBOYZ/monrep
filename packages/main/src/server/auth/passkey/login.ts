@@ -4,6 +4,7 @@ import {
   verifyAuthenticationResponse,
 } from "@simplewebauthn/server";
 import { createServerFn } from "@tanstack/react-start";
+import { issueAdminSession } from "../cookies";
 import { ensureAdminUser } from "../db";
 import { getAuthEnv } from "../env";
 import {
@@ -113,12 +114,15 @@ export const passkeyLoginVerifyFn = createServerFn({ method: "POST" })
 
     clearChallengeCookie();
     const totp = await findTotpByUserId(passkey.userId);
-    const step = totp?.enabledAt ? ("totp" as const) : ("enroll_totp" as const);
+    if (totp?.enabledAt) {
+      const session = await issueAdminSession(email);
+      return ok({ session });
+    }
     await setPendingCookie({
       email,
       userId: passkey.userId,
-      step,
+      step: "enroll_totp",
       method: "passkey",
     });
-    return ok({ step });
+    return ok({ step: "enroll_totp" as const });
   });
