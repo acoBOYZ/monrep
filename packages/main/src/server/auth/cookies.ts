@@ -50,7 +50,7 @@ export const clearSessionCookie = (): void => {
   deleteCookie(name, { path: "/" });
 };
 
-/** Mint full admin session after TOTP success. */
+/** Mint full admin session after TOTP success, or verified passkey when TOTP already enrolled. */
 export const issueAdminSession = async (email: string): Promise<PublicSession> => {
   const role = "admin" as const;
   const capabilities = [...ROLE_CAPABILITIES[role]];

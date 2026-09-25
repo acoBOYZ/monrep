@@ -153,9 +153,15 @@ export function useAdminLoginFlow(onAuthed: () => void | Promise<void>) {
         toast.error(authErrorMessage(run.value.error));
         return;
       }
-      await goAfterPending(run.value.step);
+      if ("session" in run.value) {
+        await finishSession();
+        return;
+      }
+      if ("step" in run.value) {
+        await goAfterPending(run.value.step);
+      }
     },
-    [email, goAfterPending],
+    [email, finishSession, goAfterPending],
   );
 
   const confirmTotpEnroll = useCallback(async () => {
