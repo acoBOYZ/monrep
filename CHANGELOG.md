@@ -2,6 +2,39 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.0] - 2026-09-27
+
+### 🚀 Features
+
+- Big one: Linux `monrep` agent + control-plane fleet UI. streams split client/server. effect-solutions out. by @acoBOYZ
+
+- Big one: Linux `monrep` agent + control-plane fleet UI. streams split client/server. effect-solutions out. by @acoBOYZ
+
+- *(template)* `bun run create:app <name>` scaffolds a second Worker from `packages/.templates/app`. by @acoBOYZ
+
+
+### 🎨 Styling
+
+- Public landing page + auth UI tidy. copy button grows a `block` variant. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #31 from acoBOYZ/feat-agent-cli by @acoBOYZ in #31
+
+- Merge pull request #30 from acoBOYZ/style-ui-polish by @acoBOYZ in #30
+
+- Merge pull request #29 from acoBOYZ/security-enrol-totp-if-passkey-available by @acoBOYZ in #29
+
+- Passkey verify: full session if TOTP already on; otherwise force `enroll_totp`. no more totp challenge after a good passkey. by @acoBOYZ
+
+- Merge pull request #28 from acoBOYZ/security-more-layers by @acoBOYZ in #28
+
+- Admin login gets real layers: Turnstile → password → TOTP → passkey. pending cookies between steps. by @acoBOYZ
+
+- Merge pull request #27 from acoBOYZ/feat-new-app-template by @acoBOYZ in #27
+
+
 ## [0.6.0] - 2026-09-25
 
 ### 🚀 Features
