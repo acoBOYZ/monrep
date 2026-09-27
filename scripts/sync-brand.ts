@@ -49,7 +49,7 @@ const githubRepo = `${brand.githubOwner}/${brand.githubRepo}`;
 const controlPlaneOrigin = brand.controlPlaneOrigin.replace(/\/$/, "");
 const installPath = `/${brand.installPath.replace(/^\/+|\/+$/g, "")}`;
 const installUrl = `${controlPlaneOrigin}${installPath}`;
-const installCommand = `curl -fsSL ${installUrl} | sh`;
+const installCommand = `curl -fsSL ${installUrl} | bash`;
 const githubUrl = `https://github.com/${githubRepo}`;
 const canonicalOrigin = `https://${brand.canonicalAppHost}`;
 

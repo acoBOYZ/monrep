@@ -5,7 +5,7 @@ Outbound tunnel agent for one monrep control plane. The binary is dumb: product 
 ## Install (Linux)
 
 ```bash
-curl -fsSL https://app.monrep.com/install | sh
+curl -fsSL https://app.monrep.com/install | bash
 ```
 
 Downloads the latest `monrep-linux-x86_64` or `monrep-linux-aarch64` asset from GitHub Releases into `/usr/local/bin` (or `~/.local/bin`). Domains, install path, repo, and asset prefix live in **local** root `brand.json` (gitignored; start from [`brand.json.example`](../../brand.json.example)). `bun run setup:dev`, `bun run up`, builds, and CI all run `bun run sync:brand`.

@@ -28,8 +28,8 @@
     "@monrep/ui": "workspace:^",
     "@monrep/utils": "workspace:^",
     "@tanstack/react-db": "^0.4.1",
-    "@tanstack/react-router": "^1.170.39",
-    "@tanstack/react-start": "^1.168.58",
+    "@tanstack/react-router": "^1.170.40",
+    "@tanstack/react-start": "^1.168.59",
     "@tanstack/react-store": "^0.11.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
@@ -38,10 +38,10 @@
   },
   "devDependencies": {
     "@monrep/codegen": "workspace:^",
-    "@cloudflare/vite-plugin": "^1.60.1",
+    "@cloudflare/vite-plugin": "^1.61.0",
     "@rolldown/plugin-babel": "^0.2.4",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/router-cli": "^1.167.38",
+    "@tanstack/router-cli": "^1.167.39",
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
@@ -52,6 +52,6 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.1",
     "vite-bundle-analyzer": "^1.3.9",
-    "wrangler": "^4.140.0"
+    "wrangler": "^4.142.0"
   }
 }

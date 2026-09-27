@@ -67,7 +67,7 @@ Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb op
 ## CLI agent
 
 ```bash
-curl -fsSL https://app.monrep.com/install | sh
+curl -fsSL https://app.monrep.com/install | bash
 monrep enroll --url https://<your-app> --token <one-time>
 monrep daemon
 ```
