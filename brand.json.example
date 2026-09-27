@@ -3,10 +3,10 @@
   "binName": "monrep",
   "githubOwner": "acoBOYZ",
   "githubRepo": "monrep",
-  "controlPlaneOrigin": "https://app.monrep.com",
-  "canonicalAppHost": "app.monrep.com",
-  "marketingOrigins": ["https://monrep.com", "https://www.monrep.com"],
+  "controlPlaneOrigin": "https://monrep.dev",
+  "canonicalAppHost": "monrep.dev",
+  "marketingOrigins": ["https://monrep.dev", "https://www.monrep.dev"],
   "installPath": "/install",
   "releaseAssetPrefix": "monrep-linux",
-  "adminEmailDomain": "monrep.com"
+  "adminEmailDomain": "monrep.dev"
 }
