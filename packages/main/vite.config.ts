@@ -8,8 +8,9 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { analyzer } from "vite-bundle-analyzer";
 import type { ServerOptions as HttpsServerOptions } from "node:https";
+import { CANONICAL_ORIGIN } from "./src/brand.gen";
 
-const DOMAIN = "https://app.monrep.com";
+const DOMAIN = CANONICAL_ORIGIN;
 
 const CERT_DIR = resolve(import.meta.dirname, "../../certs");
 const VITE_KEY = resolve(CERT_DIR, "vite-dev.key");

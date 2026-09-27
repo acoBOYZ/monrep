@@ -76,7 +76,3 @@ All notable changes to this project are documented in this file.
 - *(db)* Preserve createdAt on stream upsert updates
 
 ## [0.4.8] - 2026-09-24
-
-# Changelog
-
-All notable changes to this project are documented in this file.

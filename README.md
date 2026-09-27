@@ -51,11 +51,13 @@ If you just cloned this: start from [ROADMAP.md](./ROADMAP.md) for “what exist
 
 HTTPS on Vite matters for StreamDB: browsers cap ~6 concurrent HTTP/1.1 sockets per host; TLS brings HTTP/2 multiplexing so many live stream requests don’t queue.
 
+Brand / domains are **per deploy**: copy [`brand.json.example`](./brand.json.example) → `brand.json` (gitignored) and edit, or let `setup:dev` / `bun run sync:brand` create it from the example. Generated `*.gen.*` and `scripts/install-agent.sh` are also local.
+
 ```bash
 bun install
-bun run setup:dev   # openssl local CA + leaf under certs/ (skips if already there; trusts root on macOS)
+bun run setup:dev   # openssl certs + sync:brand
 bun run codegen     # when you touch DO / stream schemas
-bun run up          # upgrade bun, update deps, sync upstreams (optional)
+bun run up          # upgrade bun, update deps, sync:brand, sync upstreams (optional)
 bun run ok          # typecheck, lint, react-doctor
 bun run dev         # https://localhost:5274 (falls back to http if certs missing)
 ```
@@ -65,12 +67,12 @@ Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb op
 ## CLI agent
 
 ```bash
-curl -fsSL https://monrep.acoboyz.workers.dev/install.sh | sh
+curl -fsSL https://app.monrep.com/install | sh
 monrep enroll --url https://<your-app> --token <one-time>
 monrep daemon
 ```
 
-Details: [`packages/agent/README.md`](./packages/agent/README.md). Progress: [`ROADMAP.md`](./ROADMAP.md).
+Install URL and release asset names come from your local `brand.json` (see `brand.json.example`). After edits: `bun run sync:brand`. Details: [`packages/agent/README.md`](./packages/agent/README.md). Progress: [`ROADMAP.md`](./ROADMAP.md).
 
 ## Contributing
 

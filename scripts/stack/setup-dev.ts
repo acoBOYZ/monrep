@@ -136,3 +136,5 @@ if (process.platform === "darwin") {
 
 console.log("\n✅ Vite HTTPS certs ready under certs/");
 console.log("   bun run --cwd packages/main dev  →  https://localhost:5274\n");
+
+run(["bun", "run", "sync:brand"]);

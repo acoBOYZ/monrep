@@ -19,6 +19,9 @@ jobs:
 
       - uses: ./.github/actions/prepare
 
+      - name: Sync brand / install gens
+        run: bun run sync:brand
+
       - name: Compute next version
         id: version
         env:
@@ -27,7 +30,7 @@ jobs:
           bun run release:bumped-version
           echo "version=$(cat "$BUMPED_VERSION_FILE")" >> "$GITHUB_OUTPUT"
 
-      - name: Update package.json version
+      - name: Update package.json + agent Cargo version
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: bun run release:set-version -- "$VERSION"
@@ -48,7 +51,7 @@ jobs:
           RELEASE_BRANCH: release/v${{ steps.version.outputs.version }}
         run: |
           git switch -c "$RELEASE_BRANCH"
-          git add package.json CHANGELOG.md
+          git add package.json CHANGELOG.md packages/agent/Cargo.toml
           git commit -m "chore(release): v${VERSION}"
           git push --set-upstream origin "$RELEASE_BRANCH"
 
@@ -60,7 +63,7 @@ jobs:
           gh pr create \
             --title "chore(release): v${VERSION}" \
             --body "$(cat <<EOF
-          Bumps root version to **${VERSION}** and regenerates \`CHANGELOG.md\` (git-cliff). No npm publish.
+          Bumps root \`package.json\` + \`packages/agent/Cargo.toml\` to **${VERSION}** and regenerates \`CHANGELOG.md\` (git-cliff). Brand gens stay local (\`sync:brand\`). No npm publish.
 
           After merging, from an up-to-date \`main\`:
 

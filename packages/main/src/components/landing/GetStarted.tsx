@@ -1,10 +1,10 @@
 import { CopyableButton } from "@monrep/ui/base";
+import { INSTALL_COMMAND } from "../../brand.gen";
 import { ContentFrame } from "./frame";
 
 /**
- * Install one-liner — served from this Worker at /install.sh.
+ * Install one-liner — served from this Worker at `INSTALL_PATH` (brand.json).
  */
-const INSTALL_COMMAND = "curl -fsSL https://monrep.acoboyz.workers.dev/install.sh | sh";
 
 export function GetStarted() {
   return (
@@ -31,9 +31,9 @@ export function GetStarted() {
           <CopyableButton
             text={INSTALL_COMMAND}
             variant="block"
-            className="mt-8 overflow-hidden rounded-lg bg-background/10 text-background hover:bg-background/15 focus-visible:ring-background/40"
+            className="text-foreground mt-8 overflow-hidden rounded-lg bg-muted/10 hover:bg-muted/15 focus-visible:ring-muted/40"
           >
-            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-xs leading-relaxed text-background sm:text-sm">
+            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-xs leading-relaxed sm:text-sm text-background">
               <code>{INSTALL_COMMAND}</code>
             </pre>
           </CopyableButton>

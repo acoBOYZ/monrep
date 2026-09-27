@@ -4,12 +4,18 @@ on:
   pull_request:
     paths:
       - "packages/agent/**"
+      - "brand.json.example"
+      - "scripts/sync-brand.ts"
+      - "scripts/install-agent.sh.tpl"
       - ".github/workflows/agent-checks.yml"
       - ".github/actions/prepare-rust/**"
   push:
     branches: [main]
     paths:
       - "packages/agent/**"
+      - "brand.json.example"
+      - "scripts/sync-brand.ts"
+      - "scripts/install-agent.sh.tpl"
       - ".github/workflows/agent-checks.yml"
       - ".github/actions/prepare-rust/**"
   workflow_dispatch:
@@ -22,29 +28,78 @@ permissions:
   contents: read
 
 jobs:
-  agent-rust:
-    name: agent rust gates
+  fmtcheck:
+    name: fmtcheck
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: packages/agent
     steps:
       - uses: actions/checkout@v5
-
       - uses: ./.github/actions/prepare
-
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
-
-      - name: fmtcheck
+      - name: Format check
         run: bun run fmtcheck
 
-      - name: lint:rust
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare
+      - uses: ./.github/actions/prepare-rust
+        with:
+          working-directory: packages/agent
+      - name: Lint
         run: bun run lint:rust
 
-      - name: typecheck:rust
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare
+      - uses: ./.github/actions/prepare-rust
+        with:
+          working-directory: packages/agent
+      - name: Typecheck
+        env:
+          RUSTFLAGS: -Dwarnings
         run: bun run typecheck:rust
 
-      - name: doctor:rust
+  doctor:
+    name: doctor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare
+      - uses: ./.github/actions/prepare-rust
+        with:
+          working-directory: packages/agent
+      - name: Doctor
         run: bun run doctor:rust
+
+  agent-checks-passed:
+    if: always()
+    name: agent-checks:required
+    needs: [fmtcheck, lint, typecheck, doctor]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "Some jobs failed or were cancelled"
+            exit 1
+          fi
+          echo "All agent CI jobs passed"

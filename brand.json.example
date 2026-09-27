@@ -1,0 +1,12 @@
+{
+  "productName": "monrep",
+  "binName": "monrep",
+  "githubOwner": "acoBOYZ",
+  "githubRepo": "monrep",
+  "controlPlaneOrigin": "https://app.monrep.com",
+  "canonicalAppHost": "app.monrep.com",
+  "marketingOrigins": ["https://monrep.com", "https://www.monrep.com"],
+  "installPath": "/install",
+  "releaseAssetPrefix": "monrep-linux",
+  "adminEmailDomain": "monrep.com"
+}

@@ -13,8 +13,9 @@ Creates `packages/<name>` from [`packages/.templates/app`](../packages/.template
 ## Before you open a PR
 
 1. Prefer one concern per PR.
-2. Do **not** hand-edit generated files (`**/*.gen.ts`, `**/gen/**`). Change the source and run `bun run codegen`.
-3. Run quality gates on what you touched (from repo root, or scoped with `--cwd <package>`):
+2. Do **not** hand-edit generated files (`**/*.gen.ts`, `**/*.gen.*`, `**/gen/**`). Change the source and run `bun run codegen` (or `bun run sync:brand` for brand/install gens).
+3. **Brand is per deploy.** Commit only [`brand.json.example`](../brand.json.example) and [`scripts/install-agent.sh.tpl`](../scripts/install-agent.sh.tpl). Local `brand.json`, filled `scripts/install-agent.sh`, and brand/install `*.gen.*` are gitignored — never commit them. `setup:dev`, `up`, builds, and CI `prepare` run `bun run sync:brand` (copies example → `brand.json` if missing).
+4. Run quality gates on what you touched (from repo root, or scoped with `--cwd <package>`):
 
 ```bash
 bun run typecheck
@@ -36,6 +37,8 @@ bun run ok
 
 We never publish to npm. Release notes come from **conventional commits** via [git-cliff](https://git-cliff.org/) into root `CHANGELOG.md` and GitHub Releases.
 
+Bump rules (see [`cliff.toml`](../cliff.toml)): conventional SemVer — `fix` → patch, `feat` → minor only when cliff’s bump logic says so (we do **not** force a minor on every feature). Breaking majors stay off while on `0.x`. `prepare-release` syncs root `package.json` **and** `packages/agent/Cargo.toml` to the same version.
+
 Prefer conventional commit / PR titles:
 
 | Prefix             | Section                                                        |
@@ -51,10 +54,10 @@ CI release jobs set `GITHUB_TOKEN` so git-cliff can attach `by @user` and `in #P
 
 ### Cut a release
 
-1. Actions → **prepare-release** (workflow_dispatch). Opens `release/vX.Y.Z` with bumped root version + `CHANGELOG.md`.
+1. Actions → **prepare-release** (workflow_dispatch). Opens `release/vX.Y.Z` with bumped root + agent Cargo version and `CHANGELOG.md` (brand gens stay local via `sync:brand` on the runner).
 2. Merge that PR to `main`.
 3. From an up-to-date `main`: `bun run release:tag` (creates and pushes `vX.Y.Z`).
-4. The **release** workflow creates the GitHub Release (no npm).
+4. The **release** workflow creates the GitHub Release (no npm) and uploads `monrep-linux-*` binaries.
 
 ## Import / polish house style
 
