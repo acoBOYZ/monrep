@@ -75,6 +75,7 @@ crash-report-2.txt
 .example
 .wrangler
 .dev.vars
+.prod.vars
 .tmp
 .expect
 .oxlintrc.json.bak
