@@ -1,0 +1,35 @@
+name: Prepare Rust
+description: Install Rust toolchain for packages/agent (stable from rust-toolchain.toml + nightly miri)
+
+inputs:
+  working-directory:
+    description: Path to the agent crate
+    required: false
+    default: packages/agent
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust (stable + clippy + rustfmt)
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+        toolchain: stable
+
+    - name: Install nightly + miri
+      shell: bash
+      run: |
+        rustup toolchain install nightly --component miri
+        cargo +nightly miri setup
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ${{ inputs.working-directory }}/target
+          ${{ inputs.working-directory }}/miri/target
+        key: ${{ runner.os }}-cargo-agent-${{ hashFiles(format('{0}/Cargo.lock', inputs.working-directory), format('{0}/miri/Cargo.lock', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-agent-

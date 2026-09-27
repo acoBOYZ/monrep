@@ -11,6 +11,8 @@
       "@monrep/hooks": ["../hooks/src"],
       "@monrep/utils": ["../utils/src"],
       "@monrep/utils/*": ["../utils/src/*"],
+      "@monrep/runtime": ["../runtime/src"],
+      "@monrep/runtime/*": ["../runtime/src/*"],
       "@monrep/db": ["../db/src"],
       "@monrep/db/*": ["../db/src/*"]
     }

@@ -1,0 +1,19 @@
+# Policy for packages/agent (fleet CLI).
+# https://rust-doctor.com/docs/configuration
+
+blocking = "error"
+
+[categories]
+security = "error"
+correctness = "error"
+reliability = "warn"
+performance = "warn"
+dependencies = "warn"
+maintainability = "warn"
+
+[rules]
+"rust_doctor::structure::duplicate_function_body" = "off"
+"clippy::indexing_slicing" = "off"
+"clippy::string_slice" = "off"
+"rust_doctor::structure::near_duplicate_function_body" = "off"
+"rust_doctor::cargo::duplicate_major_versions" = "off"

@@ -30,9 +30,10 @@ function AuthenticatedLayout() {
     <>
       <DOHost />
       {streamsReady ? (
-        <Navbar>
+        <>
+          <Navbar />
           <Outlet />
-        </Navbar>
+        </>
       ) : (
         <PageLoader />
       )}

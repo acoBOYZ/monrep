@@ -67,8 +67,8 @@ export function buildDbCollectionsDoSource(entries: Array<CollectionEntry>): str
       const del = actionName("delete", c.name);
       const valueType = `T${c.exportName}Do`;
       return [
-        `    ${upsert}: ActionDefinition<${valueType}>;`,
-        `    ${del}: ActionDefinition<string>;`,
+        `    ${upsert}: ActionDefinition<${valueType} | Array<${valueType}>>;`,
+        `    ${del}: ActionDefinition<string | Array<string>>;`,
       ];
     });
     return [`  "${moduleId}": {`, ...actionLines, "  };"];

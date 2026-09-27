@@ -5,7 +5,6 @@
     "": {
       "name": "monrep-mono",
       "devDependencies": {
-        "@effect/tsgo": "^0.46.0",
         "@monrep/agent-skills": "workspace:*",
         "@shadcn/lint": "^0.2.0",
         "@stylistic/eslint-plugin": "^5.10.0",
@@ -24,6 +23,14 @@
         "rimraf": "^6.1.3",
         "turbo": "^2.11.4",
         "typescript": "^7.0.2",
+      },
+    },
+    "packages/agent": {
+      "name": "@monrep/agent",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@types/bun": "^1.4.2",
+        "rust-doctor": "^0.7.0",
       },
     },
     "packages/agent-skills": {
@@ -67,14 +74,6 @@
       "peerDependencies": {
         "react": "^19.3.0",
         "react-dom": "^19.3.0",
-      },
-    },
-    "packages/effect-solutions": {
-      "name": "@monrep/effect-solutions",
-      "version": "0.4.8",
-      "devDependencies": {
-        "@types/bun": "^1.4.2",
-        "typescript": "^7.0.2",
       },
     },
     "packages/hooks": {
@@ -138,6 +137,23 @@
         "wrangler": "^4.141.0",
       },
     },
+    "packages/runtime": {
+      "name": "@monrep/runtime",
+      "version": "1.0.0",
+      "dependencies": {
+        "@monrep/hooks": "workspace:^",
+        "@tanstack/react-store": "^0.11.1",
+      },
+      "devDependencies": {
+        "@types/react": "^19.3.0",
+        "@types/react-dom": "^19.3.0",
+        "typescript": "^7.0.2",
+      },
+      "peerDependencies": {
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+      },
+    },
     "packages/ui": {
       "name": "@monrep/ui",
       "version": "1.0.1",
@@ -148,14 +164,17 @@
         "@hugeicons/react": "^1.1.10",
         "@monrep/db": "workspace:^",
         "@monrep/hooks": "workspace:^",
+        "@monrep/runtime": "workspace:^",
         "@monrep/utils": "workspace:^",
         "@ncdai/react-wheel-picker": "^1.2.3",
         "@tanstack/react-hotkeys": "^0.12.0",
         "@tanstack/react-store": "^0.11.1",
+        "@tanstack/react-virtual": "^3.14.13",
         "class-variance-authority": "^0.7.1",
         "input-otp": "^1.5.0",
         "react-number-format": "^5.4.5",
         "sonner": "^2.0.8",
+        "use-stick-to-bottom": "^1.1.6",
       },
       "devDependencies": {
         "@tailwindcss/cli": "^4.3.3",
@@ -265,22 +284,6 @@
     "@durable-streams/server-cloudflare": ["@durable-streams/server-cloudflare@0.1.1", "", {}, "sha512-zWH8d/YVrJWqqtWFsnJJInAVxi4NseC1k5AYyEftALydGtA3S7wPFI8dEPoMHJ1Fg3I04M7iSYPiSZk7uzCYMw=="],
 
     "@durable-streams/state": ["@durable-streams/state@0.3.2", "", { "dependencies": { "@durable-streams/client": "0.2.7", "@standard-schema/spec": "^1.0.0" }, "peerDependencies": { "@tanstack/db": ">=0.6.0 <1.0.0" }, "optionalPeers": ["@tanstack/db"], "bin": { "intent": "bin/intent.js" } }, "sha512-pFj09315ARvyJR6iCt6p1CP6HW6tw/JsKgD1pfyjduveOzqxq3v01aXPSlUMb83ncwWjtMTuzwyfP6JsywbaJg=="],
-
-    "@effect/tsgo": ["@effect/tsgo@0.46.0", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.46.0", "@effect/tsgo-darwin-x64": "0.46.0", "@effect/tsgo-linux-arm": "0.46.0", "@effect/tsgo-linux-arm64": "0.46.0", "@effect/tsgo-linux-x64": "0.46.0", "@effect/tsgo-win32-arm64": "0.46.0", "@effect/tsgo-win32-x64": "0.46.0" }, "bin": { "effect-tsgo": "dist/effect-tsgo.cjs" } }, "sha512-Norc3rq0kleoRaIAohO4bA2Ef2/Ah8tW045Aq+X9bcCiCcKVPYzOaxt9DLit+utpreW56F7idHxp90HSxobqWQ=="],
-
-    "@effect/tsgo-darwin-arm64": ["@effect/tsgo-darwin-arm64@0.46.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-1Ox9ItOdRJN9aL0hZPYXX9dfFpSDb7h5DRdWCoU30OFlWe04I7ErdOlKkoImj6bea9WiQedTa8k2n3I+LbNG7w=="],
-
-    "@effect/tsgo-darwin-x64": ["@effect/tsgo-darwin-x64@0.46.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-U/A3YpyXvzChkOB/HIi2XeTTC6qnS0h1DzoPPjRfNGv8AFohRwzD+ZMnEY+hU4jvJ7owMrOZrgjr3rcRdsxIgg=="],
-
-    "@effect/tsgo-linux-arm": ["@effect/tsgo-linux-arm@0.46.0", "", { "os": "linux", "cpu": "arm" }, "sha512-VZGErwcGPTj0o/YIpxpyuHhlLtlAA8+NOx6qoepk6PFlkV76uRWWA1A68j+f7TOAzE1FOZVYfJFfI5mqZsxZNQ=="],
-
-    "@effect/tsgo-linux-arm64": ["@effect/tsgo-linux-arm64@0.46.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-Iiqx0d/gkwsIJM23jiYXQZIOo+Dfk4MgXUUIEE2RWEqQAythFaUqK6p+jzoY6cBoKzuXf3B11vMpb1xiRNs12w=="],
-
-    "@effect/tsgo-linux-x64": ["@effect/tsgo-linux-x64@0.46.0", "", { "os": "linux", "cpu": "x64" }, "sha512-PPSLhmdJw0GglzHY4DL1AdR33jnx14bH9/f+IFeifvmzMyXInCzLI4w8jI2ROX1HN2dQg6H/v8tX0Ef7xtq8tw=="],
-
-    "@effect/tsgo-win32-arm64": ["@effect/tsgo-win32-arm64@0.46.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-0CSOUE9DDROvk96TSwm5J96pxB7Mm1D1zXeHFTDMmf3Pim2JjAuCZ3oYQrrnUP520kAnbABNVUhWHURtaU5IjA=="],
-
-    "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.46.0", "", { "os": "win32", "cpu": "x64" }, "sha512-VGoT9TkWhFxjhRMOok3wqx5TwXAKKCdFgug+aggP9GGaLC33lqW1l85kLm4sMH5dzw2Fa3g/+BGyVJoL20INdg=="],
 
     "@emnapi/core": ["@emnapi/core@1.11.2", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-TC8MkTuZUtcTSiFeuC0ksCh9QIJ5+F21MvZ4Wn4ORfYaFJ/0dsiudv5tVkejgwZlwQ39jL9WWDe2lz8x0WglOA=="],
 
@@ -456,17 +459,19 @@
 
     "@microsoft/fetch-event-source": ["@microsoft/fetch-event-source@2.0.1", "", {}, "sha512-W6CLUJ2eBMw3Rec70qrsEW0jOm/3twwJv21mrmj2yORiaVmVYGS4sSS5yUwvQc1ZlDLYGPnClVWmUUMagKNsfA=="],
 
+    "@monrep/agent": ["@monrep/agent@workspace:packages/agent"],
+
     "@monrep/agent-skills": ["@monrep/agent-skills@workspace:packages/agent-skills"],
 
     "@monrep/codegen": ["@monrep/codegen@workspace:packages/codegen"],
 
     "@monrep/db": ["@monrep/db@workspace:packages/db"],
 
-    "@monrep/effect-solutions": ["@monrep/effect-solutions@workspace:packages/effect-solutions"],
-
     "@monrep/hooks": ["@monrep/hooks@workspace:packages/hooks"],
 
     "@monrep/main": ["@monrep/main@workspace:packages/main"],
+
+    "@monrep/runtime": ["@monrep/runtime@workspace:packages/runtime"],
 
     "@monrep/ui": ["@monrep/ui@workspace:packages/ui"],
 
@@ -804,6 +809,16 @@
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
 
+    "@rustdoctor/darwin-arm64": ["@rustdoctor/darwin-arm64@0.7.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-12EvdllxJxxqshcQ6jegIfluOcTNoVWnA2vOO/UNpU06NCUBPlAOMVEA6wO848F6bRFUc1C79eondLpdxgb1Dg=="],
+
+    "@rustdoctor/darwin-x64": ["@rustdoctor/darwin-x64@0.7.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-15cTf15m8yjG8M+knO0pWj5Sohkfr2MGSuH9yLSHeq+/LLE7wLiYI13/SymzB64B70HpT0la5wvU4SJ+mh6tcQ=="],
+
+    "@rustdoctor/linux-arm64": ["@rustdoctor/linux-arm64@0.7.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-HjMVxcZJAXE+9xFU/plWt2VrRj1t2/crQ733qKhcl94TmCJtg43Lf7Gc4FkMdOAaySitWVVTI902n7HFP0atHQ=="],
+
+    "@rustdoctor/linux-x64": ["@rustdoctor/linux-x64@0.7.0", "", { "os": "linux", "cpu": "x64" }, "sha512-csDzzBa5UfU+Ao+VSYkm/aEIU+RWjY/grF62ZYlDDUk0EnCWgAdBp2ocl5Y/rPernPyLMNOqndOT7CyL7Z0ENQ=="],
+
+    "@rustdoctor/win32-x64": ["@rustdoctor/win32-x64@0.7.0", "", { "os": "win32", "cpu": "x64" }, "sha512-fA/uyCbIxcQOBK12Mu9bNRvLpDzhlVdI/yCmTII4wWJthEAzJ+ky1vkH1xjQBai8kkVdnytLIDa9A19Q0YejGg=="],
+
     "@sec-ant/readable-stream": ["@sec-ant/readable-stream@0.4.1", "", {}, "sha512-831qok9r2t8AlxLko40y2ebgSDhenenCatLVeW/uBtnHPyhHOvG0C7TvfgecV+wHzIm5KUICgzmVpWS+IMEAeg=="],
 
     "@sentry/conventions": ["@sentry/conventions@0.16.0", "", {}, "sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ=="],
@@ -904,6 +919,8 @@
 
     "@tanstack/react-store": ["@tanstack/react-store@0.11.1", "", { "dependencies": { "@tanstack/store": "0.11.1", "use-sync-external-store": "^1.6.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-HaIGKI3YLmjBYIvy5DFDY23oNaYZIsTZfngey07Uh5iLVJgM3bIGCnZeOFOqzjFld9JHWcaHJnasD/bKoGKwJQ=="],
 
+    "@tanstack/react-virtual": ["@tanstack/react-virtual@3.14.13", "", { "dependencies": { "@tanstack/virtual-core": "3.17.11" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-JbDTAwtzZ99aOeCrAfW5EsE5KSq5RWh6Af2dtFwyLIIk48Ja7vm6n4axu/43T3vfjFnEGJalxJ1wyYjSQD6bSg=="],
+
     "@tanstack/router-cli": ["@tanstack/router-cli@1.167.38", "", { "dependencies": { "@tanstack/router-generator": "1.167.38", "chokidar": "^5.0.0", "yargs": "^17.7.2" }, "bin": { "tsr": "bin/tsr.cjs" } }, "sha512-Vi8wB1L4ustvGb1rGvV4wUgAxvTbLs+QGtDsZM9FQ0IbLJ2tCNs4AjJMu++lYW7O1/TDcXyYnjRPZmFLUjAEXA=="],
 
     "@tanstack/router-core": ["@tanstack/router-core@1.171.32", "", { "dependencies": { "@tanstack/history": "1.162.4", "cookie-es": "^3.0.0", "seroval": "^1.6.2", "seroval-plugins": "^1.6.2" } }, "sha512-X86Jqk3vB2KJcUfS6oLi7B7yxbaa59QEhZRPPP1fRx3k+Jw/Fu1UYVBcRtdwK/OccQnrlQdVoKvNO3QXmyEBOw=="],
@@ -925,6 +942,8 @@
     "@tanstack/start-storage-context": ["@tanstack/start-storage-context@1.167.34", "", { "dependencies": { "@tanstack/router-core": "1.171.32" } }, "sha512-cRPE0kjt1CnOIhepmNOvRFwCGhDAnCRohPD3HmzqJJThPkixLBRuLDvIYp4hRPtM1TJ9hiKbYl24IxAhjZO5TA=="],
 
     "@tanstack/store": ["@tanstack/store@0.11.1", "", {}, "sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA=="],
+
+    "@tanstack/virtual-core": ["@tanstack/virtual-core@3.17.11", "", {}, "sha512-+ILjvtHup6Y2hzQ6YzwMgX1Q+oQpxEGOXCEsCNaPoIP0VxMbizIBTmYTDtkerkIQS8/CbP1BRuyt8V/8BCsy1g=="],
 
     "@tanstack/virtual-file-routes": ["@tanstack/virtual-file-routes@1.162.0", "", {}, "sha512-uhOeFyxLcU41HzvrxsGpiWdcMbScY1EDgbZ5K7DVRMYInbLYWAC0EA/kx9wXAoSM8q82bUG2hRl8+EAjE6XAbA=="],
 
@@ -1430,6 +1449,8 @@
 
     "rou3": ["rou3@0.8.1", "", {}, "sha512-ePa+XGk00/3HuCqrEnK3LxJW7I0SdNg6EFzKUJG73hMAdDcOUC/i/aSz7LSDwLrGr33kal/rqOGydzwl6U7zBA=="],
 
+    "rust-doctor": ["rust-doctor@0.7.0", "", { "optionalDependencies": { "@rustdoctor/darwin-arm64": "0.7.0", "@rustdoctor/darwin-x64": "0.7.0", "@rustdoctor/linux-arm64": "0.7.0", "@rustdoctor/linux-x64": "0.7.0", "@rustdoctor/win32-x64": "0.7.0" }, "bin": { "rust-doctor": "bin/rust-doctor.js" } }, "sha512-dvTQzUZN6IBAJXEKjz/7b9qtnRDTgfaK0hKAJO2Uy93cHBxT5UlKC3O+FVqeFAvp1UgXIKSa0dyyfN5xXFljqg=="],
+
     "scheduler": ["scheduler@0.28.0", "", {}, "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw=="],
 
     "semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
@@ -1516,7 +1537,7 @@
 
     "ufo": ["ufo@1.6.4", "", {}, "sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA=="],
 
-    "uint8array-extras": ["uint8array-extras@1.5.0", "", {}, "sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A=="],
+    "uint8array-extras": ["uint8array-extras@1.6.0", "", {}, "sha512-8iAasVS4wUx0gPLjH8Xtz2PeDzTSiy8QiLGu2DT3X5GU+egFEQhpnbtkehbAwjvDcxIERmCYcysiODFmE3Ud0Q=="],
 
     "ulid": ["ulid@3.0.2", "", { "bin": { "ulid": "dist/cli.js" } }, "sha512-yu26mwteFYzBAot7KVMqFGCVpsF6g8wXfJzQUHvu1no3+rRRSFcSV2nKeYvNPLD2J4b08jYBDhHUjeH0ygIl9w=="],
 
@@ -1537,6 +1558,8 @@
     "uqr": ["uqr@0.1.3", "", {}, "sha512-0rjE8iEJe4YmT9TOhwsZtqCMRLc5DXZUI2UEYUUg63ikBkqqE5EYWaI0etFe/5KUcmcYwLih2RND1kq+hrUJXA=="],
 
     "uri-js": ["uri-js@4.4.1", "", { "dependencies": { "punycode": "^2.1.0" } }, "sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg=="],
+
+    "use-stick-to-bottom": ["use-stick-to-bottom@1.1.6", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-z3Up8jYQGTkUCsGBnwg6/wj70KgXoW5Kz1AAc1j8MtQuYMBo6ZsdhrIXoegxa7gaMMilgQYyTohTrt3p94jHog=="],
 
     "use-sync-external-store": ["use-sync-external-store@1.7.0", "", { "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0" } }, "sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A=="],
 
@@ -1616,9 +1639,9 @@
 
     "@tailwindcss/node/lightningcss": ["lightningcss@1.32.0", "", { "dependencies": { "detect-libc": "^2.0.3" }, "optionalDependencies": { "lightningcss-android-arm64": "1.32.0", "lightningcss-darwin-arm64": "1.32.0", "lightningcss-darwin-x64": "1.32.0", "lightningcss-freebsd-x64": "1.32.0", "lightningcss-linux-arm-gnueabihf": "1.32.0", "lightningcss-linux-arm64-gnu": "1.32.0", "lightningcss-linux-arm64-musl": "1.32.0", "lightningcss-linux-x64-gnu": "1.32.0", "lightningcss-linux-x64-musl": "1.32.0", "lightningcss-win32-arm64-msvc": "1.32.0", "lightningcss-win32-x64-msvc": "1.32.0" } }, "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ=="],
 
-    "@tailwindcss/oxide-wasm32-wasi/@emnapi/core": ["@emnapi/core@1.11.3", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.3", "tslib": "^2.4.0" }, "bundled": true }, "sha512-zLpS5asjEb7lq8jYLq37N6XKaE41DIexlY1rF/z4/tIl3wo13Sqm28fRyfIsKZD+NZ8mM5RoKkpW/rBcuoSZSg=="],
+    "@tailwindcss/oxide-wasm32-wasi/@emnapi/core": ["@emnapi/core@1.11.2", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" }, "bundled": true }, "sha512-TC8MkTuZUtcTSiFeuC0ksCh9QIJ5+F21MvZ4Wn4ORfYaFJ/0dsiudv5tVkejgwZlwQ39jL9WWDe2lz8x0WglOA=="],
 
-    "@tailwindcss/oxide-wasm32-wasi/@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" }, "bundled": true }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
+    "@tailwindcss/oxide-wasm32-wasi/@emnapi/runtime": ["@emnapi/runtime@1.11.2", "", { "dependencies": { "tslib": "^2.4.0" }, "bundled": true }, "sha512-kyOl3X0DuTiT1h2ft8r2fYO8JYtU9a9Xis/zBSiGArNaagCOWx90N1k2wxp18czFDH+OgcWGb5ZP/XMt3dcyPA=="],
 
     "@tailwindcss/oxide-wasm32-wasi/@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.3", "", { "dependencies": { "tslib": "^2.4.0" }, "bundled": true }, "sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g=="],
 
@@ -1687,6 +1710,8 @@
     "@tailwindcss/node/lightningcss/lightningcss-win32-arm64-msvc": ["lightningcss-win32-arm64-msvc@1.32.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw=="],
 
     "@tailwindcss/node/lightningcss/lightningcss-win32-x64-msvc": ["lightningcss-win32-x64-msvc@1.32.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q=="],
+
+    "@tailwindcss/oxide-wasm32-wasi/@emnapi/core/@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.2", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-c95qOXkHdydNKhscBTebqEC1CVAZpyqOfVfBzQ1qgzyl3gfeldUjIggDbIZgDKsHLgnsM+igH7TJ/eAasaVuMA=="],
 
     "ajv-formats/ajv/json-schema-traverse": ["json-schema-traverse@1.0.0", "", {}, "sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug=="],
 

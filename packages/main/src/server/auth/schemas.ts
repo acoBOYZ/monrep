@@ -108,3 +108,13 @@ export const authErrorMessage = (error: AuthError): string => {
       return "Unknown error";
   }
 };
+
+/** Carries typed `_tag` payload; message from authErrorMessage for logs / HTTP. */
+export class AuthTaggedError extends Error {
+  readonly error: AuthError;
+  constructor(error: AuthError) {
+    super(authErrorMessage(error));
+    this.name = "AuthTaggedError";
+    this.error = error;
+  }
+}

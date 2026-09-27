@@ -75,6 +75,8 @@ export default defineConfig(({ mode }) => {
         "@": resolve(import.meta.dirname, "./src"),
         "@monrep/db": resolve(import.meta.dirname, "../db/src"),
         "@monrep/hooks": resolve(import.meta.dirname, "../hooks/src"),
+        "@monrep/runtime": resolve(import.meta.dirname, "../runtime/src"),
+        "@monrep/runtime/*": resolve(import.meta.dirname, "../runtime/src/*"),
         "@monrep/ui": resolve(import.meta.dirname, "../ui/src"),
         "@monrep/utils": resolve(import.meta.dirname, "../utils/src"),
       },

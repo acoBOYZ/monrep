@@ -27,6 +27,12 @@
         "src/**/*.{ts,tsx,js,jsx,json}",
         "src/**/*.{css,scss,sass,pcss}",
         "src/styles/**/*",
+        "src/**/*.rs",
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        "build.rs",
+        "scripts/build.ts",
         "tsconfig.json",
         "tsconfig.*.json",
         "vite.config.ts",
@@ -101,6 +107,23 @@
         "Cargo.lock",
         "rust-toolchain.toml",
         "scripts/**"
+      ],
+      "env": [
+        "NODE_ENV"
+      ]
+    },
+    "doctor:rust": {
+      "dependsOn": [],
+      "cache": true,
+      "inputs": [
+        "src/**/*.rs",
+        "upstream/**/*.rs",
+        "upstream/Cargo.toml",
+        "upstream/Cargo.lock",
+        "Cargo.toml",
+        "Cargo.lock",
+        "rust-toolchain.toml",
+        "package.json"
       ],
       "env": [
         "NODE_ENV"

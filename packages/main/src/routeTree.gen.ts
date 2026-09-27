@@ -16,7 +16,9 @@ import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAdminRouteImport } from './routes/_public/admin'
 import { Route as AuthenticatedPlaygroundPresenceRouteImport } from './routes/_authenticated/playground/presence'
 import { Route as AuthenticatedPlaygroundStreamsRouteImport } from './routes/_authenticated/playground/streams'
+import { Route as AuthenticatedPlaygroundTerminalRouteImport } from './routes/_authenticated/playground/terminal'
 import { Route as AuthenticatedServersIndexRouteImport } from './routes/_authenticated/servers/index'
+import { Route as AuthenticatedServersIdRouteImport } from './routes/_authenticated/servers/$id'
 import { Route as AuthenticatedServersNewRouteImport } from './routes/_authenticated/servers/new'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -55,12 +57,23 @@ const AuthenticatedPlaygroundStreamsRoute =
     path: '/streams',
     getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
   } as any)
+const AuthenticatedPlaygroundTerminalRoute =
+  AuthenticatedPlaygroundTerminalRouteImport.update({
+    id: '/terminal',
+    path: '/terminal',
+    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
+  } as any)
 const AuthenticatedServersIndexRoute =
   AuthenticatedServersIndexRouteImport.update({
     id: '/servers/',
     path: '/servers/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedServersIdRoute = AuthenticatedServersIdRouteImport.update({
+  id: '/servers/$id',
+  path: '/servers/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedServersNewRoute = AuthenticatedServersNewRouteImport.update({
   id: '/servers/new',
   path: '/servers/new',
@@ -73,6 +86,8 @@ export interface FileRoutesByFullPath {
   '/admin': typeof PublicAdminRoute
   '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
   '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
+  '/servers/$id': typeof AuthenticatedServersIdRoute
   '/servers/new': typeof AuthenticatedServersNewRoute
   '/servers/': typeof AuthenticatedServersIndexRoute
 }
@@ -82,6 +97,8 @@ export interface FileRoutesByTo {
   '/admin': typeof PublicAdminRoute
   '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
   '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
+  '/servers/$id': typeof AuthenticatedServersIdRoute
   '/servers/new': typeof AuthenticatedServersNewRoute
   '/servers': typeof AuthenticatedServersIndexRoute
 }
@@ -94,6 +111,8 @@ export interface FileRoutesById {
   '/_public/': typeof PublicIndexRoute
   '/_authenticated/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
   '/_authenticated/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
+  '/_authenticated/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
+  '/_authenticated/servers/$id': typeof AuthenticatedServersIdRoute
   '/_authenticated/servers/new': typeof AuthenticatedServersNewRoute
   '/_authenticated/servers/': typeof AuthenticatedServersIndexRoute
 }
@@ -105,6 +124,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/playground/presence'
     | '/playground/streams'
+    | '/playground/terminal'
+    | '/servers/$id'
     | '/servers/new'
     | '/servers/'
   fileRoutesByTo: FileRoutesByTo
@@ -114,6 +135,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/playground/presence'
     | '/playground/streams'
+    | '/playground/terminal'
+    | '/servers/$id'
     | '/servers/new'
     | '/servers'
   id:
@@ -125,6 +148,8 @@ export interface FileRouteTypes {
     | '/_public/'
     | '/_authenticated/playground/presence'
     | '/_authenticated/playground/streams'
+    | '/_authenticated/playground/terminal'
+    | '/_authenticated/servers/$id'
     | '/_authenticated/servers/new'
     | '/_authenticated/servers/'
   fileRoutesById: FileRoutesById
@@ -185,11 +210,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlaygroundStreamsRouteImport
       parentRoute: typeof AuthenticatedPlaygroundRouteRoute
     }
+    '/_authenticated/playground/terminal': {
+      id: '/_authenticated/playground/terminal'
+      path: '/terminal'
+      fullPath: '/playground/terminal'
+      preLoaderRoute: typeof AuthenticatedPlaygroundTerminalRouteImport
+      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
+    }
     '/_authenticated/servers/': {
       id: '/_authenticated/servers/'
       path: '/servers'
       fullPath: '/servers/'
       preLoaderRoute: typeof AuthenticatedServersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/servers/$id': {
+      id: '/_authenticated/servers/$id'
+      path: '/servers/$id'
+      fullPath: '/servers/$id'
+      preLoaderRoute: typeof AuthenticatedServersIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/servers/new': {
@@ -205,12 +244,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedPlaygroundRouteRouteChildren {
   AuthenticatedPlaygroundPresenceRoute: typeof AuthenticatedPlaygroundPresenceRoute
   AuthenticatedPlaygroundStreamsRoute: typeof AuthenticatedPlaygroundStreamsRoute
+  AuthenticatedPlaygroundTerminalRoute: typeof AuthenticatedPlaygroundTerminalRoute
 }
 
 const AuthenticatedPlaygroundRouteRouteChildren: AuthenticatedPlaygroundRouteRouteChildren =
   {
     AuthenticatedPlaygroundPresenceRoute: AuthenticatedPlaygroundPresenceRoute,
     AuthenticatedPlaygroundStreamsRoute: AuthenticatedPlaygroundStreamsRoute,
+    AuthenticatedPlaygroundTerminalRoute: AuthenticatedPlaygroundTerminalRoute,
   }
 
 const AuthenticatedPlaygroundRouteRouteWithChildren =
@@ -220,6 +261,7 @@ const AuthenticatedPlaygroundRouteRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedPlaygroundRouteRoute: typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  AuthenticatedServersIdRoute: typeof AuthenticatedServersIdRoute
   AuthenticatedServersNewRoute: typeof AuthenticatedServersNewRoute
   AuthenticatedServersIndexRoute: typeof AuthenticatedServersIndexRoute
 }
@@ -227,6 +269,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlaygroundRouteRoute:
     AuthenticatedPlaygroundRouteRouteWithChildren,
+  AuthenticatedServersIdRoute: AuthenticatedServersIdRoute,
   AuthenticatedServersNewRoute: AuthenticatedServersNewRoute,
   AuthenticatedServersIndexRoute: AuthenticatedServersIndexRoute,
 }

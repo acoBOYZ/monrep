@@ -78,6 +78,6 @@
   // ------------------------------
   "npm.autoDetect": "off",
   "npm.packageManager": "bun",
-  "rust-analyzer.linkedProjects": ["packages/whatsapp-rust/Cargo.toml"],
+  "rust-analyzer.linkedProjects": ["packages/agent/Cargo.toml"],
   "rust-analyzer.check.command": "clippy",
 }

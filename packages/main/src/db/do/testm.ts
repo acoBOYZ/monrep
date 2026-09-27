@@ -1,6 +1,8 @@
 import { createDoModule, doTable } from "@monrep/db/module";
 import { z } from "zod";
 
+export const TermLineKindSchema = z.enum(["in", "out", "meta"]);
+
 export default createDoModule("testm")({
   streamLive: "sse",
   streamPersist: false,
@@ -53,6 +55,23 @@ export default createDoModule("testm")({
       }),
       onUpdate: ({ ctx }) => ({
         updatedAt: ctx.now,
+      }),
+    }),
+    line: doTable({
+      primaryKey: "id",
+      indexes: ["createdAt", "id", "tabId"],
+      schema: {
+        id: z.ulid().optional(),
+        tabId: z.ulid(),
+        userId: z.ulid(),
+        name: z.string(),
+        kind: TermLineKindSchema,
+        text: z.string(),
+        createdAt: z.string().optional(),
+      },
+      onInsert: ({ ctx }) => ({
+        id: ctx.ulid,
+        createdAt: ctx.now,
       }),
     }),
   },

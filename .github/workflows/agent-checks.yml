@@ -1,0 +1,50 @@
+name: agent-checks
+
+on:
+  pull_request:
+    paths:
+      - "packages/agent/**"
+      - ".github/workflows/agent-checks.yml"
+      - ".github/actions/prepare-rust/**"
+  push:
+    branches: [main]
+    paths:
+      - "packages/agent/**"
+      - ".github/workflows/agent-checks.yml"
+      - ".github/actions/prepare-rust/**"
+  workflow_dispatch:
+
+concurrency:
+  group: agent-checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  agent-rust:
+    name: agent rust gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/prepare
+
+      - uses: ./.github/actions/prepare-rust
+        with:
+          working-directory: packages/agent
+
+      - name: fmtcheck
+        run: bun run fmtcheck
+
+      - name: lint:rust
+        run: bun run lint:rust
+
+      - name: typecheck:rust
+        run: bun run typecheck:rust
+
+      - name: doctor:rust
+        run: bun run doctor:rust

@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Button, Input, PasswordInput, TextSeparator } from "@monrep/ui/base";
 import { TurnstileWidget } from "./TurnstileWidget";
 import type { SubmitEvent } from "react";
@@ -27,6 +28,9 @@ export function PasswordStep({
   onSubmit,
   onUsePasskey,
 }: PasswordStepProps) {
+  const emailId = useId();
+  const passwordId = useId();
+
   const handlePasswordFormSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     onSubmit();
@@ -34,9 +38,10 @@ export function PasswordStep({
 
   return (
     <form onSubmit={handlePasswordFormSubmit} className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1.5 text-sm font-medium">
+      <label htmlFor={emailId} className="flex flex-col gap-1.5 text-sm font-medium">
         Email
         <Input
+          id={emailId}
           type="email"
           autoComplete="username"
           required
@@ -45,9 +50,10 @@ export function PasswordStep({
           placeholder="admin@monrep.com"
         />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm font-medium">
+      <label htmlFor={passwordId} className="flex flex-col gap-1.5 text-sm font-medium">
         Password
         <PasswordInput
+          id={passwordId}
           autoComplete="current-password"
           required
           value={password}

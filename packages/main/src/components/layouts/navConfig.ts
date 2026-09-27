@@ -1,4 +1,10 @@
-import { Activity, Add01Icon, FlowIcon, Server } from "@hugeicons/core-free-icons";
+import {
+  Activity,
+  Add01Icon,
+  ComputerTerminalIcon,
+  FlowIcon,
+  Server,
+} from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { LinkProps } from "@tanstack/react-router";
 
@@ -42,6 +48,12 @@ const PLAYGROUND_CARDS: Array<NavCard> = [
     title: "Streams",
     description: "DO / stream experiments",
     icon: FlowIcon,
+  },
+  {
+    to: "/playground/terminal",
+    title: "Terminal",
+    description: "Shared typed lines",
+    icon: ComputerTerminalIcon,
   },
 ];
 

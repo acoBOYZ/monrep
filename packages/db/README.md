@@ -10,7 +10,7 @@ Library package (copy-pasteable). App catalogs live in Worker packages (e.g. `pa
 | --- | --- |
 | `@monrep/db/module` | `createDoModule` / `doTable` DSL |
 | `@monrep/db/registry` | `bindDoRegistry` / `getDoRegistry` (used by app gens) |
-| `@monrep/db/collections` | `createDoStreamDB`, stream action helpers |
+| `@monrep/db/collections` | `createDoStreamDB`, write-field gens, append + upsert/delete actions |
 | `@monrep/db/stream` | `StreamDbHost`, acquire, paths (needs bind) |
 
 ## App pipeline

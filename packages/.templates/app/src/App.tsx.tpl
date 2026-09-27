@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Toaster, TooltipHost } from "@monrep/ui/base";
+import { NetworkEnv, ThemeEnv, TimerEnv, ViewportEnv } from "@monrep/runtime";
+import { SmartPopoverHost, Toaster, TooltipHost } from "@monrep/ui/base";
 import { DbClient, DbProvider } from "@tanstack/react-db";
 import type { ReactNode } from "react";
 
@@ -12,7 +13,14 @@ export function App({ children }: Props) {
 
   return (
     <DbProvider client={dbClient}>
+      <NetworkEnv />
+      <ThemeEnv />
+      <TimerEnv />
+      <ViewportEnv />
+
       {children}
+
+      <SmartPopoverHost />
       <TooltipHost />
       <Toaster />
     </DbProvider>

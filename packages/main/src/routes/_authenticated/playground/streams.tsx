@@ -6,6 +6,7 @@ import { nextUlid } from "@monrep/utils/ulid";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSafeMutation } from "@/components/hooks/useSafeMutation";
+import { PlaygroundLiveStatus } from "@/components/playground/PlaygroundLiveStatus";
 import { useStreamDb } from "@/db/useStreamDb";
 
 export const Route = createFileRoute("/_authenticated/playground/streams")({
@@ -110,16 +111,7 @@ function StreamsPlayground() {
             presence. Hour bucket rolls via <code className="rounded bg-muted px-1">utc-hour</code>.
           </p>
         </div>
-        <dl className="flex gap-3 text-xs text-muted-foreground">
-          <div>
-            <dt className="sr-only">Stream</dt>
-            <dd>{isReady ? "live" : "connecting"}</dd>
-          </div>
-          <div>
-            <dt className="sr-only">UTC hour</dt>
-            <dd className="font-mono text-cool">{hourBucket}</dd>
-          </div>
-        </dl>
+        <PlaygroundLiveStatus isReady={isReady} hourBucket={hourBucket} />
       </header>
 
       <label className="flex flex-col gap-1 text-xs">

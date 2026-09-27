@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { SignOut } from "@/components/SignOut";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Props = {
   children: ReactNode;
@@ -24,8 +25,17 @@ export function AppShell({ children }: Props) {
           >
             Presence
           </Link>
+          <Link
+            to="/playground/terminal"
+            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Terminal
+          </Link>
         </nav>
-        <SignOut />
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <SignOut />
+        </div>
       </header>
       <div className="flex-1">{children}</div>
     </div>

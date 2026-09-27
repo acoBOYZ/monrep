@@ -10,9 +10,9 @@
     "./registry": "./src/registry.ts",
     "./collections": "./src/collections/index.ts",
     "./stream": "./src/stream/index.ts",
-    "./stream/paths": "./src/stream/paths.ts",
-    "./stream/ensureStream": "./src/stream/ensureStream.ts",
-    "./stream/streams.server": "./src/stream/streams.server.ts"
+    "./stream/common": "./src/stream/common/index.ts",
+    "./stream/client": "./src/stream/client/index.ts",
+    "./stream/server": "./src/stream/server/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit --singleThreaded",

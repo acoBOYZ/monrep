@@ -1,35 +1,15 @@
-import { ensureStream } from "@monrep/db/stream/ensureStream";
-import { streamPath } from "@monrep/db/stream/paths";
 import { eq, queryOnce } from "@tanstack/react-db";
-import { env } from "cloudflare:workers";
-import { authErrorMessage } from "./schemas";
-import type { DurableStream } from "@durable-streams/client";
+import { AuthTaggedError } from "./schemas";
 import type { TUserDo } from "@/db/types";
 import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 import { bindDoApp } from "@/db/host";
 import { ROLE_CAPABILITIES } from "@/db/schemas";
+import { openServerStream } from "@/server/doStream";
 
 bindDoApp();
 
-type ServerWriteModule = "audit" | "auth";
-
 /** Auth user after ensure — PK always present (filled by insert gens). */
 export type AuthUser = TUserDo & { id: string };
-
-export const openServerStream = async (moduleId: ServerWriteModule): Promise<DurableStream> => {
-  const pathname = streamPath(moduleId);
-  const url = `https://streams.internal${pathname}`;
-  return ensureStream({
-    url,
-    contentType: "application/json",
-    fetch: ((input, init) => {
-      const request = new Request(input, init);
-      const path = new URL(request.url).pathname;
-      const stub = env.STREAMS.get(env.STREAMS.idFromName(path));
-      return stub.fetch(request);
-    }) as typeof fetch,
-  });
-};
 
 export type AuthDb = Awaited<ReturnType<typeof loadAuthDb>>;
 
@@ -52,7 +32,7 @@ export const findUserByEmail = async (db: AuthDb, email: string): Promise<TUserD
 const isLegacyUserId = (id: string): boolean => id.startsWith("user:");
 
 const requireUserId = (user: TUserDo | undefined): AuthUser => {
-  if (!user?.id) throw new Error(authErrorMessage({ _tag: "MissingId", message: "after upsert" }));
+  if (!user?.id) throw new AuthTaggedError({ _tag: "MissingId", message: "after upsert" });
   return user as AuthUser;
 };
 
@@ -69,7 +49,7 @@ export const ensureAdminUser = async (email: string, name = "Admin"): Promise<Au
     if (!existing) {
       await db.actions.upsertUser(profile).isPersisted.promise;
     } else if (!existing.id) {
-      throw new Error(authErrorMessage({ _tag: "MissingId" }));
+      throw new AuthTaggedError({ _tag: "MissingId" });
     } else if (isLegacyUserId(existing.id)) {
       await db.actions.deleteUser(existing.id).isPersisted.promise;
       await db.actions.upsertUser({ ...profile, createdAt: existing.createdAt }).isPersisted

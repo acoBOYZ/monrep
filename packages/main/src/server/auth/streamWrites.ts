@@ -1,7 +1,7 @@
 import { nextUlid } from "@monrep/utils/ulid";
-import { openServerStream } from "./db";
 import { LoginAttemptSchema } from "./schemas";
 import type { LoginAttemptInput } from "./schemas";
+import { openServerStream } from "@/server/doStream";
 
 export const recordLoginAttempt = async (input: LoginAttemptInput): Promise<void> => {
   const data = LoginAttemptSchema.parse(input);

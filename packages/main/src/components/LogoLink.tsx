@@ -1,8 +1,6 @@
 import { SoundcloudIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { cn } from "@monrep/utils";
 import { Link } from "@tanstack/react-router";
-import { useEnvStoreWithKey } from "./shell/store.env";
 import type { ElementType } from "react";
 
 type LogoLinkProps = {
@@ -11,16 +9,9 @@ type LogoLinkProps = {
 };
 
 export const LogoLink = ({ titleAs = "h1" }: LogoLinkProps) => {
-  const effectiveTheme = useEnvStoreWithKey("effectiveTheme");
   const Title = titleAs as ElementType;
   return (
-    <Link
-      to="/"
-      className={cn(
-        "flex items-center gap-1.5",
-        effectiveTheme === "light" ? "logo-wrapper-light" : "logo-wrapper-dark",
-      )}
-    >
+    <Link to="/" className="logo-wrapper flex items-center gap-1.5">
       <HugeiconsIcon
         icon={SoundcloudIcon}
         className="size-5.5 shrink-0 text-primary"

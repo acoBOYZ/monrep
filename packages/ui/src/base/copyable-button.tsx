@@ -1,4 +1,4 @@
-import { Check, Copy } from "@hugeicons/core-free-icons";
+import { CheckIcon, CopyIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCopy } from "@monrep/hooks";
 import { cn } from "@monrep/utils";
@@ -31,9 +31,9 @@ const CopyStatusIcon = ({ isPending, size }: { isPending: boolean; size: number 
       )}
     >
       <HugeiconsIcon
-        icon={Check}
-        strokeWidth={2}
+        icon={CheckIcon}
         className="text-success"
+        strokeWidth={2}
         size={size}
         aria-hidden
       />
@@ -44,7 +44,7 @@ const CopyStatusIcon = ({ isPending, size }: { isPending: boolean; size: number 
         isPending ? "scale-0 opacity-0" : "scale-100 opacity-100",
       )}
     >
-      <HugeiconsIcon icon={Copy} strokeWidth={2} size={size} aria-hidden />
+      <HugeiconsIcon icon={CopyIcon} strokeWidth={2} size={size} aria-hidden />
     </span>
   </span>
 );
@@ -100,7 +100,7 @@ export const CopyableButton = ({
       {isBlock ? children : null}
       {isInline ? <span className="min-w-0 truncate">{text}</span> : null}
       {isBlock ? (
-        <span className="pointer-events-none absolute inset-y-0 inset-e-0 flex w-9 items-center justify-center opacity-80 group-hover:opacity-100">
+        <span className="pointer-events-none absolute inset-y-0 inset-e-0 flex w-9 items-center justify-center bg-muted">
           <CopyStatusIcon isPending={isPending} size={iconSize} />
         </span>
       ) : (

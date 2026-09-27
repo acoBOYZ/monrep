@@ -2,28 +2,27 @@
 name: rust-defaults
 description: >
   Default Rust quality gates for all first-party Rust crates in this
-  monorepo (e.g. packages/whatsapp-rust, services/voice, future crates)—
-  rustfmt, clippy, cargo check, miri, doctor:rust (rust-doctor CLI). Use
-  for any Cargo.toml/src under those crates, voip/voice, or when the user
-  mentions rust, rustwa, voice, clippy, doctor:rust, or rust-doctor. Never
-  edit upstream/. Never run package build as a quality gate.
+  monorepo (e.g. packages/agent, future crates)—rustfmt, clippy, cargo
+  check, miri, doctor:rust (rust-doctor CLI). Use for any Cargo.toml/src
+  under those crates, or when the user mentions rust, agent, clippy,
+  doctor:rust, or rust-doctor. Never edit upstream/. Never run package
+  build as a quality gate.
 metadata:
   type: lifecycle
   library: agent-skills
   library_version: '0.5.2'
 sources:
   - 'monrep/monrep-mono:packages/agent-skills/skills/rust-defaults/SKILL.md'
-  - 'monrep/monrep-mono:packages/whatsapp-rust/package.json'
-  - 'monrep/monrep-mono:packages/whatsapp-rust/rust-toolchain.toml'
-  - 'monrep/monrep-mono:packages/whatsapp-rust/rust-doctor.toml'
-  - 'monrep/monrep-mono:services/voice/package.json'
+  - 'monrep/monrep-mono:packages/agent/package.json'
+  - 'monrep/monrep-mono:packages/agent/rust-toolchain.toml'
+  - 'monrep/monrep-mono:packages/agent/rust-doctor.toml'
 ---
 
 # Rust defaults (this repo)
 
-Quality gates for **all first-party Rust crates** (not only rustwa). Today that
-includes [`packages/whatsapp-rust`](packages/whatsapp-rust) and
-[`services/voice`](services/voice); more crates later use the same pattern.
+Quality gates for **all first-party Rust crates**. Today that includes
+[`packages/agent`](packages/agent) (fleet CLI agent binary `monrep`); more
+crates later use the same pattern.
 
 ## Naming
 
@@ -39,7 +38,7 @@ Always invoke via `bun run doctor:rust` or
 ## After edits in a crate
 
 From repo root, use that package’s scripts until clean (`<crate>` =
-`packages/whatsapp-rust` or `services/voice`, etc.):
+`packages/agent`, etc.):
 
 ```bash
 bun run --cwd <crate> fmtcheck
@@ -61,17 +60,10 @@ Do **not** skip this set. Do **not** invent one-off `cargo fmt` / `clippy`
 commands that bypass the package scripts. Do **not** put these gates in
 `react-defaults`.
 
-## whatsapp-rust wrap (extra)
+## packages/agent miri
 
-Vendored `packages/whatsapp-rust/upstream` is pristine. Edit wrap `src/` and wrap
-`Cargo.toml` only. Never edit `upstream/`.
+`rust:miri` uses nightly **only** for [`miri/`](packages/agent/miri/) (std-only
+host). Do **not** add FFI / native deps to that host.
 
-Wrap [`rust-toolchain.toml`](packages/whatsapp-rust/rust-toolchain.toml) is
-**stable**. Do **not** merge with `upstream/rust-toolchain.toml` (nightly pin).
-
-Config: [`rust-doctor.toml`](packages/whatsapp-rust/rust-doctor.toml). Do **not**
-point rust-doctor at `upstream/`.
-
-`rust:miri` uses nightly **only** for [`miri/`](packages/whatsapp-rust/miri/)
-(std-only wrap modules). Do not add FFI modules (LiveKit, rusty-opus, rusqlite,
-Ogg) to that host. Same rule for `services/voice/miri/` when present.
+Config: [`rust-doctor.toml`](packages/agent/rust-doctor.toml). Toolchain:
+[`rust-toolchain.toml`](packages/agent/rust-toolchain.toml) (stable).

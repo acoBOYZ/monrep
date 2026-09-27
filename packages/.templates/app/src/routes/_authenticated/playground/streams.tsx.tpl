@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { moduleEpochLabel } from "@monrep/db/stream";
 import { Button } from "@monrep/ui/base";
+import { cn, formatTime, toDateTimeAttr } from "@monrep/utils";
 import { nextUlid } from "@monrep/utils/ulid";
 import { useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { useSafeMutation } from "@/components/hooks/useSafeMutation";
+import { PlaygroundLiveStatus } from "@/components/playground/PlaygroundLiveStatus";
 import { useStreamDb } from "@/db/useStreamDb";
 
 export const Route = createFileRoute("/_authenticated/playground/streams")({
@@ -13,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/playground/streams")({
 
 const USER_ID_KEY = "demo-chat-userId";
 const USER_NAME_KEY = "demo-chat-name";
+const TYPING_DEBOUNCE_MS = 50;
 
 function readOrCreateUserId(): string {
   if (typeof sessionStorage === "undefined") return nextUlid(null);
@@ -35,6 +38,7 @@ function StreamsPlayground() {
   const [name, setName] = useState(readStoredName);
   const [draft, setDraft] = useState("");
   const [hourBucket] = useState(() => moduleEpochLabel("demo") ?? "—");
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: messages = [] } = useLiveQuery({
     query: (q) => {
@@ -53,63 +57,145 @@ function StreamsPlayground() {
     },
   });
 
+  const typingLive = useLiveQuery({
+    query: (q) => {
+      if (!db) return null;
+      return q.from({ t: db.collections.typing });
+    },
+  });
+  const othersTyping = (typingLive.data ?? []).filter(
+    (row) => row.userId !== userId && row.draft.trim().length > 0,
+  );
+
+  const publishTyping = (nextDraft: string, nextName: string) => {
+    if (!db) return;
+    if (nextDraft.trim().length === 0) {
+      safeMutation(() => db.actions.deleteTyping(userId));
+      return;
+    }
+    safeMutation(() => db.actions.upsertTyping({ userId, name: nextName, draft: nextDraft }));
+  };
+
   const onNameChange = (value: string) => {
     setName(value);
     if (typeof sessionStorage !== "undefined") {
       sessionStorage.setItem(USER_NAME_KEY, value);
     }
+    if (draft.trim().length > 0) publishTyping(draft, value);
   };
 
-  const send = () => {
+  const onDraftChange = (value: string) => {
+    setDraft(value);
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      publishTyping(value, name);
+    }, TYPING_DEBOUNCE_MS);
+  };
+
+  const sendMessage = () => {
     const body = draft.trim();
-    if (!db || body.length === 0) return;
-    safeMutation(() => db.actions.upsertMessage({ userId, name, body }));
+    if (!db || !body) return;
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    safeMutation(() => db.actions.upsertMessage({ userId, name: name.trim() || "Anon", body }));
+    safeMutation(() => db.actions.deleteTyping(userId));
     setDraft("");
   };
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-4 p-6">
-      <h1 className="text-lg font-semibold tracking-tight">Streams playground</h1>
-      <p className="text-xs text-muted-foreground">
-        Module <code className="rounded bg-muted px-1">demo</code> · epoch {hourBucket} ·{" "}
-        {isReady ? "live" : "connecting"}
-      </p>
+    <main className="mx-auto flex h-full max-h-[calc(100svh-12rem)] max-w-xl flex-col gap-4 px-4 py-6 sm:px-6">
+      <header className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Streams</h1>
+          <p className="mt-1 text-sm text-cool">
+            Live chat on <code className="rounded bg-muted px-1">demo.</code> Same session as
+            presence. Hour bucket rolls via <code className="rounded bg-muted px-1">utc-hour</code>.
+          </p>
+        </div>
+        <PlaygroundLiveStatus isReady={isReady} hourBucket={hourBucket} />
+      </header>
 
-      <label className="flex flex-col gap-1 text-xs">
+      <label className="flex flex-col gap-1 text-xs" htmlFor="streams-display-name">
         Display name
         <input
+          id="streams-display-name"
           className="rounded border border-border bg-card px-2 py-1.5 text-sm"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
         />
       </label>
 
-      <ul className="max-h-72 space-y-2 overflow-y-auto rounded-md border border-border/60 p-3 text-sm">
-        {messages.map((m) => (
-          <li key={m.id}>
-            <span className="font-medium">{m.name}</span>
-            <span className="text-muted-foreground"> · </span>
-            {m.body}
-          </li>
-        ))}
-      </ul>
+      <section
+        className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border/60"
+        aria-label="Messages"
+      >
+        <ul className="flex flex-1 flex-col gap-2 overflow-y-auto p-3">
+          {messages.length === 0 ? (
+            <li className="py-6 text-center text-sm text-muted-foreground">
+              No messages this hour yet. Open another tab and type.
+            </li>
+          ) : (
+            messages.map((row) => {
+              const dateTime = toDateTimeAttr(row.createdAt);
+              const timeLabel = formatTime(row.createdAt);
+              return (
+                <li
+                  key={row.id}
+                  className={cn(
+                    "relative min-w-24",
+                    "max-w-[85%] rounded-md bg-muted px-2.5 pt-1.5 pb-4",
+                    row.userId === userId
+                      ? "self-end rounded-tr-none text-right"
+                      : "self-start rounded-tl-none text-left",
+                  )}
+                >
+                  <span className="block text-left text-xs text-cool">{row.name}</span>
+                  <span className="block text-left text-sm text-foreground">{row.body}</span>
+                  {dateTime && timeLabel ? (
+                    <time
+                      className="absolute right-1 bottom-px text-[10px] text-muted-foreground"
+                      dateTime={dateTime}
+                    >
+                      {timeLabel}
+                    </time>
+                  ) : null}
+                </li>
+              );
+            })
+          )}
+        </ul>
 
-      <div className="flex gap-2">
-        <label className="flex flex-1 flex-col gap-1 text-xs">
-          Message
+        {othersTyping.length > 0 ? (
+          <div className="border-t border-border/40 px-3 py-2 text-xs text-cool">
+            {othersTyping.map((row) => (
+              <p key={row.userId} className="truncate">
+                <span className="font-medium text-foreground">{row.name}</span>
+                {": "}
+                {row.draft}
+              </p>
+            ))}
+          </div>
+        ) : null}
+
+        <form
+          className="flex gap-2 border-t border-border/60 p-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sendMessage();
+          }}
+        >
           <input
-            className="rounded border border-border bg-card px-2 py-1.5 text-sm"
+            className="min-w-0 flex-1 rounded border border-border bg-card px-2 py-1.5 text-sm"
             value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") send();
-            }}
+            onChange={(event) => onDraftChange(event.target.value)}
+            placeholder="Message…"
+            disabled={!isReady}
+            aria-label="Message"
           />
-        </label>
-        <Button type="button" className="self-end" onClick={send}>
-          Send
-        </Button>
-      </div>
-    </div>
+          <Button type="submit" size="sm" disabled={!isReady || draft.trim().length === 0}>
+            Send
+          </Button>
+        </form>
+      </section>
+    </main>
   );
 }

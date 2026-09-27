@@ -12,10 +12,16 @@
 import type { z } from "zod";
 import type {
 	TDoModuleId,
+	DeviceCredDoSchema,
+	EnrollTokenDoSchema,
+	LineDoSchema,
 	MessageDoSchema,
 	PasskeyDoSchema,
 	PresenceDoSchema,
+	RuntimeConfigDoSchema,
+	SampleDoSchema,
 	SecurityDoSchema,
+	ServerDoSchema,
 	TotpDoSchema,
 	TypingDoSchema,
 	UserDoSchema,
@@ -23,13 +29,25 @@ import type {
 
 export type { TDoModuleId };
 
+export type TDeviceCredDo = z.infer<typeof DeviceCredDoSchema>;
+
+export type TEnrollTokenDo = z.infer<typeof EnrollTokenDoSchema>;
+
+export type TLineDo = z.infer<typeof LineDoSchema>;
+
 export type TMessageDo = z.infer<typeof MessageDoSchema>;
 
 export type TPasskeyDo = z.infer<typeof PasskeyDoSchema>;
 
 export type TPresenceDo = z.infer<typeof PresenceDoSchema>;
 
+export type TRuntimeConfigDo = z.infer<typeof RuntimeConfigDoSchema>;
+
+export type TSampleDo = z.infer<typeof SampleDoSchema>;
+
 export type TSecurityDo = z.infer<typeof SecurityDoSchema>;
+
+export type TServerDo = z.infer<typeof ServerDoSchema>;
 
 export type TTotpDo = z.infer<typeof TotpDoSchema>;
 
