@@ -13,12 +13,13 @@ const NAME_RE = /^[a-z][a-z0-9-]*$/;
 
 const RESERVED = new Set([
   ".templates",
+  "agent",
   "agent-skills",
   "codegen",
   "db",
-  "effect-solutions",
   "hooks",
   "main",
+  "runtime",
   "ui",
   "utils",
 ]);

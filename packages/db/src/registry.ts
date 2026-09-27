@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import type { CreateDoModuleDbOpts } from "./collections/stream/opts";
+import type { CreateDoModuleDbOpts } from "./collections/do/types";
 import type { TStreamEpoch, TStreamLive } from "./module";
 
 export type DoModuleStateEntry = {

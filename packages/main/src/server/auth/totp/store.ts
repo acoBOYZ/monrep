@@ -1,6 +1,6 @@
 import { eq, queryOnce } from "@tanstack/react-db";
 import { loadAuthDb } from "../db";
-import { authErrorMessage } from "../schemas";
+import { AuthTaggedError } from "../schemas";
 import type { TTotpDo } from "@/db/types";
 
 export const findTotpByUserId = async (userId?: string): Promise<TTotpDo | undefined> => {
@@ -25,7 +25,7 @@ export const upsertTotpSecret = async (options: {
   enabledAt?: string;
 }): Promise<void> => {
   if (!options.userId) {
-    throw new Error(authErrorMessage({ _tag: "TotpUpsertRequiresUserId" }));
+    throw new AuthTaggedError({ _tag: "TotpUpsertRequiresUserId" });
   }
 
   const db = await loadAuthDb();

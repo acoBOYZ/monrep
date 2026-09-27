@@ -62,16 +62,15 @@ bun run dev         # https://localhost:5274 (falls back to http if certs missin
 
 Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb opens connections over 6 concurrent HTTP/1.1 sockets per host and http blocks after that.
 
-## CLI (coming)
+## CLI agent
 
-Plan is roughly:
+```bash
+curl -fsSL https://monrep.acoboyz.workers.dev/install.sh | sh
+monrep enroll --url https://<your-app> --token <one-time>
+monrep daemon
+```
 
-1. Build a single binary (Bun and/or Rust TBD).
-2. Ship it so you can install on Linux.
-3. Agent connects to the control plane and waits.
-4. Web UI sends work; agent runs it; streams results back.
-
-Until that package is published, there is nothing to `curl | sh` yet. When it exists, install steps will live here and in the CLI package README.
+Details: [`packages/agent/README.md`](./packages/agent/README.md). Progress: [`ROADMAP.md`](./ROADMAP.md).
 
 ## Contributing
 

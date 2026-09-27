@@ -1,8 +1,8 @@
+import { THEME_BOOTSTRAP } from "@monrep/runtime";
 import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import appCss from "../tailwind.css?url";
 import type { ReactNode } from "react";
 import { App } from "@/App";
-import { THEME_BOOTSTRAP } from "@/components/shell/themeBootstrap";
 
 export const Route = createRootRoute({
   head: () => ({

@@ -1,0 +1,27 @@
+{
+  "name": "@monrep/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "monrep fleet CLI agent (Rust binary monrep)",
+  "scripts": {
+    "dev": "cargo watch -w src -w Cargo.toml -w Cargo.lock -x 'run --bin monrep'",
+    "typecheck": "tsc --noEmit --singleThreaded && bun run typecheck:rust",
+    "typecheck:rust": "cargo check --all-targets && bun run rust:miri",
+    "lint": "bun run lint:rust && oxlint --threads=1 scripts",
+    "lint:rust": "cargo clippy --all-targets -- -D warnings",
+    "clean": "rimraf node_modules bun.lock .turbo",
+    "fmt": "oxfmt scripts && bun run fmt:rust",
+    "fmt:rust": "cargo fmt && cargo fmt --manifest-path miri/Cargo.toml",
+    "fmtcheck": "oxfmt --check scripts && bun run fmtcheck:rust",
+    "fmtcheck:rust": "cargo fmt --check && cargo fmt --check --manifest-path miri/Cargo.toml",
+    "doctor:rust": "bunx rust-doctor --yes --verbose .",
+    "rust:miri": "bun run scripts/rust-miri.ts",
+    "build": "bun run scripts/build.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.4.2",
+    "rust-doctor": "^0.7.0"
+  }
+}

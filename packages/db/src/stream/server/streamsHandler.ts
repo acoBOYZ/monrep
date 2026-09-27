@@ -1,0 +1,95 @@
+import { createStreamsHandler } from "@durable-streams/server-cloudflare";
+import { getDoRegistry } from "../../registry";
+import { getEpochLabel, getExpiresAtByEpoch } from "../common/streamEpoch";
+import {
+  STREAM_EPOCH_HEADER,
+  physicalStreamPath,
+  streamModuleIdFromPath,
+} from "../common/streamPaths";
+import { maybeDeletePreviousPhysicalStream } from "./streamGc";
+import type { DefaultAuthEnv, StreamsHandlerOptions } from "@durable-streams/server-cloudflare";
+
+type WaitUntilCtx = {
+  waitUntil: (promise: Promise<unknown>) => void;
+};
+
+const isKnownModule = (moduleId: string): boolean =>
+  Object.hasOwn(getDoRegistry().epoch, moduleId) ||
+  Object.hasOwn(getDoRegistry().factories, moduleId);
+
+/**
+ * Worker routes for `/_streams/*`.
+ * Epoch modules: rewrite to physical clock bucket, cold-GET DELETE prev,
+ * PUT `Stream-Expires-At`, stamp `x-stream-epoch`.
+ */
+export const createPublicStreamsHandler = <E extends DefaultAuthEnv = DefaultAuthEnv>(
+  options?: StreamsHandlerOptions<E>,
+) => {
+  const base = createStreamsHandler(options);
+
+  return async (request: Request, env: E, ctx?: WaitUntilCtx): Promise<Response> => {
+    if (request.method === "OPTIONS") return base(request, env);
+
+    const url = new URL(request.url);
+    const moduleId = streamModuleIdFromPath(url.pathname);
+    if (!moduleId || !isKnownModule(moduleId)) {
+      return base(request, env);
+    }
+
+    const now = new Date();
+    const epoch = getDoRegistry().epoch[moduleId];
+    const physical = physicalStreamPath(moduleId, now);
+    const epochLabel = epoch ? getEpochLabel(epoch, now) : null;
+
+    url.pathname = physical;
+
+    let headers = request.headers;
+    if (request.method === "PUT" && epoch) {
+      headers = new Headers(request.headers);
+      if (!headers.has("Stream-Expires-At") && !headers.has("Stream-TTL")) {
+        headers.set("Stream-Expires-At", getExpiresAtByEpoch(epoch, now).toISOString());
+      }
+    }
+
+    const method = request.method.toUpperCase();
+    if ((method === "GET" || method === "HEAD") && epoch && ctx) {
+      const offset = url.searchParams.get("offset");
+      const gc = maybeDeletePreviousPhysicalStream({
+        moduleId,
+        epoch,
+        now,
+        offset,
+        currentPath: physical,
+        requestUrl: url,
+        requestHeaders: request.headers,
+        base: base as (req: Request, e: unknown) => Promise<Response>,
+        env,
+      });
+      if (gc) ctx.waitUntil(gc);
+    }
+
+    const hasBody = method !== "GET" && method !== "HEAD";
+    const forwarded = new Request(url, {
+      method: request.method,
+      headers,
+      body: hasBody ? request.body : null,
+      ...(hasBody ? { duplex: "half" as const } : {}),
+    });
+
+    const response = await base(forwarded, env);
+    if (!epochLabel) return response;
+
+    const out = new Headers(response.headers);
+    out.set(STREAM_EPOCH_HEADER, epochLabel);
+    const expose = out.get("access-control-expose-headers");
+    out.set(
+      "access-control-expose-headers",
+      expose ? `${expose}, ${STREAM_EPOCH_HEADER}` : STREAM_EPOCH_HEADER,
+    );
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: out,
+    });
+  };
+};

@@ -22,14 +22,11 @@
       "@monrep/hooks": ["./packages/hooks/src"],
       "@monrep/ui": ["./packages/ui/src"],
       "@monrep/ui/*": ["./packages/ui/src/*"],
+      "@monrep/runtime": ["./packages/runtime/src"],
+      "@monrep/runtime/*": ["./packages/runtime/src/*"],
       "@monrep/utils": ["./packages/utils/src"],
       "@monrep/utils/*": ["./packages/utils/src/*"]
     },
-    "plugins": [
-      {
-        "name": "@effect/language-service"
-      }
-    ],
 
     "strict": true,
     "forceConsistentCasingInFileNames": true,
@@ -62,7 +59,6 @@
     ".turbo",
     "tmp",
     "temp",
-    "**/doctor.config.ts",
-    "packages/effect-solutions/upstream/**"
+    "**/doctor.config.ts"
   ]
 }

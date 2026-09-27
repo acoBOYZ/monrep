@@ -272,7 +272,7 @@ if (!existsSync(GITMODULES)) {
 const submodules = readGitmodules(GITMODULES);
 if (submodules.length === 0) {
   console.error("No submodules in .gitmodules");
-  process.exit(1);
+  process.exit(0);
 }
 
 const only = parseOnly();

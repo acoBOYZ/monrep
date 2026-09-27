@@ -43,6 +43,7 @@ export function Hero() {
                 size="lg"
                 className="rounded-full bg-primary-foreground px-7 text-primary hover:bg-primary-foreground/90"
                 render={<Link to="/admin" />}
+                nativeButton={false}
               >
                 Open console
               </Button>

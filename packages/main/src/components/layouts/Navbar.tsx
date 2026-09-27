@@ -16,12 +16,7 @@ import { LogoLink } from "../LogoLink";
 import { SignOut } from "../SignOut";
 import { ThemeToggle } from "../ThemeToggle";
 import { getNavGroups } from "./navConfig";
-import type { ReactNode } from "react";
 import type { NavCard } from "./navConfig";
-
-type NavbarProps = {
-  children: ReactNode;
-};
 
 function NavCardLink({ card, onNavigate }: { card: NavCard; onNavigate?: () => void }) {
   return (
@@ -40,7 +35,7 @@ function NavCardLink({ card, onNavigate }: { card: NavCard; onNavigate?: () => v
   );
 }
 
-export function Navbar({ children }: NavbarProps) {
+export function Navbar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,104 +74,100 @@ export function Navbar({ children }: NavbarProps) {
   };
 
   return (
-    <>
-      <header
-        className={cn(
-          "sticky top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter]",
-          isScrolled || mobileMenuOpen
-            ? "border-border/60 bg-background/80 backdrop-blur-md"
-            : "bg-transparent",
-        )}
-      >
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <LogoLink />
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter]",
+        isScrolled || mobileMenuOpen
+          ? "border-border/60 bg-background/80 backdrop-blur-md"
+          : "bg-transparent",
+      )}
+    >
+      <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 sm:px-6">
+        <LogoLink />
 
-          <div className="ml-2 hidden sm:block">
-            <NavigationMenu delay={0}>
-              <NavigationMenuList>
-                {navGroups.map((group) => (
-                  <NavigationMenuItem key={group.id}>
-                    <NavigationMenuTrigger>{group.label}</NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                      <ul className="grid w-[min(100vw-2rem,22rem)] gap-1 p-1">
-                        {group.cards.map((card) => (
-                          <li key={card.to}>
-                            <NavCardLink card={card} />
-                          </li>
-                        ))}
-                      </ul>
-                    </NavigationMenuContent>
-                  </NavigationMenuItem>
-                ))}
-              </NavigationMenuList>
-            </NavigationMenu>
-          </div>
-
-          <div className="ml-auto flex items-center gap-1">
-            <ThemeToggle />
-            <SignOut />
-            <Button
-              type="button"
-              variant="ghost"
-              size="iconxs"
-              className="sm:hidden"
-              aria-expanded={mobileMenuOpen}
-              aria-controls="authenticated-mobile-nav"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-              onClick={toggleMobileMenu}
-            >
-              <HugeiconsIcon
-                icon={mobileMenuOpen ? Cancel01Icon : Menu01Icon}
-                strokeWidth={2}
-                className="size-4"
-              />
-            </Button>
-          </div>
+        <div className="ml-2 hidden sm:block">
+          <NavigationMenu delay={0}>
+            <NavigationMenuList>
+              {navGroups.map((group) => (
+                <NavigationMenuItem key={group.id}>
+                  <NavigationMenuTrigger>{group.label}</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[min(100vw-2rem,22rem)] gap-1 p-1">
+                      {group.cards.map((card) => (
+                        <li key={card.to}>
+                          <NavCardLink card={card} />
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
-        {mobileMenuOpen ? (
-          <nav
-            id="authenticated-mobile-nav"
-            className="border-t border-border/60 px-4 py-3 sm:hidden"
-            aria-label="Mobile"
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
+          <SignOut />
+          <Button
+            type="button"
+            variant="ghost"
+            size="iconxs"
+            className="sm:hidden"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="authenticated-mobile-nav"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            onClick={toggleMobileMenu}
           >
-            <div className="flex flex-col gap-4">
-              {navGroups.map((group) => (
-                <div key={group.id}>
-                  <p className="mb-1 px-1 text-xs font-medium tracking-wide text-cool uppercase">
-                    {group.label}
-                  </p>
-                  <ul className="flex flex-col gap-1">
-                    {group.cards.map((card) => (
-                      <li key={card.to}>
-                        <Link
-                          to={card.to}
-                          onClick={closeMobileMenu}
-                          className="flex items-start gap-3 rounded-md p-2 hover:bg-muted"
-                        >
-                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-cool text-cool-foreground">
-                            <HugeiconsIcon icon={card.icon} strokeWidth={2} className="size-4" />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block text-sm font-medium text-foreground">
-                              {card.title}
-                            </span>
-                            <span className="mt-0.5 block text-sm leading-snug text-cool">
-                              {card.description}
-                            </span>
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </nav>
-        ) : null}
-      </header>
+            <HugeiconsIcon
+              icon={mobileMenuOpen ? Cancel01Icon : Menu01Icon}
+              strokeWidth={2}
+              className="size-4"
+            />
+          </Button>
+        </div>
+      </div>
 
-      {children}
-    </>
+      {mobileMenuOpen ? (
+        <nav
+          id="authenticated-mobile-nav"
+          className="border-t border-border/60 px-4 py-3 sm:hidden"
+          aria-label="Mobile"
+        >
+          <div className="flex flex-col gap-4">
+            {navGroups.map((group) => (
+              <div key={group.id}>
+                <p className="mb-1 px-1 text-xs font-medium tracking-wide text-cool uppercase">
+                  {group.label}
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {group.cards.map((card) => (
+                    <li key={card.to}>
+                      <Link
+                        to={card.to}
+                        onClick={closeMobileMenu}
+                        className="flex items-start gap-3 rounded-md p-2 hover:bg-muted"
+                      >
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-cool text-cool-foreground">
+                          <HugeiconsIcon icon={card.icon} strokeWidth={2} className="size-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-medium text-foreground">
+                            {card.title}
+                          </span>
+                          <span className="mt-0.5 block text-sm leading-snug text-cool">
+                            {card.description}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </nav>
+      ) : null}
+    </header>
   );
 }

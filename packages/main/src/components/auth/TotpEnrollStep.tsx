@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Button, Input } from "@monrep/ui/base";
 import { TotpQr } from "./TotpQr";
 import type { SubmitEvent } from "react";
@@ -19,6 +20,8 @@ export function TotpEnrollStep({
   onCodeChange,
   onConfirm,
 }: TotpEnrollStepProps) {
+  const codeId = useId();
+
   const handleTotpEnrollSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     onConfirm();
@@ -31,9 +34,10 @@ export function TotpEnrollStep({
       </p>
       <TotpQr otpauth={otpauth} />
       <p className="text-center font-mono text-xs break-all text-muted-foreground">{secret}</p>
-      <label className="flex w-full flex-col gap-1.5 text-sm font-medium">
+      <label htmlFor={codeId} className="flex w-full flex-col gap-1.5 text-sm font-medium">
         Authenticator code
         <Input
+          id={codeId}
           inputMode="numeric"
           autoComplete="one-time-code"
           required

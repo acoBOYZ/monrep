@@ -9,7 +9,7 @@ import {
   setChallengeCookie,
 } from "../pending/challenge";
 import { err, ok } from "../result";
-import { authErrorMessage } from "../schemas";
+import { AuthTaggedError } from "../schemas";
 import { platformTransports, withClientDeviceHint } from "./platform";
 import { getWebAuthnRp } from "./rp";
 import { PasskeyRegisterVerifyInputSchema } from "./schemas";
@@ -19,7 +19,7 @@ import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 export const passkeyRegisterOptionsFn = createServerFn({ method: "POST" }).handler(async () => {
   const session = await readSession();
   if (!session) {
-    throw new Error(authErrorMessage({ _tag: "Unauthorized" }));
+    throw new AuthTaggedError({ _tag: "Unauthorized" });
   }
 
   const user = await ensureAdminUser(session.email);
@@ -64,7 +64,7 @@ export const passkeyRegisterVerifyFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const session = await readSession();
     if (!session) {
-      throw new Error(authErrorMessage({ _tag: "Unauthorized" }));
+      throw new AuthTaggedError({ _tag: "Unauthorized" });
     }
 
     const challenge = await readChallengeCookie();

@@ -64,6 +64,7 @@ services/*/meta.md
 # LocalAI models
 docker/ai/models/*
 !docker/ai/models/.gitkeep
+.cursor/*
 
 # Others
 .sample-files

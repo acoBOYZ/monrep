@@ -24,6 +24,7 @@
     "@hugeicons/core-free-icons": "^4.3.5",
     "@hugeicons/react": "^1.1.10",
     "@monrep/db": "workspace:^",
+    "@monrep/runtime": "workspace:^",
     "@monrep/ui": "workspace:^",
     "@monrep/utils": "workspace:^",
     "@tanstack/react-db": "^0.4.1",

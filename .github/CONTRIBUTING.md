@@ -21,7 +21,10 @@ bun run typecheck
 bun run lint
 bun run fmtcheck   # then: bun run fmt
 bun run doctor     # React / UI changes
+bun run doctor:rust  # when touching packages/agent (or other Rust crates)
 ```
+
+PRs that change `packages/agent/**` also run the **agent-checks** workflow (rustfmt, clippy, cargo check + miri, rust-doctor). Do **not** use `bun run --cwd packages/agent build` as a quality gate.
 
 Or the all-in-one health check:
 

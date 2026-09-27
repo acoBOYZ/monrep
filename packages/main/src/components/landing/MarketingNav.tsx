@@ -34,10 +34,16 @@ export function MarketingNav() {
               size="sm"
               className="rounded-full px-4"
               render={<Link to="/admin" />}
+              nativeButton={false}
             >
               Log in
             </Button>
-            <Button size="sm" className="rounded-full px-4" render={<Link to="/admin" />}>
+            <Button
+              nativeButton={false}
+              size="sm"
+              className="rounded-full px-4"
+              render={<Link to="/admin" />}
+            >
               Open console
             </Button>
           </div>

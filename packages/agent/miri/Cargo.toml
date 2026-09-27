@@ -1,0 +1,9 @@
+[package]
+name = "agent-miri"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Miri host for agent std-only unit tests"
+
+[lib]
+path = "lib.rs"

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { clearSessionCookie, readSession, toPublicSession } from "./cookies";
 import { getAuthEnv } from "./env";
 import { ok } from "./result";
-import { RequireCapabilityInputSchema, authErrorMessage } from "./schemas";
+import { AuthTaggedError, RequireCapabilityInputSchema } from "./schemas";
 import { hasCapability } from "@/db/schemas";
 
 export { loginPasswordFn } from "./password/login";
@@ -28,7 +28,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(async () => 
 
 export const requireSession = createServerFn({ method: "GET" }).handler(async () => {
   const session = await readSession();
-  if (!session) throw new Error(authErrorMessage({ _tag: "Unauthorized" }));
+  if (!session) throw new AuthTaggedError({ _tag: "Unauthorized" });
   return toPublicSession(session);
 });
 
@@ -36,9 +36,9 @@ export const requireCapability = createServerFn({ method: "POST" })
   .validator(RequireCapabilityInputSchema)
   .handler(async ({ data }) => {
     const session = await readSession();
-    if (!session) throw new Error(authErrorMessage({ _tag: "Unauthorized" }));
+    if (!session) throw new AuthTaggedError({ _tag: "Unauthorized" });
     if (!hasCapability(session.capabilities, data.capability)) {
-      throw new Error(authErrorMessage({ _tag: "Forbidden", capability: data.capability }));
+      throw new AuthTaggedError({ _tag: "Forbidden", capability: data.capability });
     }
     return toPublicSession(session);
   });

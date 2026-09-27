@@ -68,9 +68,10 @@ function LoginPage() {
           onSubmit={submitLogin}
           className="flex flex-col gap-4 rounded-xl border border-border/70 bg-card/80 p-6 shadow-sm"
         >
-          <label className="flex flex-col gap-1.5 text-xs font-medium">
+          <label className="flex flex-col gap-1.5 text-xs font-medium" htmlFor="login-email">
             Email
             <Input
+              id="login-email"
               type="email"
               autoComplete="username"
               required
@@ -79,9 +80,10 @@ function LoginPage() {
               placeholder="admin@{{name}}.local"
             />
           </label>
-          <label className="flex flex-col gap-1.5 text-xs font-medium">
+          <label className="flex flex-col gap-1.5 text-xs font-medium" htmlFor="login-password">
             Password
             <PasswordInput
+              id="login-password"
               autoComplete="current-password"
               required
               value={password}

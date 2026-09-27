@@ -18,7 +18,12 @@ export function ClosingCta() {
               Open the console when you&apos;re ready — agents connect when the CLI ships.
             </p>
           </div>
-          <Button size="lg" className="rounded-full px-7" render={<Link to="/admin" />}>
+          <Button
+            nativeButton={false}
+            size="lg"
+            className="rounded-full px-7"
+            render={<Link to="/admin" />}
+          >
             Open console
           </Button>
         </div>

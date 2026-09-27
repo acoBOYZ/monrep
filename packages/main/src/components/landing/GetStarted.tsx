@@ -2,10 +2,9 @@ import { CopyableButton } from "@monrep/ui/base";
 import { ContentFrame } from "./frame";
 
 /**
- * Placeholder until the CLI agent is published.
- * README: "Until that package is published, there is nothing to `curl | sh` yet."
+ * Install one-liner — served from this Worker at /install.sh.
  */
-const INSTALL_COMMAND = "curl -fsSL https://get.monrep.dev/install.sh | sh";
+const INSTALL_COMMAND = "curl -fsSL https://monrep.acoboyz.workers.dev/install.sh | sh";
 
 export function GetStarted() {
   return (
@@ -26,15 +25,15 @@ export function GetStarted() {
             Install the agent on each server
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-background/65 md:text-base">
-            A small CLI stays connected to the control plane. The install script is not published
-            yet. When it is, this is the command you&apos;ll run.
+            A small CLI stays connected to the control plane. Run this on each Linux host, then
+            enroll with the one-time token from Add server.
           </p>
           <CopyableButton
             text={INSTALL_COMMAND}
             variant="block"
             className="mt-8 overflow-hidden rounded-lg bg-background/10 text-background hover:bg-background/15 focus-visible:ring-background/40"
           >
-            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-sm leading-relaxed text-background">
+            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-xs leading-relaxed text-background sm:text-sm">
               <code>{INSTALL_COMMAND}</code>
             </pre>
           </CopyableButton>

@@ -104,6 +104,10 @@ export function Example() {
 
 ⚠️ This will not style correctly unless Tailwind is configured as shown above.
 
+### Terminal (`@monrep/ui/terminal`)
+
+Hosts should trim `children` / line arrays (e.g. last 1000 lines) for long sessions—the terminal uses overflow scroll, not a virtualizer.
+
 ---
 
 ## 🚫 Common Mistakes
