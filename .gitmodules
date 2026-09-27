@@ -1,3 +1,0 @@
-[submodule "packages/effect-solutions/upstream"]
-	path = packages/effect-solutions/upstream
-	url = https://github.com/kitlangton/effect-solutions.git
