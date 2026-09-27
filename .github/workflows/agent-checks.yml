@@ -1,24 +1,10 @@
 name: agent-checks
 
 on:
-  pull_request:
-    paths:
-      - "packages/agent/**"
-      - "brand.json.example"
-      - "scripts/sync-brand.ts"
-      - "scripts/install-agent.sh.tpl"
-      - ".github/workflows/agent-checks.yml"
-      - ".github/actions/prepare-rust/**"
   # push:
-  #   branches: [main]
-  #   paths:
-  #     - "packages/agent/**"
-  #     - "brand.json.example"
-  #     - "scripts/sync-brand.ts"
-  #     - "scripts/install-agent.sh.tpl"
-  #     - ".github/workflows/agent-checks.yml"
-  #     - ".github/actions/prepare-rust/**"
-  workflow_dispatch:
+  #   branches:
+  #     - main
+  pull_request:
 
 concurrency:
   group: agent-checks-${{ github.event.pull_request.number || github.ref }}
