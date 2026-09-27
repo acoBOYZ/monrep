@@ -45,4 +45,4 @@ export {
 export { timeLogger } from "./timeLogger";
 export { toArray } from "./toArray";
 export { tryCatch } from "./tryCatch";
-export { slugify, slugifySoft, createSlugifier } from "./url";
+export { createSlugifier, slugify, slugifySoft } from "./url";

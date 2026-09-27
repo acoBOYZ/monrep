@@ -18,6 +18,8 @@ run(["bunx", "--bun", "npm-check-updates", "-u", "--root", "--workspaces", "--fo
 
 run(["bun", "install"]);
 
+run(["bun", "run", "sync:brand"]);
+
 if (existsSync(agentSkillsDir)) {
   run(["bun", "run", "skills:check"]);
 }

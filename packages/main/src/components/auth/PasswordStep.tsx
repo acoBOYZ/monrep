@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { Button, Input, PasswordInput, TextSeparator } from "@monrep/ui/base";
+import { ADMIN_EMAIL_DOMAIN } from "../../brand.gen";
 import { TurnstileWidget } from "./TurnstileWidget";
 import type { SubmitEvent } from "react";
 
@@ -47,7 +48,7 @@ export function PasswordStep({
           required
           value={email}
           onChange={(event) => onEmailChange(event.target.value)}
-          placeholder="admin@monrep.com"
+          placeholder={`admin@${ADMIN_EMAIL_DOMAIN}`}
         />
       </label>
       <label htmlFor={passwordId} className="flex flex-col gap-1.5 text-sm font-medium">

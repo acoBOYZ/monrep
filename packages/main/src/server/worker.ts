@@ -2,17 +2,18 @@ import { StreamObject } from "@durable-streams/server-cloudflare";
 import { isStreamsPath } from "@monrep/db/stream/common";
 import { createPublicStreamsHandler } from "@monrep/db/stream/server";
 import startHandler from "@tanstack/react-start/server-entry";
+import { INSTALL_PATH } from "../brand.gen";
 import { handleAgentApi } from "./agent/http";
 import { AuthEnvSchema } from "./auth/schemas";
 import { resolveSessionFromRequest } from "./auth/session";
-import { INSTALL_SH } from "./installSh";
+import { INSTALL_SH } from "./installSh.gen";
 import { bindDoApp } from "@/db/host";
 
 bindDoApp();
 
 /*
  * Worker entry:
- * - `GET /install.sh` → agent install script (public)
+ * - GET INSTALL_PATH (brand.json) → agent install script (public)
  * - `/_streams/*` → Durable Streams (session cookie)
  * - `/api/agent/*` → device enroll / token / ws (no admin cookie)
  * - Everything else → TanStack Start
@@ -50,7 +51,7 @@ const streamsHandler = createPublicStreamsHandler<StreamsEnv>({
 export default {
   async fetch(request: Request, env: StreamsEnv, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
-    if (pathname === "/install.sh" && (request.method === "GET" || request.method === "HEAD")) {
+    if (pathname === INSTALL_PATH && (request.method === "GET" || request.method === "HEAD")) {
       return new Response(request.method === "HEAD" ? null : INSTALL_SH, {
         status: 200,
         headers: {

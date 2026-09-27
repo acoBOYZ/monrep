@@ -87,3 +87,10 @@ turbo-cache-key.json
 .data/
 .tmp-gpg-security/
 .demo/
+
+# Per-deploy brand (copy from brand.json.example; see bun run sync:brand)
+brand.json
+scripts/install-agent.sh
+packages/main/src/brand.gen.ts
+packages/agent/src/brand.gen.rs
+packages/main/src/server/installSh.gen.ts

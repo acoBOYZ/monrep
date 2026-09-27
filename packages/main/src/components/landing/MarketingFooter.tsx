@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { GITHUB_OWNER, GITHUB_URL } from "../../brand.gen";
 import { ContentFrame, SectionRule } from "./frame";
 
 type FooterCol = {
@@ -32,8 +33,8 @@ const FOOTER_COLS: Array<FooterCol> = [
   {
     heading: "Community",
     links: [
-      { label: "GitHub", href: "https://github.com/acoBOYZ/monrep", external: true },
-      { label: "Author", href: "https://github.com/acoBOYZ", external: true },
+      { label: "GitHub", href: GITHUB_URL, external: true },
+      { label: "Author", href: `https://github.com/${GITHUB_OWNER}`, external: true },
     ],
   },
 ];

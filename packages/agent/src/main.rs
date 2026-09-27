@@ -1,5 +1,7 @@
 //! monrep — outbound tunnel agent (1:1 control plane).
 
+#[path = "brand.gen.rs"]
+mod brand;
 mod cli;
 mod config;
 mod dispatch;

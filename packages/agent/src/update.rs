@@ -1,5 +1,6 @@
 //! Self-update from GitHub Releases (linux x86_64 / aarch64).
 
+use crate::brand;
 use crate::error::{AgentError, Result};
 use fs_err as fs;
 use serde::Deserialize;
@@ -13,7 +14,7 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
 
-pub const RELEASE_REPO: &str = "acoBOYZ/monrep";
+pub use brand::RELEASE_REPO;
 pub const AUTO_UPDATE_INTERVAL_SECS: u64 = 6 * 60 * 60;
 
 #[derive(Debug, Clone)]
@@ -42,8 +43,8 @@ fn asset_name() -> Result<&'static str> {
     )));
   }
   match ARCH {
-    "x86_64" => Ok("monrep-linux-x86_64"),
-    "aarch64" => Ok("monrep-linux-aarch64"),
+    "x86_64" => Ok(brand::RELEASE_ASSET_X86_64),
+    "aarch64" => Ok(brand::RELEASE_ASSET_AARCH64),
     other => Err(AgentError::Other(anyhow::anyhow!(
       "unsupported arch for self-update: {other}"
     ))),

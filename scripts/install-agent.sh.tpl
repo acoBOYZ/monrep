@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
-# Install monrep agent binary from GitHub Releases.
-# Usage: curl -fsSL https://monrep.acoboyz.workers.dev/install.sh | sh
+# Install {{productName}} agent binary from GitHub Releases.
+# Usage: curl -fsSL {{installUrl}} | sh
+# Source: scripts/install-agent.sh.tpl — filled by bun run sync:brand
 set -euo pipefail
 
-REPO="${MONREP_REPO:-acoBOYZ/monrep}"
+REPO="${MONREP_REPO:-{{githubRepo}}}"
 VERSION="${MONREP_VERSION:-latest}"
 INSTALL_DIR_DEFAULT="/usr/local/bin"
-BIN_NAME="monrep"
+BIN_NAME="{{binName}}"
+ASSET_PREFIX="{{releaseAssetPrefix}}"
 
 arch="$(uname -m)"
 case "$arch" in
-  x86_64|amd64) asset="monrep-linux-x86_64" ;;
-  aarch64|arm64) asset="monrep-linux-aarch64" ;;
+  x86_64|amd64) asset="${ASSET_PREFIX}-x86_64" ;;
+  aarch64|arm64) asset="${ASSET_PREFIX}-aarch64" ;;
   *)
     echo "unsupported architecture: $arch (need x86_64 or aarch64)" >&2
     exit 1
@@ -19,7 +21,7 @@ case "$arch" in
 esac
 
 if [[ "$(uname -s)" != "Linux" ]]; then
-  echo "monrep install currently supports Linux only" >&2
+  echo "{{productName}} install currently supports Linux only" >&2
   exit 1
 fi
 
@@ -33,7 +35,7 @@ echo "→ resolving ${VERSION} release for ${asset} from ${REPO}"
 url="$(curl -fsSL "$api" | grep -o "\"browser_download_url\":[[:space:]]*\"[^\"]*${asset}\"" | head -1 | sed 's/.*"\(https[^"]*\)".*/\1/')"
 if [[ -z "$url" ]]; then
   echo "could not find asset ${asset} on ${REPO} ${VERSION}" >&2
-  echo "publish a GitHub Release with monrep-linux-* assets first" >&2
+  echo "publish a GitHub Release with ${ASSET_PREFIX}-* assets first" >&2
   exit 1
 fi
 
@@ -64,8 +66,8 @@ $SUDO mv "$tmp" "$dest"
 $SUDO chmod +x "$dest"
 trap - EXIT
 
-echo "✔ installed $($dest --version 2>/dev/null || echo monrep)"
+echo "✔ installed $($dest --version 2>/dev/null || echo {{productName}})"
 echo
 echo "Next:"
-echo "  monrep enroll --url https://<your-control-plane> --token <one-time>"
-echo "  monrep daemon"
+echo "  {{binName}} enroll --url https://<your-control-plane> --token <one-time>"
+echo "  {{binName}} daemon"

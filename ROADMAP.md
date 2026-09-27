@@ -42,7 +42,7 @@ Out of Phase 3: `install.sh`, Docker lifecycle UI, true PTY.
 
 ### Phase 4 — Install & publish `[x]`
 
-- [x] `install.sh` / one-liner (`https://monrep.acoboyz.workers.dev/install.sh`)
+- [x] Install one-liner (`https://app.monrep.com/install`, from `brand.json` `installPath`)
 - [x] Single-binary CI publish (GitHub Actions release assets)
 - [x] Install docs (root README + `packages/agent` README)
 - [x] Agent self-update (CLI + auto default on + app trigger)
@@ -80,7 +80,7 @@ Install on Linux. Stays connected. Does the dirty work.
 
 - [x] Runtime: Rust `packages/agent` (binary `monrep`)
 - [x] Single binary build in GitHub Actions (Phase 4)
-- [x] Install docs (`README` + one-liner) / `install.sh` (Phase 4)
+- [x] Install docs (`README` + one-liner) / install route from `brand.json` (Phase 4)
 - [x] Persistent outbound connection to control plane (WSS + supervisor reconnect)
 - [x] Stone backpressure: bounded out queue, `MAX_RUNS`, line cap, pending TTL on DO
 - [x] Exec: generic `run` / `cancel` (Worker owns argv; no agent product modules)
