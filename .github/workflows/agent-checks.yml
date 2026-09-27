@@ -9,15 +9,15 @@ on:
       - "scripts/install-agent.sh.tpl"
       - ".github/workflows/agent-checks.yml"
       - ".github/actions/prepare-rust/**"
-  push:
-    branches: [main]
-    paths:
-      - "packages/agent/**"
-      - "brand.json.example"
-      - "scripts/sync-brand.ts"
-      - "scripts/install-agent.sh.tpl"
-      - ".github/workflows/agent-checks.yml"
-      - ".github/actions/prepare-rust/**"
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "packages/agent/**"
+  #     - "brand.json.example"
+  #     - "scripts/sync-brand.ts"
+  #     - "scripts/install-agent.sh.tpl"
+  #     - ".github/workflows/agent-checks.yml"
+  #     - ".github/actions/prepare-rust/**"
   workflow_dispatch:
 
 concurrency:
