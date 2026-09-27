@@ -31,9 +31,9 @@ export function GetStarted() {
           <CopyableButton
             text={INSTALL_COMMAND}
             variant="block"
-            className="text-foreground mt-8 overflow-hidden rounded-lg bg-muted/10 hover:bg-muted/15 focus-visible:ring-muted/40"
+            className="mt-8 overflow-hidden rounded-lg bg-muted/10 text-foreground hover:bg-muted/15 focus-visible:ring-muted/40"
           >
-            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-xs leading-relaxed sm:text-sm text-background">
+            <pre className="min-w-0 flex-1 overflow-x-auto p-2 px-4 pr-12 font-mono text-xs leading-relaxed text-background sm:text-sm">
               <code>{INSTALL_COMMAND}</code>
             </pre>
           </CopyableButton>
