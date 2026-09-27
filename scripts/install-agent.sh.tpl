@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install {{productName}} agent binary from GitHub Releases.
-# Usage: curl -fsSL {{installUrl}} | sh
+# Usage: curl -fsSL {{installUrl}} | bash
 # Source: scripts/install-agent.sh.tpl — filled by bun run sync:brand
 set -euo pipefail
 
