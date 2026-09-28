@@ -39,7 +39,7 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
   const online = server.status === "online";
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 sm:px-6">
       <ServerDetailHeader server={server} serverId={id} online={online} />
       <ServerMetaRow server={server} latest={metrics.latest} />
       <ServerMetricsToolbar range={range} onRangeChange={setRange} />

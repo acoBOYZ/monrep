@@ -57,7 +57,7 @@ export function ServerKpiStrip({
   const prevDisk = useMemo(() => avgDisk(prevPoints), [prevPoints]);
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <KpiTile
         label="Load (1m)"
         value={latest?.load1 !== undefined ? latest.load1.toFixed(2) : "—"}

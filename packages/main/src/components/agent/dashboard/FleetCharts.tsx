@@ -18,13 +18,15 @@ type FleetChartsProps = {
 export function FleetCharts({ from, to, points, servers }: FleetChartsProps) {
   const { loadSeries, memSeries } = useFleetSeries(points, servers);
   const memEmpty = useMemo(() => memoryChartEmptyMessage(points), [points]);
+  const handleFormatSeriesValue = (value: number) => `${value.toFixed(1)}%`;
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-2 lg:grid-cols-2">
       <ChartCard
         id="fleet-load"
         heading="Load average (1m)"
         caption={`${servers.length} servers`}
+        series={loadSeries}
         renderChart={({ height }) => (
           <TimeLineChart
             data={loadSeries}
@@ -55,6 +57,8 @@ export function FleetCharts({ from, to, points, servers }: FleetChartsProps) {
         id="fleet-mem"
         heading="Memory used"
         caption={`${servers.length} servers`}
+        series={memSeries}
+        formatSeriesValue={handleFormatSeriesValue}
         renderChart={({ height }) => (
           <TimeAreaChart
             data={memSeries}

@@ -1,32 +1,15 @@
 import { useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@monrep/ui/base";
+import { seriesStats } from "./seriesStats";
+import type { SeriesPoint } from "./seriesStats";
 import { TABLE_HEAD_CLASS } from "@/components/agent/utils/tableStyles";
 
-type SeriesRow = { series: string; at: Date; value: number };
-
 type SeriesStatsTableProps = {
-  data: ReadonlyArray<SeriesRow>;
+  data: ReadonlyArray<SeriesPoint>;
 };
 
 export function SeriesStatsTable({ data }: SeriesStatsTableProps) {
-  const rows = useMemo(() => {
-    const map = new Map<string, { latest?: number; min?: number; max?: number; lastAt: number }>();
-    for (const row of data) {
-      const t = row.at.getTime();
-      const cur = map.get(row.series);
-      if (!cur) {
-        map.set(row.series, { latest: row.value, min: row.value, max: row.value, lastAt: t });
-        continue;
-      }
-      if (row.value < (cur.min ?? row.value)) cur.min = row.value;
-      if (row.value > (cur.max ?? row.value)) cur.max = row.value;
-      if (t >= cur.lastAt) {
-        cur.lastAt = t;
-        cur.latest = row.value;
-      }
-    }
-    return [...map.entries()].map(([name, stats]) => ({ name, ...stats }));
-  }, [data]);
+  const rows = useMemo(() => seriesStats(data), [data]);
 
   if (rows.length === 0) return null;
 

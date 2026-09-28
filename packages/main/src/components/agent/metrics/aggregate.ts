@@ -97,16 +97,19 @@ export function toSeries(
   key: "load1" | "load5" | "load15" | "memPct" | "diskPct",
   labelOf: (p: MetricPoint) => string,
 ): Array<{ id: string; at: Date; value: number; series: string }> {
-  const out: Array<{ id: string; at: Date; value: number; series: string }> = [];
+  // TanStack Charts stack/line marks require one value per (at, series).
+  const byKey = new Map<string, { id: string; at: Date; value: number; series: string }>();
   for (const p of points) {
     const value = p[key];
     if (value === undefined) continue;
-    out.push({
+    const series = labelOf(p);
+    const at = new Date(p.at);
+    byKey.set(`${at.getTime()}\0${series}`, {
       id: `${p.runId}-${key}`,
-      at: new Date(p.at),
+      at,
       value,
-      series: labelOf(p),
+      series,
     });
   }
-  return out;
+  return [...byKey.values()].sort((a, b) => a.at.getTime() - b.at.getTime());
 }

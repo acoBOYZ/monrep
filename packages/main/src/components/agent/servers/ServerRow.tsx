@@ -21,9 +21,9 @@ export function ServerRow({ server }: ServerRowProps) {
 
   return (
     <TableRow className="h-10">
-      <TableCell className="font-medium">
+      <TableCell className="min-w-0 truncate font-medium">
         {id ? (
-          <Link to="/servers/$id" params={{ id }} className="hover:underline">
+          <Link to="/servers/$id" params={{ id }} className="hover:text-primary hover:underline">
             {server.name}
           </Link>
         ) : (
