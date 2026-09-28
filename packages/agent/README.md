@@ -29,7 +29,7 @@ bun run setup:dev
 bun run --cwd packages/main dev          # terminal A — https://localhost:5274
 # UI → Add server → copy enroll token
 bun run --cwd packages/agent local -- --token <token>   # terminal B
-# already enrolled (daemon only; pass --token again to unenroll + re-bind):
+# already linked (run only; pass --token again to unlink + re-bind):
 bun run --cwd packages/agent local
 ```
 
@@ -37,12 +37,18 @@ Override URL with `MONREP_CONTROL_URL` (default `https://localhost:5274`). CA vi
 
 ## How to use
 
-From the dashboard **Add server** flow, copy the minted command, then:
+From the dashboard **Add server** flow, copy the minted command, then (production):
 
 ```bash
-monrep enroll --url https://your-app.example --token <one-time>
+sudo monrep init --url https://your-app.example --token <one-time>
 monrep status
-monrep daemon   # supervised loop; ctrl-c to stop
+```
+
+`init` links the host (as root), writes the systemd unit, and `enable --now`. For foreground debug without systemd:
+
+```bash
+monrep link --url https://your-app.example --token <one-time>
+monrep run
 ```
 
 ### Re-bind after revoke
@@ -50,30 +56,30 @@ monrep daemon   # supervised loop; ctrl-c to stop
 App revoke deletes the cloud device credential only. The host still has `cred.json`, so a new enroll token will refuse until you clear it:
 
 ```bash
-monrep unenroll   # clears cred.json (keeps config.json / auto-update prefs)
-monrep enroll --url https://your-app.example --token <new-token>
-monrep daemon
+sudo monrep unlink   # clears cred.json (keeps config.json / auto-update prefs)
+sudo monrep init --url https://your-app.example --token <new-token> --force
 ```
 
-If the daemon is still running after revoke, token refresh returns `DeviceUnknown`: the agent clears `cred.json`, emits `not_enrolled`, and stops the retry loop — then enroll again as above.
-### Self-update
+If the agent service is still running after revoke, token refresh returns `DeviceUnknown`: the agent clears `cred.json`, emits `not_enrolled`, and stops the retry loop — then `init` / `link` again as above.
+
+### Self-upgrade
 
 - Auto-update is **on by default** (`~/.config/monrep/agent/config.json` → `auto_update`). Toggle:
 
 ```bash
-monrep config --auto-update false   # disable (prints settings path)
-monrep config                       # show current + path
-monrep update --check
-monrep update
+monrep settings --auto-update false   # disable (prints settings path)
+monrep settings                       # show current + path
+monrep upgrade --check
+monrep upgrade
 ```
 
 - Release CI asserts `monrep --version` matches the tag / `Cargo.toml` so assets are never mis-stamped.
 - For debugging a hung dial, disable auto-update first so the supervisor is not restarting on a bad loop.
 - The control plane can push `config` / `update` wire ops (UI: Auto-update + Update now).
 
-### systemd (continuous daemon)
+### systemd
 
-After enroll, install the unit from this package:
+Prefer `sudo monrep init …` (above). Manual unit install:
 
 ```bash
 sudo cp packages/agent/systemd/monrep.service /etc/systemd/system/
@@ -81,7 +87,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now monrep
 ```
 
-`ExecStart` defaults to `/usr/local/bin/monrep daemon`. Adjust `User=` / paths if the binary or config dir is not root-owned.
+`ExecStart` defaults to `/usr/local/bin/monrep run`. Production should use **root** for both `link`/`init` and the service so XDG creds match (`/root/.config/monrep/agent/`). Do not mix a normal-user `link` with a root unit.
 
 ## Local tests
 
@@ -95,8 +101,8 @@ bun run --cwd packages/agent test
 ## Security
 
 - **Main-only peer** — no local control API; nothing else connects in.
-- **Outbound only** — `daemon` dials the pinned control plane (HTTPS/WSS). No inbound bind.
-- **1:1 binding** — one enrolled agent ↔ one `control_url`. Second enroll is refused until `monrep unenroll`.
+- **Outbound only** — `run` dials the pinned control plane (HTTPS/WSS). No inbound bind.
+- **1:1 binding** — one linked agent ↔ one `control_url`. Second link is refused until `monrep unlink`.
 - **Device credential** — stored under the XDG config dir as `cred.json` mode `0600`. Secrets are never printed.
 
 ## Control-plane HTTP (main)

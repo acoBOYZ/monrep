@@ -1,7 +1,7 @@
 import { Computer, Moon, Sun } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { setTheme, storeTheme } from "@monrep/runtime";
-import { Button, TooltipTrigger } from "@monrep/ui/base";
+import { Button } from "@monrep/ui/base";
 import { useSelector } from "@tanstack/react-store";
 import type { Theme } from "@monrep/runtime";
 
@@ -22,21 +22,21 @@ export function ThemeToggle() {
   const next = NEXT_THEME[theme];
 
   return (
-    <TooltipTrigger content={`Theme: ${LABEL[theme]} - click for ${LABEL[next]}`}>
-      <Button
-        type="button"
-        variant="ghost"
-        onClick={() => setTheme(next)}
-        aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.`}
-      >
-        {theme === "system" ? (
-          <HugeiconsIcon icon={Computer} className="size-5" />
-        ) : theme === "light" ? (
-          <HugeiconsIcon icon={Sun} className="size-5" />
-        ) : (
-          <HugeiconsIcon icon={Moon} className="size-5" />
-        )}
-      </Button>
-    </TooltipTrigger>
+    <Button
+      type="button"
+      variant="ghost"
+      size="iconxs"
+      className="size-7"
+      onClick={() => setTheme(next)}
+      aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.`}
+    >
+      {theme === "system" ? (
+        <HugeiconsIcon icon={Computer} className="size-4" aria-hidden />
+      ) : theme === "light" ? (
+        <HugeiconsIcon icon={Sun} className="size-4" aria-hidden />
+      ) : (
+        <HugeiconsIcon icon={Moon} className="size-4" aria-hidden />
+      )}
+    </Button>
   );
 }

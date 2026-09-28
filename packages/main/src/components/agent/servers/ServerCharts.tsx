@@ -28,10 +28,11 @@ export function ServerCharts({ serverId, from, to, points }: ServerChartsProps) 
   const handleFormatSeriesValue = (value: number) => `${value.toFixed(1)}%`;
 
   return (
-    <div className="grid gap-2 lg:grid-cols-2">
+    <div className="grid gap-3 lg:grid-cols-2">
       <ChartCard
         id={`srv-${serverId}-load`}
         heading="Load average"
+        caption="1m · 5m · 15m"
         series={loadSeries}
         renderChart={({ height }) => (
           <TimeLineChart
@@ -62,6 +63,7 @@ export function ServerCharts({ serverId, from, to, points }: ServerChartsProps) 
       <ChartCard
         id={`srv-${serverId}-mem`}
         heading="Memory used"
+        caption="% of total RAM"
         series={memSeries}
         formatSeriesValue={handleFormatSeriesValue}
         renderChart={({ height }) => (

@@ -3,7 +3,7 @@
 
 /**
  * Bind monrep agent to local main (https://localhost:5274).
- * Trusts certs/vite-dev-root.crt, disables auto_update, optional enroll, then daemon.
+ * Trusts certs/vite-dev-root.crt, disables auto_update, optional link, then run.
  *
  *   bun run --cwd packages/agent local
  *   bun run --cwd packages/agent local -- --token <enroll-token>
@@ -67,31 +67,31 @@ const { token } = parseArgs(process.argv.slice(2));
 console.log(`→ MONREP_DEV_CA=${env.MONREP_DEV_CA}`);
 console.log(`→ control URL ${controlUrl}`);
 
-let { code } = await cargoMonrep(["config", "--auto-update", "false"], env);
+let { code } = await cargoMonrep(["settings", "--auto-update", "false"], env);
 if (code !== 0) process.exit(code);
 
 if (token) {
-  console.log("→ unenroll (clear prior binding before re-token)");
-  const cleared = await cargoMonrep(["unenroll"], env, { capture: true });
+  console.log("→ unlink (clear prior binding before re-token)");
+  const cleared = await cargoMonrep(["unlink"], env, { capture: true });
   process.stdout.write(cleared.stdout);
   process.stderr.write(cleared.stderr);
   if (cleared.code !== 0) process.exit(cleared.code);
 
-  console.log(`→ enroll --url ${controlUrl}`);
-  const enroll = await cargoMonrep(["enroll", "--url", controlUrl, "--token", token], env, {
+  console.log(`→ link --url ${controlUrl}`);
+  const linked = await cargoMonrep(["link", "--url", controlUrl, "--token", token], env, {
     capture: true,
   });
-  process.stdout.write(enroll.stdout);
-  process.stderr.write(enroll.stderr);
-  if (enroll.code !== 0) {
-    const combined = `${enroll.stdout}\n${enroll.stderr}`;
-    if (combined.includes("already enrolled")) {
-      console.error("→ still enrolled after unenroll; run: cargo run --bin monrep -- unenroll");
+  process.stdout.write(linked.stdout);
+  process.stderr.write(linked.stderr);
+  if (linked.code !== 0) {
+    const combined = `${linked.stdout}\n${linked.stderr}`;
+    if (combined.includes("already linked")) {
+      console.error("→ still linked after unlink; run: cargo run --bin monrep -- unlink");
     }
-    process.exit(enroll.code);
+    process.exit(linked.code);
   }
 }
 
-console.log("→ daemon (ctrl-c to stop)");
-({ code } = await cargoMonrep(["daemon"], env));
+console.log("→ run (ctrl-c to stop)");
+({ code } = await cargoMonrep(["run"], env));
 process.exit(code);

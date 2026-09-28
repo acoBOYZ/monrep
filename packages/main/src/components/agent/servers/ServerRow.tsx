@@ -1,3 +1,5 @@
+import { OrthogonalEdgeIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Badge, Button, TableCell, TableRow, TooltipTrigger } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import { toDateTimeAttr } from "@monrep/utils";
@@ -64,9 +66,11 @@ export function ServerRow({ server }: ServerRowProps) {
             <Button
               nativeButton={false}
               render={<Link to="/servers/$id" params={{ id }} />}
-              variant="ghost"
+              variant="outline"
+              className="border-dashed"
               size="sm"
             >
+              <HugeiconsIcon icon={OrthogonalEdgeIcon} className="size-4" aria-hidden />
               Open
             </Button>
           ) : null}

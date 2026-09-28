@@ -8,6 +8,7 @@ mod dispatch;
 mod error;
 mod health;
 mod http;
+mod init;
 mod ops;
 mod proto;
 mod settings;

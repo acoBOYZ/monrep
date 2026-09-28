@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/monrep daemon
+ExecStart=/usr/local/bin/monrep run
 Restart=always
 RestartSec=2
 # Prefer a dedicated user in production; root is fine when config lives under /root/.config

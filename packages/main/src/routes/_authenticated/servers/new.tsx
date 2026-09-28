@@ -3,6 +3,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { useCreateServer } from "@/components/agent/hooks/useCreateServer";
 import { EnrollTokenResult } from "@/components/agent/servers/EnrollTokenResult";
 import { NewServerForm } from "@/components/agent/servers/NewServerForm";
+import { PageBreadcrumb } from "@/components/layouts/PageBreadcrumb";
 
 export const Route = createFileRoute("/_authenticated/servers/new")({
   component: NewServerPage,
@@ -13,12 +14,15 @@ function NewServerPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6">
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-lg font-semibold tracking-tight">Add server</h1>
-        <Button nativeButton={false} variant="ghost" size="sm" render={<Link to="/servers" />}>
-          Cancel
-        </Button>
-      </div>
+      <header className="flex flex-col gap-2">
+        <PageBreadcrumb items={[{ label: "Servers", to: "/servers" }]} current="Add server" />
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Add server</h1>
+          <Button nativeButton={false} variant="ghost" size="sm" render={<Link to="/servers" />}>
+            Cancel
+          </Button>
+        </div>
+      </header>
       {result ? (
         <EnrollTokenResult
           serverId={result.serverId}

@@ -41,7 +41,7 @@ export function TimeLineChart({
           y: "value",
           z: "series",
           key: "id",
-          strokeWidth: 1.5,
+          strokeWidth: 2,
         }),
         crosshair({ x: { label: true }, y: false }),
       ],
@@ -51,7 +51,6 @@ export function TimeLineChart({
       },
       color: {
         scale: seriesColor.scale,
-        legend: seriesColor.legend,
       },
       tooltip,
     });

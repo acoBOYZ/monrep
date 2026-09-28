@@ -69,5 +69,4 @@ trap - EXIT
 echo "✔ installed $($dest --version 2>/dev/null || echo {{productName}})"
 echo
 echo "Next:"
-echo "  {{binName}} enroll --url https://<your-control-plane> --token <one-time>"
-echo "  {{binName}} daemon"
+echo "  sudo {{binName}} init --url https://<your-control-plane> --token <one-time>"

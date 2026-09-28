@@ -38,7 +38,7 @@ export function PendingStatusCard({ serverId, createdAt }: PendingStatusCardProp
         <dd className="col-span-2">
           <p className="text-xs text-muted-foreground">
             Agent has not connected yet. This page switches to the live view automatically once the
-            daemon connects.
+            agent connects.
           </p>
         </dd>
       </dl>

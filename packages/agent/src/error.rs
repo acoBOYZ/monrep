@@ -4,10 +4,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AgentError {
-  #[error("not enrolled; run `monrep enroll --url <url> --token <token>` first")]
+  #[error("not linked; run `monrep link --url <url> --token <token>` first")]
   NotEnrolled,
 
-  #[error("device unknown or revoked; cleared local credentials — run `monrep enroll` again")]
+  #[error("device unknown or revoked; cleared local credentials — run `monrep link` again")]
   DeviceUnknown,
 
   #[error("credential store is corrupt: {0}")]

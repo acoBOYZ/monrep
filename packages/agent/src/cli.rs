@@ -1,4 +1,4 @@
-//! Clap surface: enroll / unenroll / status / daemon / update / config.
+//! Clap surface: link / unlink / status / run / upgrade / settings / init.
 
 use crate::error::AgentError;
 use crate::health::HealthBus;
@@ -19,90 +19,110 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
-  /// Bind this host to one control plane (1:1). Refuses if already enrolled.
-  Enroll {
+  /// Bind this host to one control plane (1:1). Refuses if already linked.
+  Link {
     /// Control plane base URL (https://…)
     #[arg(long)]
     url: String,
-    /// One-time enrollment token from the dashboard
+    /// One-time enroll token from the dashboard
     #[arg(long)]
     token: String,
   },
-  /// Clear local device credentials so this host can enroll again.
-  Unenroll,
-  /// Show enrollment status (no secrets)
+  /// Clear local device credentials so this host can link again.
+  Unlink,
+  /// Show link status (no secrets)
   Status,
-  /// Run supervised outbound tunnel runtime
-  Daemon,
-  /// Check / apply self-update from GitHub Releases
-  Update {
-    /// Only report whether an update is available
+  /// Run supervised outbound tunnel runtime (foreground)
+  Run,
+  /// Check / apply self-upgrade from GitHub Releases
+  Upgrade {
+    /// Only report whether an upgrade is available
     #[arg(long)]
     check: bool,
   },
   /// Show or set local agent settings
-  Config {
-    /// Enable or disable daemon auto-update (`true` / `false`)
+  Settings {
+    /// Enable or disable auto-upgrade (`true` / `false`)
     #[arg(long, value_name = "BOOL", num_args = 0..=1, default_missing_value = "true")]
     auto_update: Option<bool>,
+  },
+  /// Link (if needed), install systemd unit, enable and start the agent (Linux, root)
+  Init {
+    /// Control plane base URL (https://…)
+    #[arg(long)]
+    url: Option<String>,
+    /// One-time enroll token from the dashboard
+    #[arg(long)]
+    token: Option<String>,
+    /// Unlink and re-link when already bound
+    #[arg(long)]
+    force: bool,
+    /// Install/enable unit but do not start
+    #[arg(long)]
+    no_start: bool,
   },
 }
 
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
   match cli.command {
-    Command::Enroll { url, token } => cmd_enroll(&url, &token).await,
-    Command::Unenroll => cmd_unenroll(),
+    Command::Link { url, token } => cmd_link(&url, &token).await,
+    Command::Unlink => cmd_unlink(),
     Command::Status => cmd_status(),
-    Command::Daemon => cmd_daemon().await,
-    Command::Update { check } => cmd_update(check).await,
-    Command::Config { auto_update } => cmd_config(auto_update),
+    Command::Run => cmd_run().await,
+    Command::Upgrade { check } => cmd_upgrade(check).await,
+    Command::Settings { auto_update } => cmd_settings(auto_update),
+    Command::Init {
+      url,
+      token,
+      force,
+      no_start,
+    } => crate::init::cmd_init(url, token, force, no_start).await,
   }
 }
 
-async fn cmd_enroll(url: &str, token: &str) -> anyhow::Result<()> {
+pub(crate) async fn cmd_link(url: &str, token: &str) -> anyhow::Result<()> {
   if url.trim().is_empty() || token.trim().is_empty() {
     anyhow::bail!("--url and --token are required");
   }
   if let Some(existing) = store::load_optional()? {
     anyhow::bail!(
-      "already enrolled to {}; run monrep unenroll before binding again",
+      "already linked to {}; run monrep unlink before binding again",
       existing.control_url
     );
   }
 
   let cred = crate::http::enroll_with_control_plane(url, token).await?;
   store::save(&cred)?;
-  // Ensure default settings file exists (autoUpdate: true).
   let _ = settings::load_settings()?;
   if !settings::settings_file_exists() {
     settings::save_settings(&settings::AgentSettings::default())?;
   }
   out(&format!(
-    "enrolled device {} → {}",
+    "linked device {} → {}",
     cred.device_id, cred.control_url
   ))?;
   Ok(())
 }
 
-fn cmd_unenroll() -> anyhow::Result<()> {
+pub(crate) fn cmd_unlink() -> anyhow::Result<()> {
   let path = crate::config::cred_path()?;
   if store::clear()? {
-    out(&format!("unenrolled; cleared {}", path.display()))?;
+    out(&format!("unlinked; cleared {}", path.display()))?;
   } else {
-    out("not enrolled")?;
+    out("not linked")?;
   }
   Ok(())
 }
 
-fn cmd_status() -> anyhow::Result<()> {
+pub(crate) fn cmd_status() -> anyhow::Result<()> {
   let settings_path = crate::config::settings_path()?;
   match store::load_optional()? {
     None => {
-      out("status: not enrolled")?;
+      out("status: not linked")?;
       out(&format!("  settings:    {}", settings_path.display()))?;
     }
     Some(cred) => {
-      out("status: enrolled")?;
+      out("status: linked")?;
       out(&format!("  control_url: {}", cred.control_url))?;
       out(&format!("  device_id:   {}", cred.device_id))?;
       out(&format!(
@@ -122,21 +142,21 @@ fn cmd_status() -> anyhow::Result<()> {
   Ok(())
 }
 
-async fn cmd_daemon() -> anyhow::Result<()> {
+async fn cmd_run() -> anyhow::Result<()> {
   match store::load() {
     Ok(cred) => {
       out(&format!(
-        "daemon: pinned peer {} (device {})",
+        "run: pinned peer {} (device {})",
         cred.control_url, cred.device_id
       ))?;
       out(&format!(
-        "daemon: auto_update={}",
+        "run: auto_update={}",
         settings::auto_update_enabled()
       ))?;
       if let Some(ca) = crate::tls::active_dev_ca_path() {
-        out(&format!("daemon: dev_ca={}", ca.display()))?;
+        out(&format!("run: dev_ca={}", ca.display()))?;
       }
-      out("daemon: supervisor running (ctrl-c to stop)")?;
+      out("run: supervisor running (ctrl-c to stop)")?;
       supervisor::run_forever().await
     }
     Err(AgentError::NotEnrolled) => {
@@ -144,15 +164,15 @@ async fn cmd_daemon() -> anyhow::Result<()> {
       health.emit(
         HealthLevel::Error,
         "not_enrolled",
-        "daemon requires enroll first",
+        "run requires link first",
       );
-      anyhow::bail!("not enrolled; run `monrep enroll --url <url> --token <token>` first")
+      anyhow::bail!("not linked; run `monrep link --url <url> --token <token>` first")
     }
     Err(e) => Err(e.into()),
   }
 }
 
-async fn cmd_update(check_only: bool) -> anyhow::Result<()> {
+async fn cmd_upgrade(check_only: bool) -> anyhow::Result<()> {
   match update::check_for_update().await? {
     None => {
       out(&format!("up to date ({})", env!("CARGO_PKG_VERSION")))?;
@@ -160,7 +180,7 @@ async fn cmd_update(check_only: bool) -> anyhow::Result<()> {
     }
     Some(info) => {
       out(&format!(
-        "update available: {} → {} ({})",
+        "upgrade available: {} → {} ({})",
         env!("CARGO_PKG_VERSION"),
         info.version,
         info.tag
@@ -177,7 +197,7 @@ async fn cmd_update(check_only: bool) -> anyhow::Result<()> {
   }
 }
 
-fn cmd_config(auto_update: Option<bool>) -> anyhow::Result<()> {
+fn cmd_settings(auto_update: Option<bool>) -> anyhow::Result<()> {
   let path = crate::config::settings_path()?;
   if let Some(v) = auto_update {
     let s = settings::set_auto_update(v)?;
@@ -191,7 +211,7 @@ fn cmd_config(auto_update: Option<bool>) -> anyhow::Result<()> {
   Ok(())
 }
 
-fn out(line: &str) -> std::io::Result<()> {
+pub(crate) fn out(line: &str) -> std::io::Result<()> {
   let mut stdout = std::io::stdout().lock();
   writeln!(stdout, "{line}")
 }

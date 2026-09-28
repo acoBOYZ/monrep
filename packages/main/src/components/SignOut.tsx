@@ -17,11 +17,12 @@ export function SignOut() {
       <Button
         type="button"
         variant="ghost"
-        className="group/so"
+        size="iconxs"
+        className="size-7 hover:[&>svg]:text-primary"
         onClick={signOut}
         aria-label="Sign out"
       >
-        <HugeiconsIcon icon={Logout} className="size-5 group-hover/so:text-primary" />
+        <HugeiconsIcon icon={Logout} className="size-4" aria-hidden />
       </Button>
     </TooltipTrigger>
   );
