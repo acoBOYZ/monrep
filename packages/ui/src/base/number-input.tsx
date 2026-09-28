@@ -2,6 +2,7 @@ import { useCallback, useImperativeHandle, useRef, useState } from "react";
 import { NumericFormat } from "react-number-format";
 import { ChevronDown, ChevronUp } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { cn } from "@monrep/utils";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -38,6 +39,7 @@ export const NumberInput = ({
   suffix,
   prefix,
   value: controlledValue,
+  className,
   ...props
 }: NumberInputProps) => {
   const isControlled = controlledValue !== undefined;
@@ -127,7 +129,10 @@ export const NumberInput = ({
         prefix={prefix}
         customInput={Input}
         placeholder={placeholder}
-        className="relative [appearance:textfield] rounded-r-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className={cn(
+          "relative [appearance:textfield] rounded-r-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          className,
+        )}
         {...props}
       />
 

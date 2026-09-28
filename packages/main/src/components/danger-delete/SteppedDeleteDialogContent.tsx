@@ -1,17 +1,14 @@
 import { Alert01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, DialogTitle, Input, Label } from "@monrep/ui/base";
-import { cn } from "@monrep/utils";
+import { DialogTitle } from "@monrep/ui/base";
 import { ConsequenceTimeline } from "./ConsequenceTimeline";
 import { DeleteEntityHero } from "./DeleteEntityHero";
-import type { ReactNode, SyntheticEvent } from "react";
+import { DeleteStepFooter } from "./DeleteStepFooter";
+import { MatchConfirmField } from "./MatchConfirmField";
+import type { ReactNode } from "react";
 import type { ConsequenceItem } from "./ConsequenceTimeline";
 import type { RequireMatchRule } from "./match";
 import type { DeleteDialogStep } from "./useSteppedDeleteDialogState";
-
-const stopEvent = (event: SyntheticEvent) => {
-  event.stopPropagation();
-};
 
 type SteppedDeleteDialogContentProps = {
   step: DeleteDialogStep;
@@ -89,34 +86,15 @@ export function SteppedDeleteDialogContent({
     return (
       <div className="space-y-3">
         <DeleteEntityHero displayName={displayName} metadata={metadata} compact />
-        {requireMatch !== undefined ? (
-          <>
-            {inputLabel ? (
-              <Label htmlFor={inputId} className="text-sm font-semibold text-foreground">
-                {inputLabel}
-              </Label>
-            ) : null}
-            <Input
-              id={inputId}
-              type="text"
-              value={matchValue}
-              autoComplete="off"
-              placeholder={placeholder}
-              onChange={(event) => {
-                setMatchValue(event.target.value);
-              }}
-              className={cn(
-                "h-10 border-destructive/55 bg-background",
-                "focus-visible:border-destructive focus-visible:ring-2 focus-visible:ring-destructive/25",
-              )}
-              onKeyDown={(event) => {
-                if (event.key !== "Enter") return;
-                event.preventDefault();
-                onDelete();
-              }}
-            />
-          </>
-        ) : null}
+        <MatchConfirmField
+          inputId={inputId}
+          matchValue={matchValue}
+          setMatchValue={setMatchValue}
+          requireMatch={requireMatch}
+          inputLabel={inputLabel}
+          placeholder={placeholder}
+          onDelete={onDelete}
+        />
       </div>
     );
   })();
@@ -138,95 +116,19 @@ export function SteppedDeleteDialogContent({
         </div>
 
         <div className="shrink-0 border-t border-border bg-background px-4 py-3">
-          {step === 1 ? (
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-10 w-full font-semibold"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onStep1Continue();
-                }}
-              >
-                {step1ContinueLabel}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 w-full text-cool"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onCancel();
-                }}
-              >
-                {resolvedCancel}
-              </Button>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-10 w-full font-semibold"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onStep2Continue();
-                }}
-              >
-                {step2AcknowledgeLabel}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                className="h-9 w-full text-cool"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onCancel();
-                }}
-              >
-                {resolvedCancel}
-              </Button>
-            </div>
-          ) : null}
-
-          {step === 3 ? (
-            <div className="flex flex-col gap-2">
-              <Button
-                type="button"
-                variant="destructive"
-                className="h-10 w-full"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onDelete();
-                }}
-                disabled={!canConfirmFinal}
-              >
-                {loading ? (
-                  <span className="inline-flex items-center gap-2">
-                    {resolvedConfirm}
-                    <span aria-hidden>…</span>
-                  </span>
-                ) : (
-                  resolvedConfirm
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-10 w-full"
-                onClick={(e) => {
-                  stopEvent(e);
-                  onCancel();
-                }}
-                disabled={loading}
-              >
-                {resolvedCancel}
-              </Button>
-            </div>
-          ) : null}
+          <DeleteStepFooter
+            step={step}
+            resolvedCancel={resolvedCancel}
+            step1ContinueLabel={step1ContinueLabel}
+            step2AcknowledgeLabel={step2AcknowledgeLabel}
+            resolvedConfirm={resolvedConfirm}
+            loading={loading}
+            canConfirmFinal={canConfirmFinal}
+            onCancel={onCancel}
+            onDelete={onDelete}
+            onStep1Continue={onStep1Continue}
+            onStep2Continue={onStep2Continue}
+          />
         </div>
       </div>
     </div>

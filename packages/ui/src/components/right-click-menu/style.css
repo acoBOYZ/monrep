@@ -1,0 +1,9 @@
+.right-click-outline::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--right-click-outline-radius, 7px);
+  pointer-events: none;
+  z-index: 10;
+}

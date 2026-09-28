@@ -11,15 +11,16 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as PublicRouteImport } from './routes/_public'
-import { Route as AuthenticatedPlaygroundRouteRouteImport } from './routes/_authenticated/playground/route'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as PublicIndexRouteImport } from './routes/_public/index'
 import { Route as PublicAdminRouteImport } from './routes/_public/admin'
-import { Route as AuthenticatedPlaygroundPresenceRouteImport } from './routes/_authenticated/playground/presence'
-import { Route as AuthenticatedPlaygroundStreamsRouteImport } from './routes/_authenticated/playground/streams'
-import { Route as AuthenticatedPlaygroundTerminalRouteImport } from './routes/_authenticated/playground/terminal'
 import { Route as AuthenticatedServersIndexRouteImport } from './routes/_authenticated/servers/index'
 import { Route as AuthenticatedServersIdRouteImport } from './routes/_authenticated/servers/$id'
 import { Route as AuthenticatedServersNewRouteImport } from './routes/_authenticated/servers/new'
+import { Route as AuthenticatedServersIdIndexRouteImport } from './routes/_authenticated/servers/$id/index'
+import { Route as AuthenticatedServersIdDockerRouteImport } from './routes/_authenticated/servers/$id/docker'
+import { Route as AuthenticatedServersIdServicesRouteImport } from './routes/_authenticated/servers/$id/services'
+import { Route as AuthenticatedServersIdDockerContainerIdRouteImport } from './routes/_authenticated/servers/$id/docker_.$containerId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -29,12 +30,11 @@ const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPlaygroundRouteRoute =
-  AuthenticatedPlaygroundRouteRouteImport.update({
-    id: '/playground',
-    path: '/playground',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -45,24 +45,6 @@ const PublicAdminRoute = PublicAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => PublicRoute,
 } as any)
-const AuthenticatedPlaygroundPresenceRoute =
-  AuthenticatedPlaygroundPresenceRouteImport.update({
-    id: '/presence',
-    path: '/presence',
-    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
-  } as any)
-const AuthenticatedPlaygroundStreamsRoute =
-  AuthenticatedPlaygroundStreamsRouteImport.update({
-    id: '/streams',
-    path: '/streams',
-    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
-  } as any)
-const AuthenticatedPlaygroundTerminalRoute =
-  AuthenticatedPlaygroundTerminalRouteImport.update({
-    id: '/terminal',
-    path: '/terminal',
-    getParentRoute: () => AuthenticatedPlaygroundRouteRoute,
-  } as any)
 const AuthenticatedServersIndexRoute =
   AuthenticatedServersIndexRouteImport.update({
     id: '/servers/',
@@ -79,79 +61,107 @@ const AuthenticatedServersNewRoute = AuthenticatedServersNewRouteImport.update({
   path: '/servers/new',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedServersIdIndexRoute =
+  AuthenticatedServersIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedServersIdRoute,
+  } as any)
+const AuthenticatedServersIdDockerRoute =
+  AuthenticatedServersIdDockerRouteImport.update({
+    id: '/docker',
+    path: '/docker',
+    getParentRoute: () => AuthenticatedServersIdRoute,
+  } as any)
+const AuthenticatedServersIdServicesRoute =
+  AuthenticatedServersIdServicesRouteImport.update({
+    id: '/services',
+    path: '/services',
+    getParentRoute: () => AuthenticatedServersIdRoute,
+  } as any)
+const AuthenticatedServersIdDockerContainerIdRoute =
+  AuthenticatedServersIdDockerContainerIdRouteImport.update({
+    id: '/docker_/$containerId',
+    path: '/docker/$containerId',
+    getParentRoute: () => AuthenticatedServersIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
-  '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin': typeof PublicAdminRoute
-  '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
-  '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
-  '/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
-  '/servers/$id': typeof AuthenticatedServersIdRoute
+  '/servers/$id': typeof AuthenticatedServersIdRouteWithChildren
   '/servers/new': typeof AuthenticatedServersNewRoute
   '/servers/': typeof AuthenticatedServersIndexRoute
+  '/servers/$id/docker': typeof AuthenticatedServersIdDockerRoute
+  '/servers/$id/services': typeof AuthenticatedServersIdServicesRoute
+  '/servers/$id/': typeof AuthenticatedServersIdIndexRoute
+  '/servers/$id/docker/$containerId': typeof AuthenticatedServersIdDockerContainerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
-  '/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/admin': typeof PublicAdminRoute
-  '/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
-  '/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
-  '/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
-  '/servers/$id': typeof AuthenticatedServersIdRoute
   '/servers/new': typeof AuthenticatedServersNewRoute
   '/servers': typeof AuthenticatedServersIndexRoute
+  '/servers/$id/docker': typeof AuthenticatedServersIdDockerRoute
+  '/servers/$id/services': typeof AuthenticatedServersIdServicesRoute
+  '/servers/$id': typeof AuthenticatedServersIdIndexRoute
+  '/servers/$id/docker/$containerId': typeof AuthenticatedServersIdDockerContainerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
-  '/_authenticated/playground': typeof AuthenticatedPlaygroundRouteRouteWithChildren
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_public/admin': typeof PublicAdminRoute
   '/_public/': typeof PublicIndexRoute
-  '/_authenticated/playground/presence': typeof AuthenticatedPlaygroundPresenceRoute
-  '/_authenticated/playground/streams': typeof AuthenticatedPlaygroundStreamsRoute
-  '/_authenticated/playground/terminal': typeof AuthenticatedPlaygroundTerminalRoute
-  '/_authenticated/servers/$id': typeof AuthenticatedServersIdRoute
+  '/_authenticated/servers/$id': typeof AuthenticatedServersIdRouteWithChildren
   '/_authenticated/servers/new': typeof AuthenticatedServersNewRoute
   '/_authenticated/servers/': typeof AuthenticatedServersIndexRoute
+  '/_authenticated/servers/$id/docker': typeof AuthenticatedServersIdDockerRoute
+  '/_authenticated/servers/$id/services': typeof AuthenticatedServersIdServicesRoute
+  '/_authenticated/servers/$id/': typeof AuthenticatedServersIdIndexRoute
+  '/_authenticated/servers/$id/docker_/$containerId': typeof AuthenticatedServersIdDockerContainerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/playground'
+    | '/dashboard'
     | '/admin'
-    | '/playground/presence'
-    | '/playground/streams'
-    | '/playground/terminal'
     | '/servers/$id'
     | '/servers/new'
     | '/servers/'
+    | '/servers/$id/docker'
+    | '/servers/$id/services'
+    | '/servers/$id/'
+    | '/servers/$id/docker/$containerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/playground'
+    | '/dashboard'
     | '/admin'
-    | '/playground/presence'
-    | '/playground/streams'
-    | '/playground/terminal'
-    | '/servers/$id'
     | '/servers/new'
     | '/servers'
+    | '/servers/$id/docker'
+    | '/servers/$id/services'
+    | '/servers/$id'
+    | '/servers/$id/docker/$containerId'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_public'
-    | '/_authenticated/playground'
+    | '/_authenticated/dashboard'
     | '/_public/admin'
     | '/_public/'
-    | '/_authenticated/playground/presence'
-    | '/_authenticated/playground/streams'
-    | '/_authenticated/playground/terminal'
     | '/_authenticated/servers/$id'
     | '/_authenticated/servers/new'
     | '/_authenticated/servers/'
+    | '/_authenticated/servers/$id/docker'
+    | '/_authenticated/servers/$id/services'
+    | '/_authenticated/servers/$id/'
+    | '/_authenticated/servers/$id/docker_/$containerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -175,11 +185,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/playground': {
-      id: '/_authenticated/playground'
-      path: '/playground'
-      fullPath: '/playground'
-      preLoaderRoute: typeof AuthenticatedPlaygroundRouteRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_public/': {
@@ -195,27 +205,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof PublicAdminRouteImport
       parentRoute: typeof PublicRoute
-    }
-    '/_authenticated/playground/presence': {
-      id: '/_authenticated/playground/presence'
-      path: '/presence'
-      fullPath: '/playground/presence'
-      preLoaderRoute: typeof AuthenticatedPlaygroundPresenceRouteImport
-      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
-    }
-    '/_authenticated/playground/streams': {
-      id: '/_authenticated/playground/streams'
-      path: '/streams'
-      fullPath: '/playground/streams'
-      preLoaderRoute: typeof AuthenticatedPlaygroundStreamsRouteImport
-      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
-    }
-    '/_authenticated/playground/terminal': {
-      id: '/_authenticated/playground/terminal'
-      path: '/terminal'
-      fullPath: '/playground/terminal'
-      preLoaderRoute: typeof AuthenticatedPlaygroundTerminalRouteImport
-      parentRoute: typeof AuthenticatedPlaygroundRouteRoute
     }
     '/_authenticated/servers/': {
       id: '/_authenticated/servers/'
@@ -238,38 +227,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServersNewRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/servers/$id/': {
+      id: '/_authenticated/servers/$id/'
+      path: '/'
+      fullPath: '/servers/$id/'
+      preLoaderRoute: typeof AuthenticatedServersIdIndexRouteImport
+      parentRoute: typeof AuthenticatedServersIdRoute
+    }
+    '/_authenticated/servers/$id/docker': {
+      id: '/_authenticated/servers/$id/docker'
+      path: '/docker'
+      fullPath: '/servers/$id/docker'
+      preLoaderRoute: typeof AuthenticatedServersIdDockerRouteImport
+      parentRoute: typeof AuthenticatedServersIdRoute
+    }
+    '/_authenticated/servers/$id/services': {
+      id: '/_authenticated/servers/$id/services'
+      path: '/services'
+      fullPath: '/servers/$id/services'
+      preLoaderRoute: typeof AuthenticatedServersIdServicesRouteImport
+      parentRoute: typeof AuthenticatedServersIdRoute
+    }
+    '/_authenticated/servers/$id/docker_/$containerId': {
+      id: '/_authenticated/servers/$id/docker_/$containerId'
+      path: '/docker/$containerId'
+      fullPath: '/servers/$id/docker/$containerId'
+      preLoaderRoute: typeof AuthenticatedServersIdDockerContainerIdRouteImport
+      parentRoute: typeof AuthenticatedServersIdRoute
+    }
   }
 }
 
-interface AuthenticatedPlaygroundRouteRouteChildren {
-  AuthenticatedPlaygroundPresenceRoute: typeof AuthenticatedPlaygroundPresenceRoute
-  AuthenticatedPlaygroundStreamsRoute: typeof AuthenticatedPlaygroundStreamsRoute
-  AuthenticatedPlaygroundTerminalRoute: typeof AuthenticatedPlaygroundTerminalRoute
+interface AuthenticatedServersIdRouteChildren {
+  AuthenticatedServersIdDockerRoute: typeof AuthenticatedServersIdDockerRoute
+  AuthenticatedServersIdServicesRoute: typeof AuthenticatedServersIdServicesRoute
+  AuthenticatedServersIdIndexRoute: typeof AuthenticatedServersIdIndexRoute
+  AuthenticatedServersIdDockerContainerIdRoute: typeof AuthenticatedServersIdDockerContainerIdRoute
 }
 
-const AuthenticatedPlaygroundRouteRouteChildren: AuthenticatedPlaygroundRouteRouteChildren =
+const AuthenticatedServersIdRouteChildren: AuthenticatedServersIdRouteChildren =
   {
-    AuthenticatedPlaygroundPresenceRoute: AuthenticatedPlaygroundPresenceRoute,
-    AuthenticatedPlaygroundStreamsRoute: AuthenticatedPlaygroundStreamsRoute,
-    AuthenticatedPlaygroundTerminalRoute: AuthenticatedPlaygroundTerminalRoute,
+    AuthenticatedServersIdDockerRoute: AuthenticatedServersIdDockerRoute,
+    AuthenticatedServersIdServicesRoute: AuthenticatedServersIdServicesRoute,
+    AuthenticatedServersIdIndexRoute: AuthenticatedServersIdIndexRoute,
+    AuthenticatedServersIdDockerContainerIdRoute:
+      AuthenticatedServersIdDockerContainerIdRoute,
   }
 
-const AuthenticatedPlaygroundRouteRouteWithChildren =
-  AuthenticatedPlaygroundRouteRoute._addFileChildren(
-    AuthenticatedPlaygroundRouteRouteChildren,
+const AuthenticatedServersIdRouteWithChildren =
+  AuthenticatedServersIdRoute._addFileChildren(
+    AuthenticatedServersIdRouteChildren,
   )
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedPlaygroundRouteRoute: typeof AuthenticatedPlaygroundRouteRouteWithChildren
-  AuthenticatedServersIdRoute: typeof AuthenticatedServersIdRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedServersIdRoute: typeof AuthenticatedServersIdRouteWithChildren
   AuthenticatedServersNewRoute: typeof AuthenticatedServersNewRoute
   AuthenticatedServersIndexRoute: typeof AuthenticatedServersIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedPlaygroundRouteRoute:
-    AuthenticatedPlaygroundRouteRouteWithChildren,
-  AuthenticatedServersIdRoute: AuthenticatedServersIdRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedServersIdRoute: AuthenticatedServersIdRouteWithChildren,
   AuthenticatedServersNewRoute: AuthenticatedServersNewRoute,
   AuthenticatedServersIndexRoute: AuthenticatedServersIndexRoute,
 }

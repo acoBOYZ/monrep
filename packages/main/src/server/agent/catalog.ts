@@ -1,15 +1,16 @@
 import { CollectorsMapSchema } from "./schemas";
 import type { CollectorsMap } from "./schemas";
 
-/**
- * Default background collectors — argv authored here (main), not in the agent.
- * Placeholders until real metric scripts land in Phase 2+.
- */
+/** Default background collectors — argv authored here (main), not in the agent. */
 export const DEFAULT_COLLECTORS: CollectorsMap = {
   monitor: {
     enabled: true,
     intervalSec: 30,
-    argv: ["/bin/sh", "-c", "uname -a; echo ---; date -u +%Y-%m-%dT%H:%M:%SZ"],
+    argv: [
+      "/bin/sh",
+      "-c",
+      "cat /proc/loadavg; free -b 2>/dev/null | awk '/^Mem:/{print \"mem\", $2, $3, $7}'; df -Pk / 2>/dev/null | awk 'NR==2{print \"disk\", $2, $3}'; nproc 2>/dev/null",
+    ],
   },
   error: {
     enabled: true,

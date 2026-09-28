@@ -1,5 +1,5 @@
-import { useId } from "react";
-import { Button, Input } from "@monrep/ui/base";
+import { Button, CopyableButton } from "@monrep/ui/base";
+import { TotpCodeInput } from "./TotpCodeInput";
 import { TotpQr } from "./TotpQr";
 import type { SubmitEvent } from "react";
 
@@ -20,8 +20,6 @@ export function TotpEnrollStep({
   onCodeChange,
   onConfirm,
 }: TotpEnrollStepProps) {
-  const codeId = useId();
-
   const handleTotpEnrollSubmit = (event: SubmitEvent) => {
     event.preventDefault();
     onConfirm();
@@ -33,19 +31,8 @@ export function TotpEnrollStep({
         Scan with your authenticator app, then enter the code.
       </p>
       <TotpQr otpauth={otpauth} />
-      <p className="text-center font-mono text-xs break-all text-muted-foreground">{secret}</p>
-      <label htmlFor={codeId} className="flex w-full flex-col gap-1.5 text-sm font-medium">
-        Authenticator code
-        <Input
-          id={codeId}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          required
-          value={code}
-          onChange={(event) => onCodeChange(event.target.value)}
-          placeholder="123456"
-        />
-      </label>
+      <CopyableButton variant="inline" text={secret} className="font-mono text-xs break-all" />
+      <TotpCodeInput code={code} onCodeChange={onCodeChange} />
       <Button type="submit" disabled={pending} className="w-full">
         {pending ? "Confirming…" : "Confirm and continue"}
       </Button>

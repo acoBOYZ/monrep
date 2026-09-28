@@ -26,6 +26,14 @@ pub enum Op {
   Config,
   #[serde(rename = "agent.health")]
   AgentHealth,
+  #[serde(rename = "pty.open")]
+  PtyOpen,
+  #[serde(rename = "pty.data")]
+  PtyData,
+  #[serde(rename = "pty.resize")]
+  PtyResize,
+  #[serde(rename = "pty.close")]
+  PtyClose,
   Result,
   Error,
   Event,

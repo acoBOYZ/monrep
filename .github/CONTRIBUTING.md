@@ -25,7 +25,7 @@ bun run doctor     # React / UI changes
 bun run doctor:rust  # when touching packages/agent (or other Rust crates)
 ```
 
-PRs that change `packages/agent/**` also run the **agent-checks** workflow (rustfmt, clippy, cargo check + miri, rust-doctor). Do **not** use `bun run --cwd packages/agent build` as a quality gate.
+PRs that change `packages/agent/**` also run the **agent-checks** workflow (rustfmt, clippy, cargo check + miri, rust-doctor, `cargo test`). Do **not** use `bun run --cwd packages/agent build` as a quality gate.
 
 Or the all-in-one health check:
 
@@ -58,6 +58,7 @@ CI release jobs set `GITHUB_TOKEN` so git-cliff can attach `by @user` and `in #P
 2. Merge that PR to `main`.
 3. From an up-to-date `main`: `bun run release:tag` (creates and pushes `vX.Y.Z`).
 4. The **release** workflow creates the GitHub Release (no npm) and uploads `monrep-linux-*` binaries.
+5. After the release job finishes, verify each asset: download `monrep-linux-*` and run `./monrep-linux-* --version` — it must report the same SemVer as the tag / `packages/agent/Cargo.toml` (CI also asserts this after `bun run build`). If a tag ever shipped with a stale embedded `0.1.0`, cut a patch release (e.g. `v0.7.1`) so installs stop looping on auto-update.
 
 ## Import / polish house style
 

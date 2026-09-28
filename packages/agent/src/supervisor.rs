@@ -1,5 +1,6 @@
 //! Never-exit wrapper: backoff, restart runtime, emit health events.
 
+use crate::error::AgentError;
 use crate::health::HealthBus;
 use crate::proto::HealthLevel;
 use crate::store::{self, DeviceCred};
@@ -11,7 +12,7 @@ use tokio::time::sleep;
 const BACKOFF_START: Duration = Duration::from_secs(1);
 const BACKOFF_MAX: Duration = Duration::from_secs(30);
 
-/// Run until Ctrl-C. Survives transient runtime errors.
+/// Run until Ctrl-C or permanent unenroll (`DeviceUnknown`). Survives transient runtime errors.
 pub async fn run_forever() -> anyhow::Result<()> {
   let mut health = HealthBus::new();
   health.emit(
@@ -33,16 +34,16 @@ pub async fn run_forever() -> anyhow::Result<()> {
       }
       result = supervised_session(&mut health) => {
         match result {
-          Ok(()) => {
+          Ok(true) => {
             backoff = BACKOFF_START;
           }
+          Ok(false) => {
+            // DeviceUnknown cleared local creds — leave enrollable, do not retry.
+            return Ok(());
+          }
           Err(err) => {
-            health.emit(
-              HealthLevel::Error,
-              "runtime_error",
-              format!("{err:#}"),
-            );
-            print_health(&health);
+            // supervised_session already emitted + printed runtime_error
+            let _ = err;
             tokio::select! {
               _ = signal::ctrl_c() => {
                 health.emit(HealthLevel::Info, "supervisor_stop", "ctrl-c received");
@@ -58,6 +59,7 @@ pub async fn run_forever() -> anyhow::Result<()> {
                   "runtime_restart",
                   format!("restarting after {}s backoff", backoff.as_secs()),
                 );
+                print_health(&health);
               }
             }
           }
@@ -67,7 +69,8 @@ pub async fn run_forever() -> anyhow::Result<()> {
   }
 }
 
-async fn supervised_session(health: &mut HealthBus) -> anyhow::Result<()> {
+/// `Ok(true)` = session ended cleanly / retry later; `Ok(false)` = permanent stop (unenrolled).
+async fn supervised_session(health: &mut HealthBus) -> anyhow::Result<bool> {
   let cred = match load_cred_resilient(health) {
     Some(c) => c,
     None => anyhow::bail!("credential store unavailable"),
@@ -80,9 +83,38 @@ async fn supervised_session(health: &mut HealthBus) -> anyhow::Result<()> {
   );
   print_health(health);
 
-  tunnel::run_session(&cred, health)
-    .await
-    .map_err(|e| anyhow::anyhow!("{e}"))
+  match tunnel::run_session(&cred, health).await {
+    Ok(()) => Ok(true),
+    Err(AgentError::DeviceUnknown) => {
+      match store::clear() {
+        Ok(true) => {
+          let _ = writeln_stdout("daemon: cleared stale credentials (device unknown/revoked)");
+        }
+        Ok(false) => {}
+        Err(e) => {
+          health.emit(
+            HealthLevel::Error,
+            "store_error",
+            format!("failed to clear credentials: {e}"),
+          );
+          print_health(health);
+        }
+      }
+      health.emit(
+        HealthLevel::Error,
+        "not_enrolled",
+        "device unknown or revoked; credentials cleared — run monrep enroll again",
+      );
+      print_health(health);
+      Ok(false)
+    }
+    Err(e) => {
+      // Ensure the failure reason is in the health stream and stdout before backoff.
+      health.emit(HealthLevel::Error, "runtime_error", format!("{e:#}"));
+      print_health(health);
+      Err(anyhow::anyhow!("{e:#}"))
+    }
+  }
 }
 
 fn load_cred_resilient(health: &mut HealthBus) -> Option<DeviceCred> {

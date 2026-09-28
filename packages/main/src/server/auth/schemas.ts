@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { CapabilitySchema, RoleSchema } from "@/db/schemas";
 
-export const DEFAULT_AUTH_REDIRECT = "/servers" as const;
+export const DEFAULT_AUTH_REDIRECT = "/dashboard" as const;
 
 export const AuthEnvSchema = z.object({
   ADMIN_EMAIL: z.email(),

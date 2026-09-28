@@ -125,3 +125,27 @@ export const formatChatListDate = (
   }
   return formatCalendarDate(value, options);
 };
+
+/** Compact relative wall time from epoch ms (e.g. `42s ago`, `3m ago`). */
+export const formatRelative = (at: number, now = Date.now()): string => {
+  const sec = Math.max(0, Math.floor((now - at) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hours = Math.floor(min / 60);
+  return `${hours}h ago`;
+};
+
+/** Elapsed duration as `MM:SS` or `H:MM:SS` when over one hour. */
+export const formatElapsed = (ms: number): string => {
+  const totalSeconds = Math.floor(Math.max(0, ms) / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad2 = (n: number) => String(n).padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${pad2(minutes)}:${pad2(seconds)}`;
+  }
+  return `${pad2(minutes)}:${pad2(seconds)}`;
+};

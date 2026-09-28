@@ -22,9 +22,11 @@ thiserror = "2.0.21"
 tokio = { version = "1.53.1", features = [
   "io-util",
   "macros",
+  "net",
   "process",
   "rt-multi-thread",
   "signal",
+  "sync",
   "time",
 ] }
 tokio-tungstenite = { version = "0.30.0", default-features = false, features = [
@@ -32,6 +34,11 @@ tokio-tungstenite = { version = "0.30.0", default-features = false, features = [
   "rustls-tls-webpki-roots",
 ] }
 futures-util = { version = "0.3.31", default-features = false, features = ["sink"] }
+rustls = "0.23.45"
+rustls-pemfile = "2.2.0"
+webpki-roots = "1.0.9"
+portable-pty = "0.9"
+base64 = "0.22"
 
 [profile.release]
 lto = "fat"

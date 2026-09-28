@@ -32,7 +32,7 @@ export const TerminalActiveInput = ({
         </span>
         <div className="react-terminal-path select-none">{pathLabel}</div>
       </div>
-      <div className="flex min-w-0 items-center">
+      <div className="flex min-w-0 items-start">
         <span className="react-terminal-prompt-elbow shrink-0 select-none" aria-hidden>
           ╰─
         </span>

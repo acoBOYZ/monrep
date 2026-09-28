@@ -14,16 +14,12 @@ import type {
 	TDoModuleId,
 	DeviceCredDoSchema,
 	EnrollTokenDoSchema,
-	LineDoSchema,
-	MessageDoSchema,
 	PasskeyDoSchema,
-	PresenceDoSchema,
 	RuntimeConfigDoSchema,
 	SampleDoSchema,
 	SecurityDoSchema,
 	ServerDoSchema,
 	TotpDoSchema,
-	TypingDoSchema,
 	UserDoSchema,
 } from "./do.gen";
 
@@ -33,13 +29,7 @@ export type TDeviceCredDo = z.infer<typeof DeviceCredDoSchema>;
 
 export type TEnrollTokenDo = z.infer<typeof EnrollTokenDoSchema>;
 
-export type TLineDo = z.infer<typeof LineDoSchema>;
-
-export type TMessageDo = z.infer<typeof MessageDoSchema>;
-
 export type TPasskeyDo = z.infer<typeof PasskeyDoSchema>;
-
-export type TPresenceDo = z.infer<typeof PresenceDoSchema>;
 
 export type TRuntimeConfigDo = z.infer<typeof RuntimeConfigDoSchema>;
 
@@ -50,7 +40,5 @@ export type TSecurityDo = z.infer<typeof SecurityDoSchema>;
 export type TServerDo = z.infer<typeof ServerDoSchema>;
 
 export type TTotpDo = z.infer<typeof TotpDoSchema>;
-
-export type TTypingDo = z.infer<typeof TypingDoSchema>;
 
 export type TUserDo = z.infer<typeof UserDoSchema>;

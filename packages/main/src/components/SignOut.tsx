@@ -1,6 +1,6 @@
 import { Logout } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button } from "@monrep/ui/base";
+import { Button, TooltipTrigger } from "@monrep/ui/base";
 import { useNavigate } from "@tanstack/react-router";
 import { logoutFn } from "@/server/auth/functions";
 
@@ -13,15 +13,16 @@ export function SignOut() {
   };
 
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      className="group/so"
-      onClick={signOut}
-      aria-label="Sign out"
-      title="Sign out"
-    >
-      <HugeiconsIcon icon={Logout} className="size-5 group-hover/so:text-primary" />
-    </Button>
+    <TooltipTrigger content="Sign out">
+      <Button
+        type="button"
+        variant="ghost"
+        className="group/so"
+        onClick={signOut}
+        aria-label="Sign out"
+      >
+        <HugeiconsIcon icon={Logout} className="size-5 group-hover/so:text-primary" />
+      </Button>
+    </TooltipTrigger>
   );
 }

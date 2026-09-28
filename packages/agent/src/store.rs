@@ -60,6 +60,17 @@ pub fn save(cred: &DeviceCred) -> Result<()> {
   Ok(())
 }
 
+/// Delete `cred.json` if present. Leaves `config.json` (auto-update prefs) alone.
+/// Returns `Ok(true)` when a file was removed, `Ok(false)` when not enrolled.
+pub fn clear() -> Result<bool> {
+  let path = config::cred_path().map_err(AgentError::Other)?;
+  if !path.exists() {
+    return Ok(false);
+  }
+  fs::remove_file(&path)?;
+  Ok(true)
+}
+
 /// Refuse connecting to a different origin than the pin.
 pub fn assert_pinned_url(cred: &DeviceCred, attempted: &str) -> Result<()> {
   let pinned = normalize_url(&cred.control_url);

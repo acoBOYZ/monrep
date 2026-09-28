@@ -4,6 +4,7 @@ import { createPublicStreamsHandler } from "@monrep/db/stream/server";
 import startHandler from "@tanstack/react-start/server-entry";
 import { INSTALL_PATH } from "../brand.gen";
 import { handleAgentApi } from "./agent/http";
+import { handleSessionWsApi } from "./agent/sessionWsHttp";
 import { AuthEnvSchema } from "./auth/schemas";
 import { resolveSessionFromRequest } from "./auth/session";
 import { INSTALL_SH } from "./installSh.gen";
@@ -15,6 +16,7 @@ bindDoApp();
  * Worker entry:
  * - GET INSTALL_PATH (brand.json) → agent install script (public)
  * - `/_streams/*` → Durable Streams (session cookie)
+ * - `/api/agent/session-ws` → browser session WS bridge (admin session cookie)
  * - `/api/agent/*` → device enroll / token / ws (no admin cookie)
  * - Everything else → TanStack Start
  */
@@ -51,8 +53,10 @@ const streamsHandler = createPublicStreamsHandler<StreamsEnv>({
 export default {
   async fetch(request: Request, env: StreamsEnv, ctx: ExecutionContext): Promise<Response> {
     const { pathname } = new URL(request.url);
-    if (pathname === INSTALL_PATH && (request.method === "GET" || request.method === "HEAD")) {
-      return new Response(request.method === "HEAD" ? null : INSTALL_SH, {
+    const method = request.method;
+
+    if (pathname === INSTALL_PATH && (method === "GET" || method === "HEAD")) {
+      return new Response(method === "HEAD" ? null : INSTALL_SH, {
         status: 200,
         headers: {
           "content-type": "text/x-shellscript; charset=utf-8",
@@ -63,8 +67,12 @@ export default {
     if (isStreamsPath(pathname)) {
       return streamsHandler(request, env, ctx);
     }
-    const agentResponse = await handleAgentApi(request, env);
-    if (agentResponse) return agentResponse;
+    if (pathname === "/api/agent/session-ws") {
+      return handleSessionWsApi(request, env, pathname);
+    }
+    if (pathname.startsWith("/api/agent/")) {
+      return handleAgentApi(request, env, pathname);
+    }
     return startHandler.fetch(request);
   },
 };

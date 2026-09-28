@@ -63,6 +63,28 @@ jobs:
         working-directory: packages/agent
         run: bun run build
 
+      - name: Assert embedded version matches tag / Cargo
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          CARGO_VER="$(sed -n 's/^version = "\([^"]*\)"/\1/p' packages/agent/Cargo.toml | head -n1)"
+          TAG_VER="${TAG_NAME#v}"
+          if [[ "$CARGO_VER" != "$TAG_VER" ]]; then
+            echo "Cargo.toml version ($CARGO_VER) != tag version ($TAG_VER)"
+            exit 1
+          fi
+          BIN_VER="$(./packages/agent/dist/monrep --version)"
+          echo "binary --version: $BIN_VER"
+          if [[ "$BIN_VER" != *"$CARGO_VER"* ]]; then
+            echo "binary version does not contain Cargo version $CARGO_VER"
+            exit 1
+          fi
+          if [[ "$BIN_VER" == *"0.1.0"* && "$CARGO_VER" != "0.1.0" ]]; then
+            echo "binary still reports 0.1.0 while releasing $CARGO_VER"
+            exit 1
+          fi
+
       - name: Stage asset
         run: |
           cp packages/agent/dist/monrep "${{ runner.temp }}/${{ matrix.asset }}"

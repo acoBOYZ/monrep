@@ -27,11 +27,12 @@ const controlUrlFromRequest = (request: Request): string => {
 const agentErrorResponse = (error: AgentTaggedError["error"]): Response =>
   json({ error: error._tag, message: agentErrorMessage(error) }, agentErrorStatus(error));
 
-/** Handle `/api/agent/*` device routes (no admin session cookie). */
-export const handleAgentApi = async (request: Request, env: Env): Promise<Response | undefined> => {
-  const { pathname } = new URL(request.url);
-  if (!pathname.startsWith("/api/agent/")) return undefined;
-
+/** Handle `/api/agent/*` device routes (no admin session cookie). Caller must gate prefix. */
+export const handleAgentApi = async (
+  request: Request,
+  env: Env,
+  pathname: string,
+): Promise<Response> => {
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,

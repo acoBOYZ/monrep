@@ -13,10 +13,18 @@ import { openServerStream } from "@/server/doStream";
 bindDoApp();
 
 export type AgentDb = Awaited<ReturnType<typeof loadAgentDb>>;
+export type AgentLiveDb = Awaited<ReturnType<typeof loadAgentLiveDb>>;
 
 export const loadAgentDb = async () => {
   const stream = await openServerStream("agent");
   const db = DO_MODULE_DB_FACTORIES.agent({ stream });
+  await db.preload();
+  return db;
+};
+
+export const loadAgentLiveDb = async () => {
+  const stream = await openServerStream("agent_live");
+  const db = DO_MODULE_DB_FACTORIES.agent_live({ stream });
   await db.preload();
   return db;
 };
@@ -57,7 +65,7 @@ export const listEnrollTokensByServerId = async (
   });
 
 export const listSamplesByServerId = async (
-  db: AgentDb,
+  db: AgentLiveDb,
   serverId: string,
 ): Promise<Array<TSampleDo>> =>
   queryOnce({
