@@ -2,6 +2,34 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.2] - 2026-09-28
+
+### 🚀 Features
+
+- One command to link + systemd: `sudo monrep init`. CLI verbs renamed to match. by @acoBOYZ
+
+
+### 🐛 Bug Fixes
+
+- Fleet/server charts + KPI chrome tightened. series legend instead of a lone “latest” number. by @acoBOYZ
+
+
+### 🎨 Styling
+
+- Ui patch by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #42 from acoBOYZ/feat-agent-cli by @acoBOYZ in #42
+
+- Merge pull request #41 from acoBOYZ/fix-uix by @acoBOYZ in #41
+
+- Merge pull request #40 from acoBOYZ/chore-up by @acoBOYZ in #40
+
+- Up by @acoBOYZ
+
+
 ## [0.7.1] - 2026-09-28
 
 ### 🐛 Bug Fixes
