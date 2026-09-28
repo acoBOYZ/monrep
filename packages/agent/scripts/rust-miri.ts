@@ -34,6 +34,7 @@ const args = [
   "+nightly",
   "miri",
   "test",
+  "--locked",
   "--manifest-path",
   hostManifest,
   ...process.argv.slice(2),

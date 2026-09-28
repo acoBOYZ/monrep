@@ -58,6 +58,9 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          # Separate from agent-checks (no miri); each arch runner persists its own host cache.
+          shared-key: agent-release
+          cache-save: "true"
 
       - name: Build release binary
         working-directory: packages/agent

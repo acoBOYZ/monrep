@@ -37,7 +37,7 @@ bun run ok
 
 We never publish to npm. Release notes come from **conventional commits** via [git-cliff](https://git-cliff.org/) into root `CHANGELOG.md` and GitHub Releases.
 
-Bump rules (see [`cliff.toml`](../cliff.toml)): conventional SemVer — `fix` → patch, `feat` → minor only when cliff’s bump logic says so (we do **not** force a minor on every feature). Breaking majors stay off while on `0.x`. `prepare-release` syncs root `package.json` **and** `packages/agent/Cargo.toml` to the same version.
+Bump rules (see [`cliff.toml`](../cliff.toml)): conventional SemVer — `fix` → patch, `feat` → minor only when cliff’s bump logic says so (we do **not** force a minor on every feature). Breaking majors stay off while on `0.x`. `prepare-release` syncs root `package.json` **and** `packages/agent/Cargo.toml` + `Cargo.lock` to the same version.
 
 Prefer conventional commit / PR titles:
 
@@ -54,7 +54,7 @@ CI release jobs set `GITHUB_TOKEN` so git-cliff can attach `by @user` and `in #P
 
 ### Cut a release
 
-1. Actions → **prepare-release** (workflow_dispatch). Opens `release/vX.Y.Z` with bumped root + agent Cargo version and `CHANGELOG.md` (brand gens stay local via `sync:brand` on the runner).
+1. Actions → **prepare-release** (workflow_dispatch). Opens `release/vX.Y.Z` with bumped root + agent Cargo.toml/Cargo.lock version and `CHANGELOG.md` (brand gens stay local via `sync:brand` on the runner).
 2. Merge that PR to `main`.
 3. From an up-to-date `main`: `bun run release:tag` (creates and pushes `vX.Y.Z`).
 4. The **release** workflow creates the GitHub Release (no npm) and uploads `monrep-linux-*` binaries.

@@ -12,7 +12,7 @@ const outBin = path.join(outDir, process.platform === "win32" ? `${binName}.exe`
 mkdirSync(outDir, { recursive: true });
 
 const proc = Bun.spawn(
-  ["cargo", "build", "-j", "3", "--release", "--bin", binName, "--message-format=json"],
+  ["cargo", "build", "-j", "3", "--locked", "--release", "--bin", binName, "--message-format=json"],
   {
     cwd: root,
     stdout: "pipe",

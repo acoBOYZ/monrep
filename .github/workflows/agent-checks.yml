@@ -4,6 +4,9 @@ on:
   # push:
   #   branches:
   #     - main
+  # Always run on PRs so required check `agent-checks:required` reports.
+  # Path filtering is job-level below — workflow-level `paths:` skips the
+  # whole workflow and blocks merges when the check is required.
   pull_request:
 
 concurrency:
@@ -14,8 +17,27 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    outputs:
+      agent: ${{ steps.filter.outputs.agent }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            agent:
+              - "packages/agent/**"
+              - ".github/workflows/agent-checks.yml"
+              - ".github/actions/prepare-rust/**"
+              - ".github/actions/prepare/**"
+
   fmtcheck:
     name: fmtcheck
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,11 +48,15 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          # Same toolchain set as other jobs → shared Swatinem key hits.
+          with-miri: "true"
       - name: Format check
         run: bun run fmtcheck
 
   lint:
     name: lint
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -41,11 +67,14 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          with-miri: "true"
       - name: Lint
         run: bun run lint:rust
 
   typecheck:
     name: typecheck
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -56,6 +85,9 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          with-miri: "true"
+          # Heaviest compile path (check + miri) owns the shared cache write.
+          cache-save: "true"
       - name: Typecheck
         env:
           RUSTFLAGS: -Dwarnings
@@ -63,6 +95,8 @@ jobs:
 
   doctor:
     name: doctor
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -73,11 +107,14 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          with-miri: "true"
       - name: Doctor
         run: bun run doctor:rust
 
   test:
     name: test
+    needs: changes
+    if: needs.changes.outputs.agent == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -88,17 +125,26 @@ jobs:
       - uses: ./.github/actions/prepare-rust
         with:
           working-directory: packages/agent
+          with-miri: "true"
       - name: Cargo test
         run: bun run test
 
   agent-checks-passed:
     if: always()
     name: agent-checks:required
-    needs: [fmtcheck, lint, typecheck, doctor, test]
+    needs: [changes, fmtcheck, lint, typecheck, doctor, test]
     runs-on: ubuntu-latest
     steps:
       - name: Check all jobs passed
         run: |
+          if [[ "${{ needs.changes.result }}" != "success" ]]; then
+            echo "changes job did not succeed"
+            exit 1
+          fi
+          if [[ "${{ needs.changes.outputs.agent }}" != "true" ]]; then
+            echo "No agent-related paths changed — rust gates skipped"
+            exit 0
+          fi
           if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" || "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
             echo "Some jobs failed or were cancelled"
             exit 1
