@@ -31,4 +31,15 @@ if (nextCargo === cargo && !cargo.includes(`version = "${version}"`)) {
 }
 writeFileSync(CARGO_TOML_PATH, nextCargo);
 
-console.log(`set version ${version} (package.json + packages/agent/Cargo.toml)`);
+// Keep Cargo.lock [[package]] name = "agent" in sync. prepare-release used to
+// bump only Cargo.toml; the next local/CI cargo invocation then dirtied the lock.
+const CARGO_LOCK_PATH = join(REPO_ROOT, "packages/agent/Cargo.lock");
+const lock = readFileSync(CARGO_LOCK_PATH, "utf8");
+const agentPackageVersion = /(\[\[package\]\]\nname = "agent"\nversion = ")[^"]*(")/;
+if (!agentPackageVersion.test(lock)) {
+  throw new Error(`could not find [[package]] name = "agent" in ${CARGO_LOCK_PATH}`);
+}
+const nextLock = lock.replace(agentPackageVersion, `$1${version}$2`);
+writeFileSync(CARGO_LOCK_PATH, nextLock);
+
+console.log(`set version ${version} (package.json + packages/agent/Cargo.toml + Cargo.lock)`);

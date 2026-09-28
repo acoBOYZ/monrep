@@ -51,7 +51,7 @@ jobs:
           RELEASE_BRANCH: release/v${{ steps.version.outputs.version }}
         run: |
           git switch -c "$RELEASE_BRANCH"
-          git add package.json CHANGELOG.md packages/agent/Cargo.toml
+          git add package.json CHANGELOG.md packages/agent/Cargo.toml packages/agent/Cargo.lock
           git commit -m "chore(release): v${VERSION}"
           git push --set-upstream origin "$RELEASE_BRANCH"
 
@@ -63,7 +63,7 @@ jobs:
           gh pr create \
             --title "chore(release): v${VERSION}" \
             --body "$(cat <<EOF
-          Bumps root \`package.json\` + \`packages/agent/Cargo.toml\` to **${VERSION}** and regenerates \`CHANGELOG.md\` (git-cliff). Brand gens stay local (\`sync:brand\`). No npm publish.
+          Bumps root \`package.json\` + \`packages/agent/Cargo.toml\` / \`Cargo.lock\` to **${VERSION}** and regenerates \`CHANGELOG.md\` (git-cliff). Brand gens stay local (\`sync:brand\`). No npm publish.
 
           After merging, from an up-to-date \`main\`:
 

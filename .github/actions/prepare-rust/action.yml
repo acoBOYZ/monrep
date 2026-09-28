@@ -1,11 +1,23 @@
 name: Prepare Rust
-description: Install Rust toolchain for packages/agent (stable from rust-toolchain.toml + nightly miri)
+description: Install Rust toolchain for packages/agent and restore a shared cargo cache across jobs
 
 inputs:
   working-directory:
     description: Path to the agent crate
     required: false
     default: packages/agent
+  with-miri:
+    description: Install nightly + miri (needed for typecheck:rust / rust:miri)
+    required: false
+    default: "false"
+  cache-save:
+    description: Persist the shared cargo cache from this job (only one job per workflow should set true)
+    required: false
+    default: "false"
+  shared-key:
+    description: Swatinem shared cache key (same value across jobs that should share)
+    required: false
+    default: agent
 
 runs:
   using: composite
@@ -16,20 +28,33 @@ runs:
         components: rustfmt, clippy
         toolchain: stable
 
+    # Keep toolchain set identical across jobs that share a key so Swatinem hits.
+    # Rustup cache makes nightly+miri cheap on restore-only jobs.
+    - name: Cache rustup (nightly + miri)
+      if: inputs.with-miri == 'true'
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.rustup/toolchains
+          ~/.rustup/update-hashes
+        key: ${{ runner.os }}-rustup-nightly-miri-${{ hashFiles(format('{0}/rust-toolchain.toml', inputs.working-directory)) }}
+        restore-keys: |
+          ${{ runner.os }}-rustup-nightly-miri-
+
     - name: Install nightly + miri
+      if: inputs.with-miri == 'true'
       shell: bash
       run: |
         rustup toolchain install nightly --component miri
         cargo +nightly miri setup
 
-    - name: Cache cargo
-      uses: actions/cache@v4
+    - name: Shared cargo cache
+      uses: Swatinem/rust-cache@v2
       with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          ${{ inputs.working-directory }}/target
-          ${{ inputs.working-directory }}/miri/target
-        key: ${{ runner.os }}-cargo-agent-${{ hashFiles(format('{0}/Cargo.lock', inputs.working-directory), format('{0}/miri/Cargo.lock', inputs.working-directory)) }}
-        restore-keys: |
-          ${{ runner.os }}-cargo-agent-
+        workspaces: |
+          ${{ inputs.working-directory }}
+          ${{ inputs.working-directory }}/miri
+        shared-key: ${{ inputs.shared-key }}
+        # Only the designated job writes; others restore the same cache.
+        save-if: ${{ inputs.cache-save == 'true' }}
+        cache-on-failure: "true"
