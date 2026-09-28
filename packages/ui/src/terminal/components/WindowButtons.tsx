@@ -14,7 +14,7 @@ export const WindowButtons = ({ onMaximize }: WindowButtonsProps) => (
       aria-label="Close"
       disabled
       aria-disabled
-      className="flex size-3 cursor-not-allowed items-center justify-center rounded-full border-0 bg-destructive"
+      className="flex size-3 cursor-not-allowed items-center justify-center rounded-sm border-0 bg-destructive"
     >
       <HugeiconsIcon
         icon={XIcon}
@@ -27,7 +27,7 @@ export const WindowButtons = ({ onMaximize }: WindowButtonsProps) => (
       aria-label="Minimize"
       disabled
       aria-disabled
-      className="flex size-3 cursor-not-allowed items-center justify-center rounded-full border-0 bg-warning"
+      className="flex size-3 cursor-not-allowed items-center justify-center rounded-sm border-0 bg-warning"
     >
       <HugeiconsIcon
         icon={MinusIcon}
@@ -38,7 +38,7 @@ export const WindowButtons = ({ onMaximize }: WindowButtonsProps) => (
     <button
       type="button"
       aria-label="Maximize"
-      className="flex size-3 cursor-pointer items-center justify-center rounded-full border-0 bg-success"
+      className="flex size-3 cursor-pointer items-center justify-center rounded-sm border-0 bg-success"
       onClick={(event) => {
         event.stopPropagation();
         onMaximize();

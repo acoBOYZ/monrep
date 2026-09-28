@@ -60,16 +60,16 @@ bindDoApp();
 import { useStreamDb } from "@/db/useStreamDb";
 import { useLiveQuery } from "@tanstack/react-db";
 
-function Presence() {
-  const { db, isReady } = useStreamDb("testm");
-  const live = useLiveQuery({
+function Servers() {
+  const { db, isReady } = useStreamDb("agent");
+  const { data =  [] } = useLiveQuery({
     query: (q) => {
       if (!db) return null;
-      return q.from({ p: db.collections.presence }).orderBy(({ p }) => p.userId, "asc");
+      return q.from({ s: db.collections.server }).orderBy(({ s }) => s.name, "asc");
     },
   });
   if (!isReady) return null;
-  return <pre>{JSON.stringify(live.data, null, 2)}</pre>;
+  return <pre>{JSON.stringify(data, null, 2)}</pre>;
 }
 ```
 

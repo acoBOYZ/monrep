@@ -83,6 +83,7 @@ turbo-cache-key.json
 .voip
 .profiling
 .sheet
+.perf
 
 # local service data
 .data/

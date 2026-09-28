@@ -76,10 +76,25 @@ jobs:
       - name: Doctor
         run: bun run doctor:rust
 
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agent
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/prepare
+      - uses: ./.github/actions/prepare-rust
+        with:
+          working-directory: packages/agent
+      - name: Cargo test
+        run: bun run test
+
   agent-checks-passed:
     if: always()
     name: agent-checks:required
-    needs: [fmtcheck, lint, typecheck, doctor]
+    needs: [fmtcheck, lint, typecheck, doctor, test]
     runs-on: ubuntu-latest
     steps:
       - name: Check all jobs passed

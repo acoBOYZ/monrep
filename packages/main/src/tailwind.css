@@ -15,3 +15,13 @@ body {
     box-shadow 180ms ease,
     border-color 180ms ease;
 }
+
+::view-transition-group(.chart-share) {
+  animation-duration: 280ms;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(.chart-share),
+::view-transition-new(.chart-share) {
+  animation-duration: 280ms;
+}

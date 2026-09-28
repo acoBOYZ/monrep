@@ -13,8 +13,12 @@ mod proto;
 mod settings;
 mod store;
 mod supervisor;
+mod tls;
 mod tunnel;
 mod update;
+
+#[cfg(test)]
+mod mock_cp_tests;
 
 use clap::Parser;
 use cli::Cli;

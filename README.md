@@ -66,10 +66,20 @@ Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb op
 
 ## CLI agent
 
+Prod install:
+
 ```bash
 curl -fsSL https://app.monrep.com/install | bash
 monrep enroll --url https://<your-app> --token <one-time>
 monrep daemon
+```
+
+Local bind to Vite main (`https://localhost:5274`): see [`packages/agent/README.md`](./packages/agent/README.md) **Local (main + agent)** — `bun run --cwd packages/agent local`.
+```bash
+bun run dev # or bun run --cwd packages/main dev 
+bun run --cwd packages/agent local -- --token <token>
+# later:
+bun run --cwd packages/agent local
 ```
 
 Install URL and release asset names come from your local `brand.json` (see `brand.json.example`). After edits: `bun run sync:brand`. Details: [`packages/agent/README.md`](./packages/agent/README.md). Progress: [`ROADMAP.md`](./ROADMAP.md).

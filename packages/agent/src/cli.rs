@@ -1,4 +1,4 @@
-//! Clap surface: enroll / status / daemon / update / config.
+//! Clap surface: enroll / unenroll / status / daemon / update / config.
 
 use crate::error::AgentError;
 use crate::health::HealthBus;
@@ -28,6 +28,8 @@ pub enum Command {
     #[arg(long)]
     token: String,
   },
+  /// Clear local device credentials so this host can enroll again.
+  Unenroll,
   /// Show enrollment status (no secrets)
   Status,
   /// Run supervised outbound tunnel runtime
@@ -40,8 +42,8 @@ pub enum Command {
   },
   /// Show or set local agent settings
   Config {
-    /// Enable or disable daemon auto-update (default: true)
-    #[arg(long)]
+    /// Enable or disable daemon auto-update (`true` / `false`)
+    #[arg(long, value_name = "BOOL", num_args = 0..=1, default_missing_value = "true")]
     auto_update: Option<bool>,
   },
 }
@@ -49,6 +51,7 @@ pub enum Command {
 pub async fn run(cli: Cli) -> anyhow::Result<()> {
   match cli.command {
     Command::Enroll { url, token } => cmd_enroll(&url, &token).await,
+    Command::Unenroll => cmd_unenroll(),
     Command::Status => cmd_status(),
     Command::Daemon => cmd_daemon().await,
     Command::Update { check } => cmd_update(check).await,
@@ -62,7 +65,7 @@ async fn cmd_enroll(url: &str, token: &str) -> anyhow::Result<()> {
   }
   if let Some(existing) = store::load_optional()? {
     anyhow::bail!(
-      "already enrolled to {}; unenroll before binding another app",
+      "already enrolled to {}; run monrep unenroll before binding again",
       existing.control_url
     );
   }
@@ -81,10 +84,22 @@ async fn cmd_enroll(url: &str, token: &str) -> anyhow::Result<()> {
   Ok(())
 }
 
+fn cmd_unenroll() -> anyhow::Result<()> {
+  let path = crate::config::cred_path()?;
+  if store::clear()? {
+    out(&format!("unenrolled; cleared {}", path.display()))?;
+  } else {
+    out("not enrolled")?;
+  }
+  Ok(())
+}
+
 fn cmd_status() -> anyhow::Result<()> {
+  let settings_path = crate::config::settings_path()?;
   match store::load_optional()? {
     None => {
       out("status: not enrolled")?;
+      out(&format!("  settings:    {}", settings_path.display()))?;
     }
     Some(cred) => {
       out("status: enrolled")?;
@@ -94,6 +109,7 @@ fn cmd_status() -> anyhow::Result<()> {
         "  auto_update: {}",
         settings::auto_update_enabled()
       ))?;
+      out(&format!("  settings:    {}", settings_path.display()))?;
       out(&format!("  version:     {}", env!("CARGO_PKG_VERSION")))?;
       let health = HealthBus::new();
       if let Some(last) = health.last() {
@@ -117,6 +133,9 @@ async fn cmd_daemon() -> anyhow::Result<()> {
         "daemon: auto_update={}",
         settings::auto_update_enabled()
       ))?;
+      if let Some(ca) = crate::tls::active_dev_ca_path() {
+        out(&format!("daemon: dev_ca={}", ca.display()))?;
+      }
       out("daemon: supervisor running (ctrl-c to stop)")?;
       supervisor::run_forever().await
     }
@@ -159,12 +178,15 @@ async fn cmd_update(check_only: bool) -> anyhow::Result<()> {
 }
 
 fn cmd_config(auto_update: Option<bool>) -> anyhow::Result<()> {
+  let path = crate::config::settings_path()?;
   if let Some(v) = auto_update {
     let s = settings::set_auto_update(v)?;
     out(&format!("auto_update set to {}", s.auto_update))?;
+    out(&format!("settings: {}", path.display()))?;
   } else {
     let s = settings::load_settings()?;
     out(&format!("auto_update: {}", s.auto_update))?;
+    out(&format!("settings: {}", path.display()))?;
   }
   Ok(())
 }

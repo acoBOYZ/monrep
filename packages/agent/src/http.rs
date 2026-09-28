@@ -1,17 +1,12 @@
 //! Outbound HTTPS to the pinned control plane (enroll / refresh).
 
+use crate::error::{AgentError, Result as AgentResult};
 use crate::store::DeviceCred;
 use reqwest::Client;
 use serde::Deserialize;
-use std::time::Duration;
 
 pub fn client() -> anyhow::Result<Client> {
-  Ok(
-    Client::builder()
-      .use_rustls_tls()
-      .timeout(Duration::from_secs(30))
-      .build()?,
-  )
+  crate::tls::http_client()
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,8 +70,8 @@ pub async fn enroll_with_control_plane(
 }
 
 /// POST `/api/agent/token` — returns a short-lived access token for WSS.
-pub async fn refresh_access(cred: &DeviceCred) -> anyhow::Result<String> {
-  let client = client()?;
+pub async fn refresh_access(cred: &DeviceCred) -> AgentResult<String> {
+  let client = client().map_err(AgentError::Other)?;
   let url = format!("{}/api/agent/token", cred.control_url.trim_end_matches('/'));
   let res = client
     .post(url)
@@ -85,18 +80,23 @@ pub async fn refresh_access(cred: &DeviceCred) -> anyhow::Result<String> {
       "deviceSecret": cred.token,
     }))
     .send()
-    .await?;
+    .await
+    .map_err(|e| AgentError::Other(e.into()))?;
 
   let status = res.status();
-  let bytes = res.bytes().await?;
+  let bytes = res.bytes().await.map_err(|e| AgentError::Other(e.into()))?;
   if !status.is_success() {
-    let msg = serde_json::from_slice::<ApiErrorBody>(&bytes)
-      .ok()
+    let parsed = serde_json::from_slice::<ApiErrorBody>(&bytes).ok();
+    if parsed.as_ref().and_then(|b| b.error.as_deref()) == Some("DeviceUnknown") {
+      return Err(AgentError::DeviceUnknown);
+    }
+    let msg = parsed
       .and_then(|b| b.message.or(b.error))
       .unwrap_or_else(|| format!("token refresh failed ({status})"));
-    anyhow::bail!("{msg}");
+    return Err(AgentError::Other(anyhow::anyhow!("{msg}")));
   }
 
-  let body: TokenResponse = serde_json::from_slice(&bytes)?;
+  let body: TokenResponse = serde_json::from_slice(&bytes)
+    .map_err(|e| AgentError::Other(anyhow::anyhow!("invalid token response: {e}")))?;
   Ok(body.access_token)
 }

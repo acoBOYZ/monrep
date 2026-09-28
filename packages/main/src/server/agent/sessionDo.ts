@@ -3,11 +3,26 @@
 import { nextUlid } from "@monrep/utils/ulid";
 import { DurableObject } from "cloudflare:workers";
 import { z } from "zod";
+import {
+  clearBrowserOwnedPtys,
+  ownedPtyIds,
+  ptyIdFromClosedResult,
+  removeOwnedPtyFromBrowsers,
+  trackBrowserPtyEnvelope,
+} from "./browserPtyOwnership";
+import { BrowserReplyRouter } from "./browserReplyRouter";
 import { parseCollectorsJson } from "./catalog";
-import { findDeviceCredByDeviceId, findRuntimeConfig, findServerById, loadAgentDb } from "./db";
+import {
+  findDeviceCredByDeviceId,
+  findRuntimeConfig,
+  findServerById,
+  loadAgentDb,
+  loadAgentLiveDb,
+} from "./db";
+import { PRUNE_RETRY_DELAY_MS, pruneServerSamples } from "./samplePrune";
 import { AgentTaggedError, agentErrorMessage, agentErrorStatus } from "./schemas";
 import { verifyDeviceAccessToken } from "./service";
-import type { SampleKindSchema } from "@/db/do/agent";
+import type { SampleKindSchema } from "@/db/do/agent_live";
 import { AuthEnvSchema } from "@/server/auth/schemas";
 
 const PROTO_V = 1;
@@ -20,6 +35,10 @@ const OpSchema = z.enum([
   "update",
   "config",
   "agent.health",
+  "pty.open",
+  "pty.data",
+  "pty.resize",
+  "pty.close",
   "result",
   "error",
   "event",
@@ -33,6 +52,9 @@ export const EnvelopeSchema = z.object({
 });
 export type Envelope = z.infer<typeof EnvelopeSchema>;
 
+type SocketRole = "agent" | "browser";
+type SocketAttachment = { role: SocketRole; ptyIds?: Array<string> };
+
 type SampleKind = z.infer<typeof SampleKindSchema>;
 
 const collectorKind = (name: string): SampleKind => {
@@ -44,20 +66,37 @@ const collectorKind = (name: string): SampleKind => {
 
 type DueMap = Record<string, number>;
 
-type PendingRun = {
+type PendingCollectorRun = {
   collector: string;
   kind: SampleKind;
   /** epoch ms when the run was sent */
   at: number;
 };
 
+type PendingInteractiveRun = {
+  kind: "interactive";
+  argv?: Array<string>;
+  /** epoch ms when the run was sent */
+  at: number;
+};
+
+type PendingRun = PendingCollectorRun | PendingInteractiveRun;
+
 const PENDING_TTL_MS = 15 * 60 * 1000;
 
 export class AgentSession extends DurableObject<Env> {
+  private readonly browserReplyRouter = new BrowserReplyRouter();
+
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/send" && request.method === "POST") {
       return this.handleSend(request);
+    }
+    if (
+      url.pathname === "/browser-ws" &&
+      request.headers.get("Upgrade")?.toLowerCase() === "websocket"
+    ) {
+      return this.handleBrowserUpgrade(request);
     }
     if (request.headers.get("Upgrade")?.toLowerCase() === "websocket") {
       return this.handleUpgrade(request);
@@ -65,11 +104,23 @@ export class AgentSession extends DurableObject<Env> {
     return new Response("expected websocket or POST /send", { status: 400 });
   }
 
-  /** Dashboard / scheduler: push an envelope to the connected agent. */
-  sendEnvelope(envelope: Envelope): Promise<{ ok: true } | { ok: false; error: string }> {
-    const sockets = this.ctx.getWebSockets();
+  private socketRole(ws: WebSocket): SocketRole {
+    const attachment = ws.deserializeAttachment() as SocketAttachment | null;
+    return attachment?.role === "browser" ? "browser" : "agent";
+  }
+
+  private socketsWithRole(role: SocketRole): Array<WebSocket> {
+    return this.ctx.getWebSockets().filter((ws) => this.socketRole(ws) === role);
+  }
+
+  /** Dashboard / scheduler: push an envelope to the connected agent only. */
+  async sendEnvelope(envelope: Envelope): Promise<{ ok: true } | { ok: false; error: string }> {
+    const sockets = this.socketsWithRole("agent");
     if (sockets.length === 0) {
-      return Promise.resolve({ ok: false, error: "SessionNotConnected" });
+      return { ok: false, error: "SessionNotConnected" };
+    }
+    if (envelope.op === "run") {
+      await this.markInteractivePending(envelope);
     }
     const payload = JSON.stringify(envelope);
     for (const ws of sockets) {
@@ -79,7 +130,49 @@ export class AgentSession extends DurableObject<Env> {
         console.error("[agent-session] send failed", e);
       }
     }
-    return Promise.resolve({ ok: true });
+    return { ok: true };
+  }
+
+  /** Interactive dashboard runs (no collector) — forward to browsers, never sample. */
+  private async markInteractivePending(envelope: Envelope): Promise<void> {
+    const body = envelope.body;
+    if (!body || typeof body !== "object") return;
+    const record = body as { collector?: unknown; argv?: unknown };
+    if (typeof record.collector === "string" && record.collector.length > 0) return;
+    const argv = Array.isArray(record.argv)
+      ? record.argv.filter((item): item is string => typeof item === "string")
+      : undefined;
+    await this.ctx.storage.put(`pending:${envelope.id}`, {
+      kind: "interactive",
+      argv,
+      at: Date.now(),
+    } satisfies PendingInteractiveRun);
+  }
+
+  private async releaseBrowserOwnedPtys(ws: WebSocket): Promise<void> {
+    const ptyIds = ownedPtyIds(ws);
+    clearBrowserOwnedPtys(ws);
+    await Promise.all(
+      ptyIds.map((ptyId) =>
+        this.sendEnvelope({
+          v: PROTO_V,
+          id: nextUlid(null),
+          op: "pty.close",
+          body: { pty_id: ptyId },
+        }),
+      ),
+    );
+  }
+
+  private sendToBrowsers(envelope: Envelope): void {
+    const payload = JSON.stringify(envelope);
+    for (const ws of this.socketsWithRole("browser")) {
+      try {
+        ws.send(payload);
+      } catch (e) {
+        console.error("[agent-session] browser send failed", e);
+      }
+    }
   }
 
   async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
@@ -110,39 +203,50 @@ export class AgentSession extends DurableObject<Env> {
       );
       return;
     }
-    await this.onEnvelope(ws, env.data);
+    if (this.socketRole(ws) === "browser") {
+      await this.onBrowserEnvelope(ws, env.data);
+      return;
+    }
+    await this.onEnvelope(env.data);
   }
 
   async webSocketClose(
-    _ws: WebSocket,
+    ws: WebSocket,
     _code: number,
     _reason: string,
     _wasClean: boolean,
   ): Promise<void> {
-    if (this.ctx.getWebSockets().length === 0) {
+    if (this.socketRole(ws) === "browser") {
+      await this.releaseBrowserOwnedPtys(ws);
+    }
+    if (this.socketsWithRole("agent").length === 0) {
       await this.setPresence("offline");
       await this.ctx.storage.deleteAlarm();
     }
   }
 
-  webSocketError(_ws: WebSocket, error: unknown): void | Promise<void> {
+  async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
     console.error("[agent-session] ws error", error);
+    if (this.socketRole(ws) === "browser") {
+      await this.releaseBrowserOwnedPtys(ws);
+    }
   }
 
   async alarm(): Promise<void> {
     const meta = await this.sessionMeta();
-    if (!meta || this.ctx.getWebSockets().length === 0) {
+    if (!meta || this.socketsWithRole("agent").length === 0) {
       await this.ctx.storage.deleteAlarm();
       return;
     }
 
     await this.expirePendingRuns();
 
-    const db = await loadAgentDb();
+    const [db, adb] = await Promise.all([loadAgentDb(), loadAgentLiveDb()]);
     try {
+      const prune = await pruneServerSamples(adb, meta.serverId);
       const config = await findRuntimeConfig(db, meta.serverId);
       if (!config?.backgroundEnabled) {
-        await this.scheduleNextAlarm(30_000);
+        await this.scheduleNextAlarm(prune.hasMore ? PRUNE_RETRY_DELAY_MS : 30_000);
         return;
       }
       const collectors = parseCollectorsJson(config.collectorsJson);
@@ -187,7 +291,9 @@ export class AgentSession extends DurableObject<Env> {
         }),
       );
       await this.ctx.storage.put("due", due);
-      await this.scheduleNextAlarm(nextDelayMs);
+      await this.scheduleNextAlarm(
+        prune.hasMore ? Math.min(nextDelayMs, PRUNE_RETRY_DELAY_MS) : nextDelayMs,
+      );
     } finally {
       db.close();
     }
@@ -255,11 +361,62 @@ export class AgentSession extends DurableObject<Env> {
 
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
+    pair[1].serializeAttachment({ role: "agent" } satisfies SocketAttachment);
     await this.ctx.storage.put("meta", { deviceId, serverId });
     await this.setPresence("online");
     await this.scheduleNextAlarm(5_000);
 
     return new Response(null, { status: 101, webSocket: pair[0] });
+  }
+
+  /** Browser PTY bridge — auth already enforced by the Worker before stub.fetch. */
+  private async handleBrowserUpgrade(request: Request): Promise<Response> {
+    const serverId = new URL(request.url).searchParams.get("serverId");
+    if (!serverId) {
+      return new Response(JSON.stringify({ error: "serverId required" }), { status: 400 });
+    }
+    const meta = await this.sessionMeta();
+    if (meta && meta.serverId !== serverId) {
+      return new Response(JSON.stringify({ error: "server mismatch" }), { status: 403 });
+    }
+    if (this.socketsWithRole("agent").length === 0) {
+      return new Response(JSON.stringify({ error: "SessionNotConnected" }), { status: 409 });
+    }
+    const pair = new WebSocketPair();
+    this.ctx.acceptWebSocket(pair[1]);
+    pair[1].serializeAttachment({ role: "browser", ptyIds: [] } satisfies SocketAttachment);
+    return new Response(null, { status: 101, webSocket: pair[0] });
+  }
+
+  private async onBrowserEnvelope(ws: WebSocket, envelope: Envelope): Promise<void> {
+    switch (envelope.op) {
+      case "pty.open":
+      case "pty.data":
+      case "pty.resize":
+      case "pty.close": {
+        if (envelope.op === "pty.open" || envelope.op === "pty.close") {
+          trackBrowserPtyEnvelope(ws, envelope.op, envelope.id, envelope.body);
+        }
+        this.browserReplyRouter.trackBrowserEnvelope(envelope);
+        const result = await this.sendEnvelope(envelope);
+        if (!result.ok) {
+          this.sendToBrowsers({
+            v: PROTO_V,
+            id: envelope.id,
+            op: "error",
+            body: { message: "agent not connected" },
+          });
+        }
+        return;
+      }
+      default:
+        this.sendToBrowsers({
+          v: PROTO_V,
+          id: envelope.id,
+          op: "error",
+          body: { message: "op not allowed from browser" },
+        });
+    }
   }
 
   private async handleSend(request: Request): Promise<Response> {
@@ -279,48 +436,76 @@ export class AgentSession extends DurableObject<Env> {
     });
   }
 
-  private async onEnvelope(ws: WebSocket, envelope: Envelope): Promise<void> {
+  private async onEnvelope(envelope: Envelope): Promise<void> {
     switch (envelope.op) {
       case "hello": {
+        // Do not ACK with op "result" on the agent socket — agent treats inbound
+        // Result as illegal and replies with Error (feedback storm → Miniflare die).
         await this.setPresence("online");
         await this.persistAgentVersion(envelope);
-        ws.send(
-          JSON.stringify({
-            v: PROTO_V,
-            id: envelope.id,
-            op: "result",
-            body: { ok: true },
-          }),
-        );
         await this.pushAgentConfig();
-        return;
+        break;
       }
       case "heartbeat": {
         await this.setPresence("online");
-        ws.send(
-          JSON.stringify({
-            v: PROTO_V,
-            id: envelope.id,
-            op: "result",
-            body: { ok: true },
-          }),
-        );
-        return;
+        break;
       }
-      case "agent.health":
-      case "event":
+      case "pty.data":
+      case "pty.open":
+      case "pty.resize":
+      case "pty.close": {
+        this.sendToBrowsers(envelope);
+        break;
+      }
       case "result": {
+        if (this.browserReplyRouter.shouldForwardResult(envelope)) {
+          this.sendToBrowsers(envelope);
+          this.browserReplyRouter.afterForwardResult(envelope);
+          const body = envelope.body;
+          if (body && typeof body === "object" && (body as { closed?: unknown }).closed === true) {
+            const ptyId = ptyIdFromClosedResult(body, envelope.id);
+            removeOwnedPtyFromBrowsers(this.socketsWithRole("browser"), ptyId);
+          }
+          break;
+        }
+        if (await this.forwardInteractive(envelope)) break;
         await this.persistSample(envelope);
-        return;
+        break;
+      }
+      case "event": {
+        if (await this.forwardInteractive(envelope)) break;
+        await this.persistSample(envelope);
+        break;
+      }
+      case "agent.health": {
+        await this.persistSample(envelope);
+        break;
       }
       case "error": {
         console.error("[agent-session] agent error frame", envelope.body);
+        if (this.browserReplyRouter.shouldForwardError(envelope)) {
+          this.sendToBrowsers(envelope);
+          this.browserReplyRouter.afterForwardError(envelope);
+          break;
+        }
+        if (await this.forwardInteractive(envelope)) break;
         await this.persistSample(envelope);
-        return;
+        break;
       }
       default:
-        return;
+        break;
     }
+  }
+
+  /** Live ops: relay to browsers only; never open agent_live streams. */
+  private async forwardInteractive(envelope: Envelope): Promise<boolean> {
+    const pending = await this.ctx.storage.get<PendingRun>(`pending:${envelope.id}`);
+    if (!pending || pending.kind !== "interactive") return false;
+    this.sendToBrowsers(envelope);
+    if (envelope.op === "result" || envelope.op === "error") {
+      await this.ctx.storage.delete(`pending:${envelope.id}`);
+    }
+    return true;
   }
 
   private async persistSample(envelope: Envelope): Promise<void> {
@@ -333,6 +518,7 @@ export class AgentSession extends DurableObject<Env> {
       kind = "health";
     } else {
       const pending = await this.ctx.storage.get<PendingRun>(`pending:${envelope.id}`);
+      if (pending?.kind === "interactive") return;
       if (pending) {
         kind = pending.kind;
         collector = pending.collector;
@@ -342,7 +528,7 @@ export class AgentSession extends DurableObject<Env> {
       }
     }
 
-    const db = await loadAgentDb();
+    const db = await loadAgentLiveDb();
     try {
       await db.actions.upsertSample({
         serverId: meta.serverId,

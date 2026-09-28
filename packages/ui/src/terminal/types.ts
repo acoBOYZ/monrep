@@ -36,4 +36,6 @@ export type TerminalProps = {
   onActiveTabChange?: (id: string) => void;
   onTabAdd?: () => void;
   onTabClose?: (id: string) => void;
+  /** Stretch tab/children body to fill the chrome (e.g. xterm PTY). */
+  fillContent?: boolean;
 };

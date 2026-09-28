@@ -2,12 +2,8 @@ import { nextUlid } from "@monrep/utils/ulid";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
-import { findRuntimeConfig, findServerById, loadAgentDb } from "@/server/agent/db";
-import {
-  AgentTaggedError,
-  CollectorsMapSchema,
-  CreateServerInputSchema,
-} from "@/server/agent/schemas";
+import { findServerById, loadAgentDb } from "@/server/agent/db";
+import { AgentTaggedError, CreateServerInputSchema } from "@/server/agent/schemas";
 import {
   createServerWithEnrollToken,
   listFleetServers,
@@ -31,11 +27,9 @@ const CancelAgentRunInputSchema = z.object({
   runId: z.string().min(1),
 });
 
-const UpdateRuntimeConfigInputSchema = z.object({
+const PushAgentConfigInputSchema = z.object({
   serverId: z.string().min(1),
-  backgroundEnabled: z.boolean(),
-  autoUpdate: z.boolean().optional(),
-  collectors: CollectorsMapSchema,
+  autoUpdate: z.boolean(),
 });
 
 const ServerIdInputSchema = z.object({
@@ -119,33 +113,22 @@ export const sendAgentCancelFn = createServerFn({ method: "POST" })
     }
   });
 
-export const updateRuntimeConfigFn = createServerFn({ method: "POST" })
-  .validator(UpdateRuntimeConfigInputSchema)
+export const pushAgentConfigFn = createServerFn({ method: "POST" })
+  .validator(PushAgentConfigInputSchema)
   .handler(async ({ data }) => {
     await requireSession();
     const db = await loadAgentDb();
     try {
       const server = await findServerById(db, data.serverId);
       if (!server?.id) throw new AgentTaggedError({ _tag: "ServerNotFound" });
-      const existing = await findRuntimeConfig(db, data.serverId);
-      const autoUpdate = data.autoUpdate ?? existing?.autoUpdate ?? true;
-      await db.actions.upsertRuntimeConfig({
-        serverId: data.serverId,
-        backgroundEnabled: data.backgroundEnabled,
-        autoUpdate,
-        collectorsJson: JSON.stringify(data.collectors),
-        updatedAt: existing?.updatedAt,
-      }).isPersisted.promise;
-
-      if (server.deviceId && data.autoUpdate !== undefined) {
-        const stub = getAgentSessionStub(env, server.deviceId);
-        await stub.sendEnvelope({
-          v: 1,
-          id: nextUlid(null),
-          op: "config",
-          body: { autoUpdate },
-        });
-      }
+      if (!server.deviceId) return ok();
+      const stub = getAgentSessionStub(env, server.deviceId);
+      await stub.sendEnvelope({
+        v: 1,
+        id: nextUlid(null),
+        op: "config",
+        body: { autoUpdate: data.autoUpdate },
+      });
       return ok();
     } finally {
       db.close();

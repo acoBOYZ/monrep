@@ -15,6 +15,7 @@ import {
   listSamplesByServerId,
   listServers,
   loadAgentDb,
+  loadAgentLiveDb,
 } from "./db";
 import { AgentTaggedError, DeviceAccessPayloadSchema } from "./schemas";
 import type { EnrollResponse } from "./schemas";
@@ -78,7 +79,7 @@ export const listFleetServers = async (): Promise<Array<TServerDo>> => {
 
 /** Hard-delete server row and related agent control-plane rows. */
 export const revokeServer = async (serverId: string): Promise<void> => {
-  const db = await loadAgentDb();
+  const [db, adb] = await Promise.all([loadAgentDb(), loadAgentLiveDb()]);
   try {
     const server = await findServerById(db, serverId);
     if (!server?.id) throw new AgentTaggedError({ _tag: "ServerNotFound" });
@@ -89,10 +90,10 @@ export const revokeServer = async (serverId: string): Promise<void> => {
       await db.actions.deleteEnrollToken(enrollIds).isPersisted.promise;
     }
 
-    const samples = await listSamplesByServerId(db, serverId);
+    const samples = await listSamplesByServerId(adb, serverId);
     const sampleIds = samples.map((s) => s.id).filter((id): id is string => Boolean(id));
     if (sampleIds.length > 0) {
-      await db.actions.deleteSample(sampleIds).isPersisted.promise;
+      await adb.actions.deleteSample(sampleIds).isPersisted.promise;
     }
 
     await db.actions.deleteRuntimeConfig(serverId).isPersisted.promise;
@@ -100,6 +101,7 @@ export const revokeServer = async (serverId: string): Promise<void> => {
     await db.actions.deleteServer(server.id).isPersisted.promise;
   } finally {
     db.close();
+    adb.close();
   }
 };
 

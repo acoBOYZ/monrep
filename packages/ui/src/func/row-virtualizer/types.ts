@@ -16,7 +16,7 @@ import type {
  */
 export interface RowVirtualizerProps<TValue, TItem extends number | undefined> extends PartialKeys<
   VirtualizerOptions<HTMLDivElement, Element>,
-  "observeElementRect" | "observeElementOffset" | "scrollToFn"
+  "count" | "getScrollElement" | "observeElementRect" | "observeElementOffset" | "scrollToFn"
 > {
   /**
    * Class on the scroll container (not the inner spacer).

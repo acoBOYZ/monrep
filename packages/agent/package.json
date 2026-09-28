@@ -6,6 +6,7 @@
   "description": "monrep fleet CLI agent (Rust binary monrep)",
   "scripts": {
     "dev": "cargo watch -w src -w Cargo.toml -w Cargo.lock -x 'run --bin monrep'",
+    "local": "bun run scripts/local.ts",
     "typecheck": "tsc --noEmit --singleThreaded && bun run typecheck:rust",
     "typecheck:rust": "cargo check --all-targets && bun run rust:miri",
     "lint": "bun run lint:rust && oxlint --threads=1 scripts",
@@ -17,6 +18,7 @@
     "fmtcheck:rust": "cargo fmt --check && cargo fmt --check --manifest-path miri/Cargo.toml",
     "doctor:rust": "bunx rust-doctor --yes --verbose .",
     "rust:miri": "bun run scripts/rust-miri.ts",
+    "test": "cargo test --all-targets",
     "build": "bun run scripts/build.ts"
   },
   "dependencies": {},

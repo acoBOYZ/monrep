@@ -12,6 +12,8 @@ export { filterMap } from "./filterMap";
 export {
   formatCalendarDate,
   formatChatListDate,
+  formatElapsed,
+  formatRelative,
   formatTime,
   toDateTimeAttr,
   toZonedDateTime,

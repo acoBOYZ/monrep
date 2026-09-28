@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { Button, Input, PasswordInput, TextSeparator } from "@monrep/ui/base";
+import { Button, Input, Label, PasswordInput, TextSeparator } from "@monrep/ui/base";
 import { ADMIN_EMAIL_DOMAIN } from "../../brand.gen";
 import { TurnstileWidget } from "./TurnstileWidget";
 import type { SubmitEvent } from "react";
@@ -39,8 +39,8 @@ export function PasswordStep({
 
   return (
     <form onSubmit={handlePasswordFormSubmit} className="flex flex-col gap-4">
-      <label htmlFor={emailId} className="flex flex-col gap-1.5 text-sm font-medium">
-        Email
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={emailId}>Email</Label>
         <Input
           id={emailId}
           type="email"
@@ -50,9 +50,9 @@ export function PasswordStep({
           onChange={(event) => onEmailChange(event.target.value)}
           placeholder={`admin@${ADMIN_EMAIL_DOMAIN}`}
         />
-      </label>
-      <label htmlFor={passwordId} className="flex flex-col gap-1.5 text-sm font-medium">
-        Password
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={passwordId}>Password</Label>
         <PasswordInput
           id={passwordId}
           autoComplete="current-password"
@@ -61,7 +61,7 @@ export function PasswordStep({
           onChange={(event) => onPasswordChange(event.target.value)}
           placeholder="••••••••"
         />
-      </label>
+      </div>
       <TurnstileWidget siteKey={turnstileSiteKey} onToken={onTurnstileToken} />
       <Button type="submit" disabled={pending || !turnstileToken} className="w-full">
         {pending ? "Signing in…" : "Login"}

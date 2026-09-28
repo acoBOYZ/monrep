@@ -22,16 +22,12 @@ import type {
 	TDoModuleId,
 	TDeviceCredDo,
 	TEnrollTokenDo,
-	TLineDo,
-	TMessageDo,
 	TPasskeyDo,
-	TPresenceDo,
 	TRuntimeConfigDo,
 	TSampleDo,
 	TSecurityDo,
 	TServerDo,
 	TTotpDo,
-	TTypingDo,
 	TUserDo
 } from "./types.gen";
 
@@ -43,8 +39,6 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
       deleteEnrollToken: createDeleteStreamAction({ db, helpers: state.enroll_token, collection: db.collections.enroll_token }),
       upsertRuntimeConfig: createUpsertStreamAction({ db, helpers: state.runtime_config, collection: db.collections.runtime_config, primaryKey: "serverId", schema: DO_MODULES["agent"].collections.runtime_config.Schema, insertGens: DO_MODULES["agent"].collections.runtime_config.insertGens, updateGens: DO_MODULES["agent"].collections.runtime_config.updateGens }),
       deleteRuntimeConfig: createDeleteStreamAction({ db, helpers: state.runtime_config, collection: db.collections.runtime_config }),
-      upsertSample: createUpsertStreamAction({ db, helpers: state.sample, collection: db.collections.sample, primaryKey: "id", schema: DO_MODULES["agent"].collections.sample.Schema, insertGens: DO_MODULES["agent"].collections.sample.insertGens, updateGens: DO_MODULES["agent"].collections.sample.updateGens }),
-      deleteSample: createDeleteStreamAction({ db, helpers: state.sample, collection: db.collections.sample }),
       upsertServer: createUpsertStreamAction({ db, helpers: state.server, collection: db.collections.server, primaryKey: "id", schema: DO_MODULES["agent"].collections.server.Schema, insertGens: DO_MODULES["agent"].collections.server.insertGens, updateGens: DO_MODULES["agent"].collections.server.updateGens }),
       deleteServer: createDeleteStreamAction({ db, helpers: state.server, collection: db.collections.server }),
   }));
@@ -54,13 +48,21 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
   sdb.collections.enroll_token.createIndex((r) => r.expiresAt, { indexType: BasicIndex });
   sdb.collections.enroll_token.createIndex((r) => r.tokenHash, { indexType: BasicIndex });
   sdb.collections.runtime_config.createIndex((r) => r.serverId, { indexType: BasicIndex });
+  sdb.collections.server.createIndex((r) => r.status, { indexType: BasicIndex });
+  sdb.collections.server.createIndex((r) => r.deviceId, { indexType: BasicIndex });
+  sdb.collections.server.createIndex((r) => r.createdAt, { indexType: BasicIndex });
+  return sdb;
+};
+
+const createAgentLiveStreamDB = (opts: CreateDoModuleDbOpts) => {
+  const sdb = createDoStreamDB(DO_MODULE_STATE["agent_live"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["agent_live"] }, ({ db, state }) => ({
+      upsertSample: createUpsertStreamAction({ db, helpers: state.sample, collection: db.collections.sample, primaryKey: "id", schema: DO_MODULES["agent_live"].collections.sample.Schema, insertGens: DO_MODULES["agent_live"].collections.sample.insertGens, updateGens: DO_MODULES["agent_live"].collections.sample.updateGens }),
+      deleteSample: createDeleteStreamAction({ db, helpers: state.sample, collection: db.collections.sample }),
+  }));
   sdb.collections.sample.createIndex((r) => r.serverId, { indexType: BasicIndex });
   sdb.collections.sample.createIndex((r) => r.kind, { indexType: BasicIndex });
   sdb.collections.sample.createIndex((r) => r.at, { indexType: BasicIndex });
   sdb.collections.sample.createIndex((r) => r.runId, { indexType: BasicIndex });
-  sdb.collections.server.createIndex((r) => r.status, { indexType: BasicIndex });
-  sdb.collections.server.createIndex((r) => r.deviceId, { indexType: BasicIndex });
-  sdb.collections.server.createIndex((r) => r.createdAt, { indexType: BasicIndex });
   return sdb;
 };
 
@@ -89,32 +91,11 @@ const createAuthStreamDB = (opts: CreateDoModuleDbOpts) => {
   return sdb;
 };
 
-const createTestmStreamDB = (opts: CreateDoModuleDbOpts) => {
-  const sdb = createDoStreamDB(DO_MODULE_STATE["testm"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["testm"] }, ({ db, state }) => ({
-      upsertLine: createUpsertStreamAction({ db, helpers: state.line, collection: db.collections.line, primaryKey: "id", schema: DO_MODULES["testm"].collections.line.Schema, insertGens: DO_MODULES["testm"].collections.line.insertGens, updateGens: DO_MODULES["testm"].collections.line.updateGens }),
-      deleteLine: createDeleteStreamAction({ db, helpers: state.line, collection: db.collections.line }),
-      upsertMessage: createUpsertStreamAction({ db, helpers: state.message, collection: db.collections.message, primaryKey: "id", schema: DO_MODULES["testm"].collections.message.Schema, insertGens: DO_MODULES["testm"].collections.message.insertGens, updateGens: DO_MODULES["testm"].collections.message.updateGens }),
-      deleteMessage: createDeleteStreamAction({ db, helpers: state.message, collection: db.collections.message }),
-      upsertPresence: createUpsertStreamAction({ db, helpers: state.presence, collection: db.collections.presence, primaryKey: "userId", schema: DO_MODULES["testm"].collections.presence.Schema, insertGens: DO_MODULES["testm"].collections.presence.insertGens, updateGens: DO_MODULES["testm"].collections.presence.updateGens }),
-      deletePresence: createDeleteStreamAction({ db, helpers: state.presence, collection: db.collections.presence }),
-      upsertTyping: createUpsertStreamAction({ db, helpers: state.typing, collection: db.collections.typing, primaryKey: "userId", schema: DO_MODULES["testm"].collections.typing.Schema, insertGens: DO_MODULES["testm"].collections.typing.insertGens, updateGens: DO_MODULES["testm"].collections.typing.updateGens }),
-      deleteTyping: createDeleteStreamAction({ db, helpers: state.typing, collection: db.collections.typing }),
-  }));
-  sdb.collections.line.createIndex((r) => r.createdAt, { indexType: BasicIndex });
-  sdb.collections.line.createIndex((r) => r.id, { indexType: BasicIndex });
-  sdb.collections.line.createIndex((r) => r.tabId, { indexType: BasicIndex });
-  sdb.collections.message.createIndex((r) => r.createdAt, { indexType: BasicIndex });
-  sdb.collections.message.createIndex((r) => r.id, { indexType: BasicIndex });
-  sdb.collections.presence.createIndex((r) => r.userId, { indexType: BasicIndex });
-  sdb.collections.typing.createIndex((r) => r.userId, { indexType: BasicIndex });
-  return sdb;
-};
-
 const DO_MODULE_DB_FACTORY_IMPL = {
   "agent": createAgentStreamDB,
+  "agent_live": createAgentLiveStreamDB,
   "audit": createAuditStreamDB,
   "auth": createAuthStreamDB,
-  "testm": createTestmStreamDB,
 }
 
 export const DO_MODULE_DB_FACTORIES: {
@@ -129,10 +110,12 @@ export type TDoModuleActionDefinitions = {
     deleteEnrollToken: ActionDefinition<string | Array<string>>;
     upsertRuntimeConfig: ActionDefinition<TRuntimeConfigDo | Array<TRuntimeConfigDo>>;
     deleteRuntimeConfig: ActionDefinition<string | Array<string>>;
-    upsertSample: ActionDefinition<TSampleDo | Array<TSampleDo>>;
-    deleteSample: ActionDefinition<string | Array<string>>;
     upsertServer: ActionDefinition<TServerDo | Array<TServerDo>>;
     deleteServer: ActionDefinition<string | Array<string>>;
+  };
+  "agent_live": {
+    upsertSample: ActionDefinition<TSampleDo | Array<TSampleDo>>;
+    deleteSample: ActionDefinition<string | Array<string>>;
   };
   "audit": {
     upsertSecurity: ActionDefinition<TSecurityDo | Array<TSecurityDo>>;
@@ -145,15 +128,5 @@ export type TDoModuleActionDefinitions = {
     deleteTotp: ActionDefinition<string | Array<string>>;
     upsertUser: ActionDefinition<TUserDo | Array<TUserDo>>;
     deleteUser: ActionDefinition<string | Array<string>>;
-  };
-  "testm": {
-    upsertLine: ActionDefinition<TLineDo | Array<TLineDo>>;
-    deleteLine: ActionDefinition<string | Array<string>>;
-    upsertMessage: ActionDefinition<TMessageDo | Array<TMessageDo>>;
-    deleteMessage: ActionDefinition<string | Array<string>>;
-    upsertPresence: ActionDefinition<TPresenceDo | Array<TPresenceDo>>;
-    deletePresence: ActionDefinition<string | Array<string>>;
-    upsertTyping: ActionDefinition<TTypingDo | Array<TTypingDo>>;
-    deleteTyping: ActionDefinition<string | Array<string>>;
   };
 };

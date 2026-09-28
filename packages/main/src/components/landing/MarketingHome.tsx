@@ -1,26 +1,20 @@
-import { Capabilities } from "./Capabilities";
-import { ClosingCta } from "./ClosingCta";
-import { ConsoleStage } from "./ConsoleStage";
-import { GetStarted } from "./GetStarted";
-import { Hero } from "./Hero";
+import { ContentFrame } from "./ContentFrame";
+import { LandingStage } from "./LandingStage";
 import { MarketingFooter } from "./MarketingFooter";
 import { MarketingNav } from "./MarketingNav";
-import { PageGutterHatches } from "./frame";
+import { PageGutterHatches } from "./PageGutterHatches";
 
-/** Marketing `/` — primary hero plane, console stage, open capabilities, Region guides. */
+/** Public `/` — single-viewport console-style landing. */
 export function MarketingHome() {
   return (
-    <div className="relative min-h-dvh bg-background">
-      {/* Sticky must not sit under overflow-x-hidden (breaks position:sticky). */}
+    <div className="flex min-h-svh flex-col bg-background">
       <MarketingNav />
-      <div className="relative overflow-x-hidden px-3 min-[1280px]:px-0">
+      <div className="relative flex flex-1 flex-col overflow-x-hidden px-3 min-[1280px]:px-0">
         <PageGutterHatches />
         <main className="relative z-10 flex flex-1 flex-col">
-          <Hero />
-          <ConsoleStage />
-          <Capabilities />
-          <GetStarted />
-          <ClosingCta />
+          <ContentFrame className="flex flex-1 flex-col justify-center py-8">
+            <LandingStage />
+          </ContentFrame>
         </main>
         <MarketingFooter />
       </div>

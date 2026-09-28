@@ -1,10 +1,12 @@
 //! Generic ops — product features stay on the Worker.
 
 pub mod cancel;
+pub mod pty;
 pub mod registry;
 pub mod run;
 pub mod update;
 
+use crate::ops::pty::PtyMap;
 use crate::ops::registry::RunRegistry;
 use crate::proto::{Envelope, Op, PROTO_V};
 use crate::settings;
@@ -16,11 +18,17 @@ pub async fn handle(
   out: mpsc::Sender<Envelope>,
   runs: RunRegistry,
   run_slots: Arc<Semaphore>,
+  ptys: PtyMap,
+  pty_slots: Arc<Semaphore>,
 ) -> anyhow::Result<()> {
   match env.op {
     Op::Run => run::handle(&env, out, runs, run_slots).await,
     Op::Cancel => cancel::handle(&env, out, runs).await,
     Op::Update => update::handle(&env, out).await,
+    Op::PtyOpen => pty::handle_open(&env, out, ptys, pty_slots).await,
+    Op::PtyData => pty::handle_data(&env, ptys).await,
+    Op::PtyResize => pty::handle_resize(&env, ptys).await,
+    Op::PtyClose => pty::handle_close(&env, ptys).await,
     Op::Config => {
       if let Some(body) = &env.body
         && let Some(v) = body.get("autoUpdate").and_then(|x| x.as_bool())
@@ -51,8 +59,7 @@ pub async fn handle(
         .await;
       Ok(())
     }
-    Op::AgentHealth | Op::Result | Op::Error | Op::Event => {
-      anyhow::bail!("op {:?} is not an inbound control op", env.op)
-    }
+    // Agent→CP (or stray CP ACKs). Never control; ignore so we do not Error-storm.
+    Op::AgentHealth | Op::Result | Op::Error | Op::Event => Ok(()),
   }
 }

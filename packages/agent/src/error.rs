@@ -7,6 +7,9 @@ pub enum AgentError {
   #[error("not enrolled; run `monrep enroll --url <url> --token <token>` first")]
   NotEnrolled,
 
+  #[error("device unknown or revoked; cleared local credentials — run `monrep enroll` again")]
+  DeviceUnknown,
+
   #[error("credential store is corrupt: {0}")]
   CorruptStore(String),
 
