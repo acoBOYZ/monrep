@@ -2,6 +2,44 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.1] - 2026-09-28
+
+### 🐛 Bug Fixes
+
+- Agent loop gets real ops: PTY + Docker/Services + fleet charts. playground/`testm` out. session WS bridges browser ↔ agent. by @acoBOYZ
+
+- Install one-liner pipes to `bash`, not `sh` (script is bash + `set -euo pipefail`). by @acoBOYZ
+
+- Required check needs run by @acoBOYZ
+
+- Per-deploy brand config. install URL / assets / CSP come from local `brand.json`, not hardcoded workers.dev. by @acoBOYZ
+
+- Per-deploy brand config. install URL / assets / CSP come from local `brand.json`, not hardcoded workers.dev. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #38 from acoBOYZ/fix-agent-loop by @acoBOYZ in #38
+
+- Merge pull request #37 from acoBOYZ/fix-install-command-as-bash by @acoBOYZ in #37
+
+- Merge pull request #36 from acoBOYZ/chore-drop-env by @acoBOYZ in #36
+
+- Drop fixed env by @acoBOYZ
+
+- Merge pull request #35 from acoBOYZ/chore-branding-domain by @acoBOYZ in #35
+
+- Domain branding by @acoBOYZ
+
+- Merge pull request #34 from acoBOYZ/fix-agents-checks by @acoBOYZ in #34
+
+- Close agent checks on actions for main by @acoBOYZ
+
+- Merge pull request #33 from acoBOYZ/fix-monrep-statics by @acoBOYZ in #33
+
+- Forgatten fmt by @acoBOYZ
+
+
 ## [0.7.0] - 2026-09-27
 
 ### 🚀 Features
