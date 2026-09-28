@@ -1,14 +1,18 @@
-import { ArrowLeft01Icon, ArrowReloadHorizontalIcon } from "@hugeicons/core-free-icons";
+import { ArrowReloadHorizontalIcon, TerminalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert, AlertDescription, Badge, Button } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import type { Crumb } from "@/components/layouts/PageBreadcrumb";
+import { PageBreadcrumb } from "@/components/layouts/PageBreadcrumb";
 
 type EntityOpsChromeProps = {
   serverId: string;
   serverName: string;
   title: string;
+  /** Extra ancestors between the server and this page (e.g. Docker → container). */
+  crumbs?: ReadonlyArray<Crumb>;
   counts: { total: number; totalLabel: string; bad: number; badLabel: string };
   online: boolean;
   busy: boolean;
@@ -26,6 +30,7 @@ export function EntityOpsChrome({
   serverId,
   serverName,
   title,
+  crumbs = [],
   counts,
   online,
   busy,
@@ -40,57 +45,67 @@ export function EntityOpsChrome({
 }: EntityOpsChromeProps) {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <Button
-            nativeButton={false}
-            variant="ghost"
-            size="sm"
-            render={<Link to="/servers/$id" params={{ id: serverId }} />}
+      <header className="flex flex-col gap-2">
+        <PageBreadcrumb
+          items={[
+            { label: "Servers", to: "/servers" },
+            { label: serverName, to: "/servers/$id", params: { id: serverId } },
+            ...crumbs,
+          ]}
+          current={title}
+        />
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="min-w-0 truncate text-xl font-semibold tracking-tight sm:text-2xl">
+              {title}
+            </h1>
+            {counts.total > 0 ? (
+              <ImpactFlash watch={counts.total}>
+                <Badge variant="muted" className="tabular-nums">
+                  {counts.total} {counts.totalLabel}
+                </Badge>
+              </ImpactFlash>
+            ) : null}
+            {counts.bad > 0 ? (
+              <ImpactFlash watch={counts.bad}>
+                <Badge variant="destructive" className="tabular-nums">
+                  {counts.bad} {counts.badLabel}
+                </Badge>
+              </ImpactFlash>
+            ) : null}
+          </div>
+          <div
+            role="toolbar"
+            aria-label="Page actions"
+            className="ms-auto flex shrink-0 flex-wrap items-center gap-2"
           >
-            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" aria-hidden />
-            {serverName}
-          </Button>
-          <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
-          <ImpactFlash watch={counts.total}>
-            <Badge variant="muted">
-              {counts.total} {counts.totalLabel}
-            </Badge>
-          </ImpactFlash>
-          {counts.bad > 0 ? (
-            <ImpactFlash watch={counts.bad}>
-              <Badge variant="destructive">
-                {counts.bad} {counts.badLabel}
-              </Badge>
-            </ImpactFlash>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={!online || busy}
-            onClick={onRefresh}
-          >
-            <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" aria-hidden />
-            Refresh
-          </Button>
-          {busy ? (
-            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-              Cancel
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!online || busy}
+              onClick={onRefresh}
+            >
+              <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" aria-hidden />
+              Refresh
             </Button>
-          ) : null}
-          <Button
-            nativeButton={false}
-            variant="ghost"
-            size="sm"
-            render={<Link to="/servers/$id" params={{ id: serverId }} />}
-          >
-            Shell
-          </Button>
+            {busy ? (
+              <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+                Cancel
+              </Button>
+            ) : null}
+            <Button
+              nativeButton={false}
+              variant="ghost"
+              size="sm"
+              render={<Link to="/servers/$id" params={{ id: serverId }} />}
+            >
+              <HugeiconsIcon icon={TerminalIcon} className="size-4" aria-hidden />
+              Shell
+            </Button>
+          </div>
         </div>
-      </div>
+      </header>
 
       {toolbar ? <div className="flex flex-wrap items-center gap-2">{toolbar}</div> : null}
 

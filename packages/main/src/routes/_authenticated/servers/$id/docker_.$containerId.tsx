@@ -23,6 +23,7 @@ function ServerDockerContainerLogsPage() {
       serverId={id}
       serverName={ops.server.name}
       title={label}
+      crumbs={[{ label: "Docker", to: "/servers/$id/docker", params: { id } }]}
       counts={{ total: 0, totalLabel: "containers", bad: 0, badLabel: "not running" }}
       online={ops.online}
       busy={ops.busy}
@@ -31,7 +32,7 @@ function ServerDockerContainerLogsPage() {
       onRefresh={ops.refreshLogs}
       onCancel={ops.cancel}
     >
-      <DockerContainerLogsPage serverId={id} containerId={containerId} ops={ops} />
+      <DockerContainerLogsPage containerId={containerId} ops={ops} />
     </EntityOpsChrome>
   );
 }

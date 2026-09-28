@@ -21,7 +21,7 @@ export function FleetCharts({ from, to, points, servers }: FleetChartsProps) {
   const handleFormatSeriesValue = (value: number) => `${value.toFixed(1)}%`;
 
   return (
-    <div className="grid gap-2 lg:grid-cols-2">
+    <div className="grid gap-3 lg:grid-cols-2">
       <ChartCard
         id="fleet-load"
         heading="Load average (1m)"

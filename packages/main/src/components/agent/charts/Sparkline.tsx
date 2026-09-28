@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import { cn } from "@monrep/utils";
 import { areaY, defineChart, lineY } from "@tanstack/charts";
 import { Chart } from "@tanstack/charts/react";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 import { scaleUtc } from "d3-scale";
-import { CHART_MOTION } from "./chartTheme";
+import { CHART_MOTION, CHART_PALETTE_CLASS } from "./chartTheme";
 
 type SparklineProps = {
   data: Array<{ id: string; at: Date; value: number }>;
@@ -34,14 +35,14 @@ export function Sparkline({ data, color }: SparklineProps) {
             y: "value",
             key: "id",
             fill: color,
-            fillOpacity: 0.12,
+            fillOpacity: 0.18,
           }),
           lineY(data, {
             x: "at",
             y: "value",
             key: "id",
             stroke: color,
-            strokeWidth: 1.5,
+            strokeWidth: 2,
           }),
         ],
         scales: {
@@ -55,6 +56,8 @@ export function Sparkline({ data, color }: SparklineProps) {
   );
 
   return (
-    <Chart definition={definition} height={40} ariaLabel="Sparkline trend" className="w-full" />
+    <div className={cn("w-full", CHART_PALETTE_CLASS)}>
+      <Chart definition={definition} height={40} ariaLabel="Sparkline trend" className="w-full" />
+    </div>
   );
 }

@@ -41,14 +41,14 @@ export function TimeAreaChart({
           y: "value",
           z: "series",
           key: "id",
-          fillOpacity: 0.12,
+          fillOpacity: 0.18,
         }),
         lineY(data, {
           x: "at",
           y: "value",
           z: "series",
           key: "id",
-          strokeWidth: 1.5,
+          strokeWidth: 2,
         }),
         crosshair({ x: { label: true }, y: false }),
       ],
@@ -58,7 +58,6 @@ export function TimeAreaChart({
       },
       color: {
         scale: seriesColor.scale,
-        legend: seriesColor.legend,
       },
       tooltip,
     });

@@ -1,14 +1,5 @@
-import { Skeleton } from "@monrep/ui/base";
-
-const BAR_HEIGHTS = [
-  { id: "b1", ratio: 0.35 },
-  { id: "b2", ratio: 0.55 },
-  { id: "b3", ratio: 0.42 },
-  { id: "b4", ratio: 0.68 },
-  { id: "b5", ratio: 0.48 },
-  { id: "b6", ratio: 0.62 },
-  { id: "b7", ratio: 0.38 },
-] as const;
+import { ChartLineData02Icon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 
 type ChartEmptyProps = {
   height: number;
@@ -20,17 +11,14 @@ export function ChartEmpty({
   message = "No metrics yet - collectors post every 30 s",
 }: ChartEmptyProps) {
   return (
-    <div className="flex flex-col gap-2" style={{ height }}>
-      <div className="flex min-h-0 flex-1 items-end gap-1 px-1" style={{ height: height - 24 }}>
-        {BAR_HEIGHTS.map((bar) => (
-          <Skeleton
-            key={bar.id}
-            className="h-[inherit] min-h-0 flex-1"
-            style={{ height: `${Math.round(bar.ratio * (height - 32))}px` }}
-          />
-        ))}
-      </div>
-      <p className="text-xs text-muted-foreground">{message}</p>
+    <div
+      className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 px-4 text-center"
+      style={{ height }}
+    >
+      <span className="flex size-9 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+        <HugeiconsIcon icon={ChartLineData02Icon} className="size-4" aria-hidden />
+      </span>
+      <p className="max-w-xs text-xs text-muted-foreground">{message}</p>
     </div>
   );
 }

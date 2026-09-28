@@ -1,4 +1,10 @@
 import { useMemo } from "react";
+import {
+  Activity01Icon,
+  AlertCircleIcon,
+  Chip02Icon,
+  HardDriveIcon,
+} from "@hugeicons/core-free-icons";
 import type { ErrorRun, MetricPoint } from "@/components/agent/metrics/types";
 import { SERIES_COLOR } from "@/components/agent/charts/chartTheme";
 import { KpiTile } from "@/components/agent/kpi/KpiTile";
@@ -57,9 +63,10 @@ export function ServerKpiStrip({
   const prevDisk = useMemo(() => avgDisk(prevPoints), [prevPoints]);
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
       <KpiTile
         label="Load (1m)"
+        icon={Activity01Icon}
         value={latest?.load1 !== undefined ? latest.load1.toFixed(2) : "—"}
         delta={delta(latest?.load1, kpis.prevAvgLoad1)}
         deltaFormat={(d) => `${d > 0 ? "+" : ""}${d.toFixed(2)}`}
@@ -70,6 +77,7 @@ export function ServerKpiStrip({
       />
       <KpiTile
         label="Memory used"
+        icon={Chip02Icon}
         value={latest?.memPct !== undefined ? latest.memPct.toFixed(1) : "—"}
         unit={latest?.memPct !== undefined ? "%" : undefined}
         delta={delta(latest?.memPct, kpis.prevAvgMemPct)}
@@ -81,6 +89,7 @@ export function ServerKpiStrip({
       />
       <KpiTile
         label="Disk used"
+        icon={HardDriveIcon}
         value={latest?.diskPct !== undefined ? latest.diskPct.toFixed(1) : "—"}
         unit="%"
         delta={delta(latest?.diskPct, prevDisk)}
@@ -92,6 +101,7 @@ export function ServerKpiStrip({
       />
       <KpiTile
         label="New kernel messages"
+        icon={AlertCircleIcon}
         value={String(kpis.errorLines)}
         delta={delta(kpis.errorLines, kpis.prevErrorLines)}
         deltaFormat={(d) => `${d > 0 ? "+" : ""}${d}`}

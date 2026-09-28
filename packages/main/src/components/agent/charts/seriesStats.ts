@@ -8,7 +8,10 @@ export type SeriesStats = {
   lastAt: number;
 };
 
-/** Aggregate min/max/latest per series for legends and expand tables. */
+/**
+ * Aggregate min/max/latest per series for legends and expand tables.
+ * Rows keep first-appearance order so legend index N matches palette color N.
+ */
 export function seriesStats(data: ReadonlyArray<SeriesPoint>): Array<SeriesStats> {
   const map = new Map<string, { latest?: number; min?: number; max?: number; lastAt: number }>();
   for (const row of data) {
@@ -25,7 +28,5 @@ export function seriesStats(data: ReadonlyArray<SeriesPoint>): Array<SeriesStats
       cur.latest = row.value;
     }
   }
-  return [...map.entries()]
-    .map(([name, stats]) => ({ name, ...stats }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  return [...map.entries()].map(([name, stats]) => ({ name, ...stats }));
 }

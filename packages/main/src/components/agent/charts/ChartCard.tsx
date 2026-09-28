@@ -34,11 +34,14 @@ export function ChartCard({
   const hasSeries = series !== undefined && series.length > 0;
 
   return (
-    <section className="flex flex-col gap-2 rounded-md border border-border/50 bg-card/30 p-2.5">
+    <section
+      aria-label={heading}
+      className="group flex min-w-0 flex-col gap-3 rounded-lg border border-border/60 bg-card/40 p-3 transition-colors hover:bg-card/60"
+    >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 space-y-1">
+        <div className="flex min-w-0 flex-col gap-1.5">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <h3 className="text-sm font-medium">{heading}</h3>
+            <h3 className="text-sm font-semibold">{heading}</h3>
             {caption ? (
               <span className="font-mono text-[11px] text-muted-foreground">{caption}</span>
             ) : null}
@@ -49,11 +52,11 @@ export function ChartCard({
           type="button"
           variant="ghost"
           size="icon"
-          className="size-7 shrink-0"
-          aria-label="Expand chart"
+          className="size-7 shrink-0 text-muted-foreground opacity-70 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100"
+          aria-label={`Expand ${heading} chart`}
           onClick={openDialog}
         >
-          <HugeiconsIcon icon={ExpandIcon} className="size-5" aria-hidden />
+          <HugeiconsIcon icon={ExpandIcon} className="size-4" aria-hidden />
         </Button>
       </div>
       {open ? (
