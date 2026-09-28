@@ -8,7 +8,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { analyzer } from "vite-bundle-analyzer";
 import type { ServerOptions as HttpsServerOptions } from "node:https";
-import { CANONICAL_ORIGIN } from "./src/brand.gen";
+import { CANONICAL_ORIGIN } from "./src/brand.gen.ts";
 
 const DOMAIN = CANONICAL_ORIGIN;
 

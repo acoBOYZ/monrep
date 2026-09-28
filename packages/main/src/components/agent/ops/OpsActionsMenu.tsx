@@ -1,4 +1,4 @@
-import { MoreHorizontal } from "@hugeicons/core-free-icons";
+import { MoreVertical } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, SmartPopoverTrigger } from "@monrep/ui/base";
 import { createOpsActionsMenuRenderer } from "./opsActionsMenuRenderer";
@@ -25,7 +25,7 @@ export function OpsActionsMenu({
       content={createOpsActionsMenuRenderer({ name, onStart, onStop, onRestart })}
     >
       <Button type="button" size="sm" variant="ghost" disabled={disabled} aria-label="Actions">
-        <HugeiconsIcon icon={MoreHorizontal} className="size-4" aria-hidden />
+        <HugeiconsIcon icon={MoreVertical} className="size-4" aria-hidden />
       </Button>
     </SmartPopoverTrigger>
   );

@@ -35,18 +35,22 @@ export function KpiTile({
   const showSpark = spark !== undefined && spark.length >= 2;
 
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-border/60 bg-card/40 p-3">
+    <div className="flex flex-col gap-1.5 rounded-md border border-border/50 bg-card/30 p-2.5">
       <p className="text-xs text-muted-foreground">{label}</p>
       <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-1">
         <ImpactFlash watch={value}>
-          <span className="text-2xl font-semibold tabular-nums">{value}</span>
+          <span className="text-2xl font-semibold tracking-tight tabular-nums">{value}</span>
         </ImpactFlash>
         {unit ? <span className="text-xs text-muted-foreground">{unit}</span> : null}
         {deltaText && delta !== undefined ? (
           <KpiDeltaBadge delta={delta} deltaText={deltaText} invert={invert} />
         ) : null}
       </div>
-      {showSpark ? <Sparkline data={[...spark]} color={sparkColor} /> : null}
+      {showSpark ? (
+        <div className="mt-0.5 w-full">
+          <Sparkline data={[...spark]} color={sparkColor} />
+        </div>
+      ) : null}
     </div>
   );
 }

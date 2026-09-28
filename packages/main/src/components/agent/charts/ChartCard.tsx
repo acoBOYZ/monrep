@@ -1,10 +1,12 @@
 import { ViewTransition } from "react";
-import { ArrowExpand01Icon } from "@hugeicons/core-free-icons";
+import { ExpandIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Button, TooltipTrigger } from "@monrep/ui/base";
+import { Button } from "@monrep/ui/base";
 import { ChartExpandDialog } from "./ChartExpandDialog";
+import { ChartSeriesLegend } from "./ChartSeriesLegend";
 import { useChartExpand } from "./useChartExpand";
 import type { ReactNode } from "react";
+import type { SeriesPoint } from "./seriesStats";
 
 const CARD_CHART_HEIGHT = 200;
 
@@ -12,38 +14,47 @@ type ChartCardProps = {
   id: string;
   heading: string;
   caption?: string;
-  latest?: string;
+  series?: ReadonlyArray<SeriesPoint>;
+  formatSeriesValue?: (value: number) => string;
   renderChart: (opts: { height: number }) => ReactNode;
   expanded: ReactNode;
 };
 
-export function ChartCard({ id, heading, caption, latest, renderChart, expanded }: ChartCardProps) {
+export function ChartCard({
+  id,
+  heading,
+  caption,
+  series,
+  formatSeriesValue,
+  renderChart,
+  expanded,
+}: ChartCardProps) {
   const { open, openDialog, closeDialog } = useChartExpand();
   const transitionName = `chart-${id}`;
+  const hasSeries = series !== undefined && series.length > 0;
 
   return (
-    <section className="flex flex-col gap-2 rounded-lg border border-border/60 bg-card/40 p-3">
+    <section className="flex flex-col gap-2 rounded-md border border-border/50 bg-card/30 p-2.5">
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className="text-sm font-medium">{heading}</h3>
-          {caption ? (
-            <span className="font-mono text-xs text-muted-foreground">{caption}</span>
-          ) : null}
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <h3 className="text-sm font-medium">{heading}</h3>
+            {caption ? (
+              <span className="font-mono text-[11px] text-muted-foreground">{caption}</span>
+            ) : null}
+          </div>
+          {hasSeries ? <ChartSeriesLegend data={series} formatValue={formatSeriesValue} /> : null}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {latest ? <span className="font-mono text-sm tabular-nums">{latest}</span> : null}
-          <TooltipTrigger content="Expand">
-            <Button
-              type="button"
-              variant="ghost"
-              size="iconxs"
-              aria-label="Expand chart"
-              onClick={openDialog}
-            >
-              <HugeiconsIcon icon={ArrowExpand01Icon} className="size-4" aria-hidden />
-            </Button>
-          </TooltipTrigger>
-        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label="Expand chart"
+          onClick={openDialog}
+        >
+          <HugeiconsIcon icon={ExpandIcon} className="size-5" aria-hidden />
+        </Button>
       </div>
       {open ? (
         <div aria-hidden style={{ height: CARD_CHART_HEIGHT }} />

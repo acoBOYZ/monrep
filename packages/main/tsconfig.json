@@ -15,7 +15,9 @@
       "@monrep/runtime/*": ["../runtime/src/*"],
       "@monrep/db": ["../db/src"],
       "@monrep/db/*": ["../db/src/*"]
-    }
+    },
+
+    "allowImportingTsExtensions": true,
   },
   "include": ["**/*.ts", "**/*.tsx", "doctor.config.ts"],
   "exclude": ["node_modules", "dist"]

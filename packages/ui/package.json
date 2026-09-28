@@ -31,7 +31,7 @@
     "@monrep/utils": "workspace:^",
     "@ncdai/react-wheel-picker": "^1.2.3",
     "@tanstack/react-hotkeys": "^0.12.1",
-    "@tanstack/react-pacer": "^0.23.0",
+    "@tanstack/react-pacer": "^0.24.0",
     "@tanstack/react-store": "^0.11.1",
     "@tanstack/react-virtual": "^3.14.13",
     "class-variance-authority": "^0.7.1",

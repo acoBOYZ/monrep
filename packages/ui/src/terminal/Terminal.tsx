@@ -103,6 +103,18 @@ export const Terminal = ({
     },
   );
 
+  useHotkey(
+    "Mod+J",
+    (event) => {
+      event.preventDefault();
+      handleMaximize();
+    },
+    {
+      target: hotkeyTarget,
+      ignoreInputs: false,
+    },
+  );
+
   useTerminalBodyInteractions({
     wrapperRef,
     bodyRef,

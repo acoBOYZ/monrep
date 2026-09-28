@@ -26,8 +26,12 @@ export function FleetRow({ server, latest, msgs }: FleetRowProps) {
 
   return (
     <TableRow className="h-10">
-      <TableCell className="font-medium">
-        <Link to="/servers/$id" params={{ id: server.id }} className="hover:underline">
+      <TableCell className="truncate font-medium">
+        <Link
+          to="/servers/$id"
+          params={{ id: server.id }}
+          className="hover:text-primary hover:underline"
+        >
           {server.name}
         </Link>
       </TableCell>

@@ -1,4 +1,4 @@
-import { UserBlock01Icon } from "@hugeicons/core-free-icons";
+import { RemoveCircleHalfDotIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button, CopyableButton } from "@monrep/ui/base";
 import { tryCatch } from "@monrep/utils";
@@ -50,7 +50,7 @@ export function RevokeServerButton({
       step2AcknowledgeLabel="I understand the consequences"
       trigger={
         <Button type="button" variant="destructive" size={size}>
-          <HugeiconsIcon icon={UserBlock01Icon} className="size-4" aria-hidden />
+          <HugeiconsIcon icon={RemoveCircleHalfDotIcon} className="size-4" aria-hidden />
           Revoke
         </Button>
       }

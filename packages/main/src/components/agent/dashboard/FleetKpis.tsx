@@ -35,7 +35,7 @@ export function FleetKpis({ loading, online, total, points, errors, kpis }: Flee
   );
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
       <KpiTile
         label="Servers online"
         value={`${online}/${total}`}

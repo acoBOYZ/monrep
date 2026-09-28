@@ -25,12 +25,14 @@ export function ServerCharts({ serverId, from, to, points }: ServerChartsProps) 
   );
   const memSeries = useMemo(() => toSeries(points, "memPct", () => "mem"), [points]);
   const memEmpty = useMemo(() => memoryChartEmptyMessage(points), [points]);
+  const handleFormatSeriesValue = (value: number) => `${value.toFixed(1)}%`;
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-2 lg:grid-cols-2">
       <ChartCard
         id={`srv-${serverId}-load`}
         heading="Load average"
+        series={loadSeries}
         renderChart={({ height }) => (
           <TimeLineChart
             data={loadSeries}
@@ -60,6 +62,8 @@ export function ServerCharts({ serverId, from, to, points }: ServerChartsProps) 
       <ChartCard
         id={`srv-${serverId}-mem`}
         heading="Memory used"
+        series={memSeries}
+        formatSeriesValue={handleFormatSeriesValue}
         renderChart={({ height }) => (
           <TimeAreaChart
             data={memSeries}
