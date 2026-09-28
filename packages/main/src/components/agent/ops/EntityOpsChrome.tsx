@@ -96,7 +96,7 @@ export function EntityOpsChrome({
 
       {!online ? (
         <Alert>
-          <AlertDescription>Agent offline — connect the daemon to run commands.</AlertDescription>
+          <AlertDescription>Agent offline — connect the agent to run commands.</AlertDescription>
         </Alert>
       ) : null}
       {error ? (

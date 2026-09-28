@@ -15,11 +15,7 @@ const BACKOFF_MAX: Duration = Duration::from_secs(30);
 /// Run until Ctrl-C or permanent unenroll (`DeviceUnknown`). Survives transient runtime errors.
 pub async fn run_forever() -> anyhow::Result<()> {
   let mut health = HealthBus::new();
-  health.emit(
-    HealthLevel::Info,
-    "supervisor_start",
-    "daemon supervisor started",
-  );
+  health.emit(HealthLevel::Info, "supervisor_start", "supervisor started");
 
   let mut backoff = BACKOFF_START;
 
@@ -88,7 +84,7 @@ async fn supervised_session(health: &mut HealthBus) -> anyhow::Result<bool> {
     Err(AgentError::DeviceUnknown) => {
       match store::clear() {
         Ok(true) => {
-          let _ = writeln_stdout("daemon: cleared stale credentials (device unknown/revoked)");
+          let _ = writeln_stdout("run: cleared stale credentials (device unknown/revoked)");
         }
         Ok(false) => {}
         Err(e) => {
@@ -103,7 +99,7 @@ async fn supervised_session(health: &mut HealthBus) -> anyhow::Result<bool> {
       health.emit(
         HealthLevel::Error,
         "not_enrolled",
-        "device unknown or revoked; credentials cleared — run monrep enroll again",
+        "device unknown or revoked; credentials cleared — run monrep link again",
       );
       print_health(health);
       Ok(false)

@@ -70,8 +70,7 @@ Prod install:
 
 ```bash
 curl -fsSL https://app.monrep.com/install | bash
-monrep enroll --url https://<your-app> --token <one-time>
-monrep daemon
+sudo monrep init --url https://<your-app> --token <one-time>
 ```
 
 Local bind to Vite main (`https://localhost:5274`): see [`packages/agent/README.md`](./packages/agent/README.md) **Local (main + agent)** — `bun run --cwd packages/agent local`.
