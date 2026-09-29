@@ -54,9 +54,9 @@ export function ServersTable({ rows, isReady }: ServersTableProps) {
                   nativeButton={false}
                   render={<Link to="/servers/new" />}
                   size="sm"
-                  variant="outline"
+                  variant="link"
                 >
-                  Add server
+                  Add a server.
                 </Button>
               </TableCell>
             </TableRow>

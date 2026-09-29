@@ -1,9 +1,4 @@
-import {
-  Activity01Icon,
-  ContainerIcon,
-  Database01Icon,
-  Settings03Icon,
-} from "@hugeicons/core-free-icons";
+import { ContainerIcon, CpuIcon, Database01Icon, Diamond02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SmartPopoverTrigger } from "@monrep/ui/base";
 import { HealthEventsPopoverContent } from "./HealthEventsPopoverContent";
@@ -33,8 +28,8 @@ export function ServerOpsGlance({ serverId, online, health }: ServerOpsGlancePro
   return (
     <section aria-labelledby="server-ops-heading" className="flex flex-col gap-3 pt-2">
       <div className="flex items-center gap-2">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-          <HugeiconsIcon icon={Settings03Icon} className="size-3.5" aria-hidden />
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+          <HugeiconsIcon icon={Diamond02Icon} className="size-6 text-cool" strokeWidth={2} />
         </span>
         <div className="min-w-0">
           <h2 id="server-ops-heading" className="text-sm font-semibold">
@@ -50,6 +45,7 @@ export function ServerOpsGlance({ serverId, online, health }: ServerOpsGlancePro
           label="Docker"
           detail={dockerDetail(dockerTotal, dockerBad, online)}
           icon={ContainerIcon}
+          iconClassName="text-sky-500"
           to="/servers/$id/docker"
           params={{ id: serverId }}
           watch={dockerBad ?? "scan"}
@@ -60,6 +56,7 @@ export function ServerOpsGlance({ serverId, online, health }: ServerOpsGlancePro
           label="Services"
           detail={servicesDetail(servicesFailed, online)}
           icon={Database01Icon}
+          iconClassName="text-orange-500"
           to="/servers/$id/services"
           params={{ id: serverId }}
           watch={servicesFailed ?? "scan"}
@@ -80,7 +77,8 @@ export function ServerOpsGlance({ serverId, online, health }: ServerOpsGlancePro
             <OpsGlanceFace
               label="Health"
               detail={healthGlance.detail}
-              icon={Activity01Icon}
+              icon={CpuIcon}
+              iconClassName="text-lime-500"
               watch={healthGlance.watch}
               badgeVariant={healthGlance.badgeVariant}
               badgeLabel={healthGlance.badgeLabel}

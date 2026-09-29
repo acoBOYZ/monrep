@@ -12,8 +12,8 @@ export function ServerMetricsToolbar({ range, onRangeChange }: ServerMetricsTool
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 pt-2">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-          <HugeiconsIcon icon={Analytics01Icon} className="size-3.5" aria-hidden />
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
+          <HugeiconsIcon icon={Analytics01Icon} className="size-6 text-cool" strokeWidth={2} />
         </span>
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">Metrics</h2>

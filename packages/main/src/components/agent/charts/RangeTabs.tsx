@@ -17,7 +17,7 @@ type RangeTabsProps = {
 export function RangeTabs({ value, onChange }: RangeTabsProps) {
   return (
     <Tabs value={value} onValueChange={onChange}>
-      <TabsList size="sm">
+      <TabsList>
         {RANGES.map((range) => (
           <TabsTrigger key={range} value={range}>
             {RANGE_LABEL[range]}

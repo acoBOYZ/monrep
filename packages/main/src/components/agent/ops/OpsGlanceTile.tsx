@@ -8,6 +8,7 @@ type OpsGlanceTileProps = {
   label: string;
   detail: string;
   icon: IconSvgElement;
+  iconClassName?: string;
   to: LinkProps["to"];
   params?: LinkProps["params"];
   watch: string | number;
@@ -19,6 +20,7 @@ export function OpsGlanceTile({
   label,
   detail,
   icon,
+  iconClassName,
   to,
   params,
   watch,
@@ -36,6 +38,7 @@ export function OpsGlanceTile({
         label={label}
         detail={detail}
         icon={icon}
+        iconClassName={iconClassName}
         watch={watch}
         badgeVariant={badgeVariant}
         badgeLabel={badgeLabel}

@@ -1,3 +1,5 @@
+import { ServerIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Badge, Button } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import { Link } from "@tanstack/react-router";
@@ -33,7 +35,8 @@ export function FleetHeader({ online, offline, pending, range, onRangeChange }: 
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <RangeTabs value={range} onChange={onRangeChange} />
-        <Button nativeButton={false} variant="outline" size="sm" render={<Link to="/servers" />}>
+        <Button nativeButton={false} size="sm" render={<Link to="/servers" />}>
+          <HugeiconsIcon icon={ServerIcon} className="size-4" />
           Servers
         </Button>
       </div>

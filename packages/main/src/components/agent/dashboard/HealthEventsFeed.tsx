@@ -1,4 +1,4 @@
-import { Activity01Icon } from "@hugeicons/core-free-icons";
+import { CpuIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { storeTimer } from "@monrep/runtime";
 import { Badge, ScrollArea, TooltipTrigger } from "@monrep/ui/base";
@@ -56,7 +56,7 @@ export function HealthEventsFeed({ health }: HealthEventsFeedProps) {
     >
       <div className="flex items-center gap-2">
         <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground">
-          <HugeiconsIcon icon={Activity01Icon} className="size-7 text-primary" aria-hidden />
+          <HugeiconsIcon icon={CpuIcon} className="size-7 text-primary" aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
           <h2 id="health-feed-heading" className="text-sm font-semibold">
@@ -76,7 +76,7 @@ export function HealthEventsFeed({ health }: HealthEventsFeedProps) {
       {events.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/60 bg-muted/20 px-4 py-8 text-center">
           <span className="flex size-9 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-            <HugeiconsIcon icon={Activity01Icon} className="size-4" aria-hidden />
+            <HugeiconsIcon icon={CpuIcon} className="size-4" aria-hidden />
           </span>
           <p className="text-sm font-medium">No health events</p>
           <p className="max-w-xs text-xs text-muted-foreground">

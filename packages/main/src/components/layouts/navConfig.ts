@@ -1,4 +1,4 @@
-import { Add01Icon, DashboardSquare01Icon, Server } from "@hugeicons/core-free-icons";
+import { AddCircleHalfDotIcon, DashboardCircleIcon, ServerIcon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { LinkProps } from "@tanstack/react-router";
 
@@ -18,17 +18,17 @@ const FLEET_CARDS: Array<NavCard> = [
   {
     to: "/dashboard",
     title: "Dashboard",
-    icon: DashboardSquare01Icon,
+    icon: DashboardCircleIcon,
   },
   {
     to: "/servers",
     title: "Servers",
-    icon: Server,
+    icon: ServerIcon,
   },
   {
     to: "/servers/new",
     title: "Add server",
-    icon: Add01Icon,
+    icon: AddCircleHalfDotIcon,
   },
 ];
 
