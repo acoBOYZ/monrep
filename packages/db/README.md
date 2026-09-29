@@ -22,6 +22,7 @@ Library package (copy-pasteable). App catalogs live in Worker packages (e.g. `pa
    - Worker / serverFn: call `bindDoApp()` (no React)
 
 App cookbook (examples): [`packages/main/README.md`](../main/README.md).  
-CLI / config: [`packages/codegen/README.md`](../codegen/README.md).
+CLI / config: [`packages/codegen/README.md`](../codegen/README.md).  
+New apps: [`packages/.templates/README.md`](../.templates/README.md).
 
 See [`AGENTS.md`](./AGENTS.md).

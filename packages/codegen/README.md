@@ -50,6 +50,8 @@ Public barrels next to `outDir` (created if missing, never overwritten): `host.t
 
 ## Second Worker
 
+Prefer `bun run create:app <name>` (see [packages/.templates/README.md](../.templates/README.md)). Or by hand:
+
 1. Add `packages/<name>/codegen.config.ts` (`doDir` + `outDir`)
 2. Add hand `src/db/do/*.ts` (+ schemas)
 3. `bun run codegen -- --package <name>`

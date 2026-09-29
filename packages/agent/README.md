@@ -4,10 +4,10 @@ Outbound tunnel agent for one monrep control plane. The binary is dumb: product 
 
 ## Install (Linux)
 
-Use **bash** (not `sh` — Ubuntu `/bin/sh` is dash and breaks `set -o pipefail`):
+Use **bash** (not `sh`. Ubuntu `/bin/sh` is dash and breaks `set -o pipefail`):
 
 ```bash
-curl -fsSL https://app.monrep.com/install | bash
+curl -fsSL https://monrep.dev/install | bash
 ```
 
 Downloads the latest `monrep-linux-x86_64` or `monrep-linux-aarch64` asset from GitHub Releases into `/usr/local/bin` (or `~/.local/bin`). Domains, install path, repo, and asset prefix live in **local** root `brand.json` (gitignored; start from [`brand.json.example`](../../brand.json.example)). `bun run setup:dev`, `bun run up`, builds, and CI all run `bun run sync:brand`.
@@ -26,7 +26,7 @@ One entrypoint binds the agent to Vite main with the repo Vite CA (fixes `Unknow
 
 ```bash
 bun run setup:dev
-bun run --cwd packages/main dev          # terminal A — https://localhost:5274
+bun run --cwd packages/main dev          # terminal A: https://localhost:5274
 # UI → Add server → copy enroll token
 bun run --cwd packages/agent local -- --token <token>   # terminal B
 # already linked (run only; pass --token again to unlink + re-bind):
@@ -60,7 +60,7 @@ sudo monrep unlink   # clears cred.json (keeps config.json / auto-update prefs)
 sudo monrep init --url https://your-app.example --token <new-token> --force
 ```
 
-If the agent service is still running after revoke, token refresh returns `DeviceUnknown`: the agent clears `cred.json`, emits `not_enrolled`, and stops the retry loop — then `init` / `link` again as above.
+If the agent service is still running after revoke, token refresh returns `DeviceUnknown`: the agent clears `cred.json`, emits `not_enrolled`, and stops the retry loop. Then `init` / `link` again as above.
 
 ### Self-upgrade
 
@@ -100,10 +100,10 @@ bun run --cwd packages/agent test
 
 ## Security
 
-- **Main-only peer** — no local control API; nothing else connects in.
-- **Outbound only** — `run` dials the pinned control plane (HTTPS/WSS). No inbound bind.
-- **1:1 binding** — one linked agent ↔ one `control_url`. Second link is refused until `monrep unlink`.
-- **Device credential** — stored under the XDG config dir as `cred.json` mode `0600`. Secrets are never printed.
+- **Main-only peer:** no local control API. Nothing else connects in.
+- **Outbound only:** `run` dials the pinned control plane (HTTPS/WSS). No inbound bind.
+- **1:1 binding:** one linked agent ↔ one `control_url`. Second link is refused until `monrep unlink`.
+- **Device credential:** stored under the XDG config dir as `cred.json` mode `0600`. Secrets are never printed.
 
 ## Control-plane HTTP (main)
 
@@ -118,16 +118,17 @@ bun run --cwd packages/agent test
 Envelope:
 
 ```json
-{ "v": 1, "id": "…", "op": "hello|heartbeat|run|cancel|update|config|agent.health|result|error|event", "body": { } }
+{ "v": 1, "id": "…", "op": "hello|heartbeat|run|cancel|update|config|agent.health|metrics.*|result|error|event", "body": { } }
 ```
 
 | Op | Direction | Role |
 | --- | --- | --- |
 | `hello` | agent → main | session hello (+ version) |
-| `config` | main → agent | push `autoUpdate` |
+| `config` | main → agent | push `autoUpdate` + metrics prefs |
 | `update` | main → agent | trigger self-update |
 | `heartbeat` | both | liveness |
 | `run` / `cancel` | main → agent | spawn / stop argv |
+| `metrics.query` / `metrics.latest` / `events.query` | main → agent | local SQLite timeseries |
 | `agent.health` | agent → main | health events |
 | `result` / `error` / `event` | agent → main | outcomes + streams |
 
@@ -135,6 +136,7 @@ Envelope:
 
 PRs that touch `packages/agent/**` run [`.github/workflows/agent-checks.yml`](../../.github/workflows/agent-checks.yml): `fmtcheck`, `lint:rust`, `typecheck:rust` (incl. miri), `doctor:rust`, `test`. Tag releases attach linux binaries via [`.github/workflows/release.yml`](../../.github/workflows/release.yml) and assert `monrep --version` matches the tag / `Cargo.toml`.
 
-## Status
+## Related
 
-Phase 4: install.sh, release assets, self-update (CLI + auto + app). Phase 5+: Docker / PTY product surfaces.
+- Control plane app: [packages/main/README.md](../main/README.md)
+- Brand / install script: root `brand.json` + `bun run sync:brand`

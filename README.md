@@ -39,6 +39,8 @@ Because the control plane is not a random Node script. We want:
 
 The packages under `packages/` are the building blocks for that path (web shell, db/stream codegen, UI, etc.). Product surface grows as the roadmap items land.
 
+New Worker app from a seed: `bun run create:app <name>` (see [packages/.templates/README.md](./packages/.templates/README.md)).
+
 ## Status
 
 Early. Public so people can follow along and contribute. Expect breakage; expect the roadmap to move.
@@ -69,11 +71,11 @@ Why we need Bun + `openssl`. certs are only for the Vite app becasue streamdb op
 Prod install:
 
 ```bash
-curl -fsSL https://app.monrep.com/install | bash
+curl -fsSL https://monrep.dev/install | bash
 sudo monrep init --url https://<your-app> --token <one-time>
 ```
 
-Local bind to Vite main (`https://localhost:5274`): see [`packages/agent/README.md`](./packages/agent/README.md) **Local (main + agent)** — `bun run --cwd packages/agent local`.
+Local bind to Vite main (`https://localhost:5274`): see [`packages/agent/README.md`](./packages/agent/README.md) **Local (main + agent)**. `bun run --cwd packages/agent local`.
 ```bash
 bun run dev # or bun run --cwd packages/main dev 
 bun run --cwd packages/agent local -- --token <token>
