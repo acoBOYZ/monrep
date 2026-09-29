@@ -64,10 +64,10 @@ export default createDoModule("agent")({
       indexes: ["serverId"],
       schema: {
         serverId: z.string(),
+        /** Agent local metrics scrape on/off (pushed as metricsEnabled). */
         backgroundEnabled: z.boolean(),
         autoUpdate: z.boolean().optional(),
-        /** Serialized CollectorsMapSchema JSON */
-        collectorsJson: z.string(),
+        metricsIntervalSec: z.number().int().positive().optional(),
         updatedAt: z.string().optional(),
       },
       onInsert: ({ ctx }) => ({

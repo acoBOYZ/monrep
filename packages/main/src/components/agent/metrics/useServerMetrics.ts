@@ -1,76 +1,155 @@
-import { useMemo } from "react";
-import { and, eq, gte, inArray, lte, useLiveQuery } from "@tanstack/react-db";
+import { useEffect, useState } from "react";
 import { mergeLatest, sumErrorLines, windowStats } from "./aggregate";
-import { groupSamples } from "./groupRuns";
-import type { TSampleDo } from "@/db/types";
-import { useStreamDb } from "@/db/useStreamDb";
+import {
+  CHART_METRIC_NAMES,
+  eventsToHealth,
+  seriesToMetricPoints,
+  stepMsForRange,
+} from "./seriesMap";
+import { sessionRequest } from "./sessionRequest";
+import type { MetricsSeries } from "./seriesMap";
+import type { ErrorRun, HealthEvent, MetricPoint } from "./types";
 
-const METRIC_KINDS = ["monitor", "error", "overload"] as const;
-const EMPTY_SAMPLES: ReadonlyArray<TSampleDo> = [];
+const EMPTY_POINTS: ReadonlyArray<MetricPoint> = [];
+const EMPTY_ERRORS: ReadonlyArray<ErrorRun> = [];
+const EMPTY_HEALTH: ReadonlyArray<HealthEvent> = [];
+
+type QueryState = {
+  points: ReadonlyArray<MetricPoint>;
+  prevPoints: ReadonlyArray<MetricPoint>;
+  health: ReadonlyArray<HealthEvent>;
+  ready: boolean;
+};
+
+function parseSeries(body: unknown): Array<MetricsSeries> {
+  if (!body || typeof body !== "object") return [];
+  const series = (body as { series?: unknown }).series;
+  if (!Array.isArray(series)) return [];
+  const out: Array<MetricsSeries> = [];
+  for (const row of series) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as { name?: unknown; dims?: unknown; points?: unknown };
+    if (typeof r.name !== "string") continue;
+    const dims = typeof r.dims === "string" ? r.dims : "{}";
+    const points: Array<[number, number]> = [];
+    if (Array.isArray(r.points)) {
+      for (const p of r.points) {
+        if (!Array.isArray(p) || p.length < 2) continue;
+        const at = Number(p[0]);
+        const value = Number(p[1]);
+        if (Number.isFinite(at) && Number.isFinite(value)) points.push([at, value]);
+      }
+    }
+    out.push({ name: r.name, dims, points });
+  }
+  return out;
+}
+
+function parseEvents(body: unknown): Array<{ at: number; kind: string; payload: unknown }> {
+  if (!body || typeof body !== "object") return [];
+  const events = (body as { events?: unknown }).events;
+  if (!Array.isArray(events)) return [];
+  const out: Array<{ at: number; kind: string; payload: unknown }> = [];
+  for (const row of events) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as { at?: unknown; kind?: unknown; payload?: unknown };
+    const at = typeof r.at === "number" ? r.at : Number(r.at);
+    if (!Number.isFinite(at) || typeof r.kind !== "string") continue;
+    out.push({ at, kind: r.kind, payload: r.payload });
+  }
+  return out;
+}
 
 export function useServerMetrics(serverId: string, from: number, to: number) {
-  const { db, isReady } = useStreamDb("agent_live");
   const windowMs = to - from;
   const prevFrom = from - windowMs;
-  const fromIso = new Date(prevFrom).toISOString();
-  const toIso = new Date(to).toISOString();
-  const rangeFromIso = new Date(from).toISOString();
-
-  const { data: samplesLive } = useLiveQuery({
-    query: (q) => {
-      if (!db || !serverId) return null;
-      return q
-        .from({ s: db.collections.sample })
-        .where(({ s }) =>
-          and(
-            eq(s.serverId, serverId),
-            gte(s.at, fromIso),
-            lte(s.at, toIso),
-            inArray(s.kind, [...METRIC_KINDS]),
-          ),
-        );
-    },
+  const [state, setState] = useState<QueryState>({
+    points: EMPTY_POINTS,
+    prevPoints: EMPTY_POINTS,
+    health: EMPTY_HEALTH,
+    ready: false,
   });
 
-  const { data: healthLive } = useLiveQuery({
-    query: (q) => {
-      if (!db || !serverId) return null;
-      return q
-        .from({ s: db.collections.sample })
-        .where(({ s }) =>
-          and(
-            eq(s.serverId, serverId),
-            eq(s.kind, "health"),
-            gte(s.at, rangeFromIso),
-            lte(s.at, toIso),
-          ),
-        )
-        .orderBy(({ s }) => s.at, "desc")
-        .limit(12);
-    },
-  });
+  useEffect(() => {
+    if (!serverId) return;
+    let cancelled = false;
+    const run = async () => {
+      try {
+        const stepMs = stepMsForRange(from, to);
+        const [metricsEnv, prevEnv, eventsEnv] = await Promise.all([
+          sessionRequest(serverId, "metrics.query", {
+            from,
+            to,
+            names: [...CHART_METRIC_NAMES],
+            stepMs,
+            agg: "avg",
+          }),
+          sessionRequest(serverId, "metrics.query", {
+            from: prevFrom,
+            to: from,
+            names: ["cpu.used_pct", "cpu.load.1m", "mem.used_pct", "disk.used_pct"],
+            stepMs,
+            agg: "avg",
+          }),
+          sessionRequest(serverId, "events.query", {
+            from,
+            to,
+            kinds: ["health"],
+            limit: 12,
+          }),
+        ]);
+        if (cancelled) return;
+        const points =
+          metricsEnv.op === "result"
+            ? seriesToMetricPoints(serverId, parseSeries(metricsEnv.body))
+            : [];
+        const prevPoints =
+          prevEnv.op === "result" ? seriesToMetricPoints(serverId, parseSeries(prevEnv.body)) : [];
+        const health =
+          eventsEnv.op === "result" ? eventsToHealth(serverId, parseEvents(eventsEnv.body)) : [];
+        setState({ points, prevPoints, health, ready: true });
+      } catch {
+        if (!cancelled) {
+          setState({
+            points: EMPTY_POINTS,
+            prevPoints: EMPTY_POINTS,
+            health: EMPTY_HEALTH,
+            ready: true,
+          });
+        }
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [serverId, from, to, prevFrom]);
 
-  const samples = samplesLive ?? EMPTY_SAMPLES;
-  const healthRows = healthLive ?? EMPTY_SAMPLES;
-
-  const parsed = useMemo(() => groupSamples(samples), [samples]);
-  const health = useMemo(() => groupSamples(healthRows).health, [healthRows]);
-
-  const points = parsed.metrics.filter((p) => p.at >= from && p.at <= to);
-  const prevPoints = parsed.metrics.filter((p) => p.at >= prevFrom && p.at < from);
-  const errors = parsed.errors.filter((e) => e.at >= from && e.at <= to);
-  const latest = mergeLatest(parsed.metrics);
-
+  const points = state.points;
+  const prevPoints = state.prevPoints;
+  const errors = EMPTY_ERRORS;
+  const health = state.health;
+  const latest = mergeLatest(points);
   const cur = windowStats(points, from, to);
   const prev = windowStats(prevPoints, prevFrom, from);
   const kpis = {
+    avgCpuPct: cur.avgCpuPct,
+    prevAvgCpuPct: prev.avgCpuPct,
     avgLoad1: cur.avgLoad1,
     prevAvgLoad1: prev.avgLoad1,
     avgMemPct: cur.avgMemPct,
     prevAvgMemPct: prev.avgMemPct,
-    errorLines: sumErrorLines(parsed.errors, from, to),
-    prevErrorLines: sumErrorLines(parsed.errors, prevFrom, from),
+    errorLines: sumErrorLines(errors, from, to),
+    prevErrorLines: sumErrorLines(errors, prevFrom, from),
   };
 
-  return { isReady, points, prevPoints, errors, health, latest, kpis };
+  return {
+    isReady: state.ready,
+    points,
+    prevPoints,
+    errors,
+    health,
+    latest,
+    kpis,
+  };
 }

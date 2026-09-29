@@ -104,7 +104,6 @@ const TooltipFloatingShell = ({ state, onClose, className, children }: ShellProp
         data-state={animationState}
         data-side={side}
         className={cn(
-          "hidden sm:block",
           "pointer-events-auto relative text-xs",
           "rounded-lg border border-muted shadow-[0_10px_30px_-10px_rgba(0,0,0,0.35)]",
           "bg-popover text-popover-foreground",

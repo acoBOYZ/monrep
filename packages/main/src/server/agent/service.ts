@@ -6,16 +6,13 @@ import {
   verifyHmacJson,
 } from "@monrep/utils";
 import { nextUlid } from "@monrep/utils/ulid";
-import { defaultCollectorsJson } from "./catalog";
 import {
   findDeviceCredByDeviceId,
   findEnrollTokenByHash,
   findServerById,
   listEnrollTokensByServerId,
-  listSamplesByServerId,
   listServers,
   loadAgentDb,
-  loadAgentLiveDb,
 } from "./db";
 import { AgentTaggedError, DeviceAccessPayloadSchema } from "./schemas";
 import type { EnrollResponse } from "./schemas";
@@ -23,6 +20,7 @@ import type { TServerDo } from "@/db/types";
 
 const ENROLL_TTL_MS = 30 * 60 * 1000;
 const ACCESS_TTL_SEC = 60 * 60;
+const DEFAULT_METRICS_INTERVAL_SEC = 30;
 
 export type MintedEnroll = {
   server: TServerDo;
@@ -50,7 +48,7 @@ export const createServerWithEnrollToken = async (name: string): Promise<MintedE
       serverId,
       backgroundEnabled: true,
       autoUpdate: true,
-      collectorsJson: defaultCollectorsJson(),
+      metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
     }).isPersisted.promise;
 
     await db.actions.upsertEnrollToken({
@@ -79,7 +77,7 @@ export const listFleetServers = async (): Promise<Array<TServerDo>> => {
 
 /** Hard-delete server row and related agent control-plane rows. */
 export const revokeServer = async (serverId: string): Promise<void> => {
-  const [db, adb] = await Promise.all([loadAgentDb(), loadAgentLiveDb()]);
+  const db = await loadAgentDb();
   try {
     const server = await findServerById(db, serverId);
     if (!server?.id) throw new AgentTaggedError({ _tag: "ServerNotFound" });
@@ -90,18 +88,11 @@ export const revokeServer = async (serverId: string): Promise<void> => {
       await db.actions.deleteEnrollToken(enrollIds).isPersisted.promise;
     }
 
-    const samples = await listSamplesByServerId(adb, serverId);
-    const sampleIds = samples.map((s) => s.id).filter((id): id is string => Boolean(id));
-    if (sampleIds.length > 0) {
-      await adb.actions.deleteSample(sampleIds).isPersisted.promise;
-    }
-
     await db.actions.deleteRuntimeConfig(serverId).isPersisted.promise;
     await db.actions.deleteDeviceCred(serverId).isPersisted.promise;
     await db.actions.deleteServer(server.id).isPersisted.promise;
   } finally {
     db.close();
-    adb.close();
   }
 };
 
@@ -159,7 +150,7 @@ export const enrollWithToken = async (
       serverId: server.id,
       backgroundEnabled: true,
       autoUpdate: true,
-      collectorsJson: defaultCollectorsJson(),
+      metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
     }).isPersisted.promise;
 
     return {

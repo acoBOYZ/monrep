@@ -6,7 +6,7 @@ import { cn } from "@monrep/utils";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { Button } from "./button";
 import { Input } from "./input";
-import type { Ref } from "react";
+import type { FocusEvent, MouseEvent, Ref } from "react";
 import type { NumericFormatProps } from "react-number-format";
 
 export interface NumberInputProps extends Omit<NumericFormatProps, "value" | "onValueChange"> {
@@ -40,6 +40,8 @@ export const NumberInput = ({
   prefix,
   value: controlledValue,
   className,
+  disabled,
+  onBlur,
   ...props
 }: NumberInputProps) => {
   const isControlled = controlledValue !== undefined;
@@ -111,6 +113,15 @@ export const NumberInput = ({
     }
   };
 
+  const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+    clampNumericInputToBounds();
+    onBlur?.(event);
+  };
+
+  const preventStepperFocusSteal = (event: MouseEvent) => {
+    event.preventDefault();
+  };
+
   return (
     <div className="flex items-center">
       <NumericFormat
@@ -122,13 +133,14 @@ export const NumberInput = ({
         fixedDecimalScale={fixedDecimalScale}
         allowNegative={min < 0}
         valueIsNumericString
-        onBlur={clampNumericInputToBounds}
+        onBlur={handleBlur}
         max={max}
         min={min}
         suffix={suffix}
         prefix={prefix}
         customInput={Input}
         placeholder={placeholder}
+        disabled={disabled}
         className={cn(
           "relative [appearance:textfield] rounded-r-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           className,
@@ -141,8 +153,9 @@ export const NumberInput = ({
           aria-label="Increase value"
           className="h-4.5 rounded-l-none rounded-br-none border-b-[0.5px] border-l-0 border-input px-2 focus-visible:relative"
           variant="outline"
+          onMouseDown={preventStepperFocusSteal}
           onClick={handleIncrement}
-          disabled={value === max}
+          disabled={disabled || value === max}
         >
           <HugeiconsIcon icon={ChevronUp} className="size-4" aria-hidden />
         </Button>
@@ -150,8 +163,9 @@ export const NumberInput = ({
           aria-label="Decrease value"
           className="h-4.5 rounded-l-none rounded-tr-none border-t-[0.5px] border-l-0 border-input px-2 focus-visible:relative"
           variant="outline"
+          onMouseDown={preventStepperFocusSteal}
           onClick={handleDecrement}
-          disabled={value === min}
+          disabled={disabled || value === min}
         >
           <HugeiconsIcon icon={ChevronDown} className="size-4" aria-hidden />
         </Button>

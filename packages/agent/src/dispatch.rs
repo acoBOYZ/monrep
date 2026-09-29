@@ -1,5 +1,6 @@
 //! Dispatch inbound frames from the active tunnel session only.
 
+use crate::metrics::MetricsDb;
 use crate::ops;
 use crate::ops::pty::PtyMap;
 use crate::ops::registry::RunRegistry;
@@ -14,6 +15,7 @@ pub async fn dispatch(
   run_slots: Arc<Semaphore>,
   ptys: PtyMap,
   pty_slots: Arc<Semaphore>,
+  metrics_db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
-  ops::handle(env, out, runs, run_slots, ptys, pty_slots).await
+  ops::handle(env, out, runs, run_slots, ptys, pty_slots, metrics_db).await
 }

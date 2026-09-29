@@ -17,7 +17,7 @@ type ServerKpiStripProps = {
   prevPoints: ReadonlyArray<MetricPoint>;
   errors: ReadonlyArray<ErrorRun>;
   kpis: {
-    prevAvgLoad1?: number;
+    prevAvgCpuPct?: number;
     prevAvgMemPct?: number;
     errorLines: number;
     prevErrorLines: number;
@@ -43,8 +43,8 @@ export function ServerKpiStrip({
   errors,
   kpis,
 }: ServerKpiStripProps) {
-  const loadSpark = useMemo(
-    () => toSeries(points, "load1", () => "me").map(({ id, at, value }) => ({ id, at, value })),
+  const cpuSpark = useMemo(
+    () => toSeries(points, "cpuPct", () => "me").map(({ id, at, value }) => ({ id, at, value })),
     [points],
   );
   const memSpark = useMemo(
@@ -65,13 +65,14 @@ export function ServerKpiStrip({
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
       <KpiTile
-        label="Load (1m)"
+        label="CPU used"
         icon={Activity01Icon}
-        value={latest?.load1 !== undefined ? latest.load1.toFixed(2) : "—"}
-        delta={delta(latest?.load1, kpis.prevAvgLoad1)}
-        deltaFormat={(d) => `${d > 0 ? "+" : ""}${d.toFixed(2)}`}
+        value={latest?.cpuPct !== undefined ? latest.cpuPct.toFixed(1) : "—"}
+        unit={latest?.cpuPct !== undefined ? "%" : undefined}
+        delta={delta(latest?.cpuPct, kpis.prevAvgCpuPct)}
+        deltaFormat={(d) => `${d > 0 ? "+" : ""}${d.toFixed(1)}%`}
         invert
-        spark={loadSpark}
+        spark={cpuSpark}
         sparkColor={SERIES_COLOR(0)}
         loading={loading}
       />

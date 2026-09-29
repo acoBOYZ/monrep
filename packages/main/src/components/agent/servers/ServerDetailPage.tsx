@@ -32,7 +32,7 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
   });
 
   if (!isReady) return <ServerDetailSkeleton />;
-  if (!server) return <ServerDetailNotFound />;
+  if (!server || !server.id) return <ServerDetailNotFound />;
   if (server.status === "pending")
     return <PendingServerPage serverId={id} name={server.name} createdAt={server.createdAt} />;
 
@@ -41,7 +41,13 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-6 sm:px-6">
       <ServerDetailHeader server={server} serverId={id} online={online} />
-      <ServerMetaRow server={server} latest={metrics.latest} />
+      <ServerMetaRow
+        serverId={id}
+        agentVersion={server.agentVersion}
+        serverDeviceId={server.deviceId}
+        serverLastSeenAt={server.lastSeenAt}
+        latest={metrics.latest}
+      />
       <ServerMetricsToolbar range={range} onRangeChange={setRange} />
       <ServerKpiStrip
         loading={!metrics.isReady}

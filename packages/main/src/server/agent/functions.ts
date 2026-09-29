@@ -2,6 +2,7 @@ import { nextUlid } from "@monrep/utils/ulid";
 import { createServerFn } from "@tanstack/react-start";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
+import type { Envelope } from "@/server/agent/sessionDo";
 import { findServerById, loadAgentDb } from "@/server/agent/db";
 import { AgentTaggedError, CreateServerInputSchema } from "@/server/agent/schemas";
 import {
@@ -29,7 +30,14 @@ const CancelAgentRunInputSchema = z.object({
 
 const PushAgentConfigInputSchema = z.object({
   serverId: z.string().min(1),
-  autoUpdate: z.boolean(),
+  autoUpdate: z.boolean().optional(),
+  metricsEnabled: z.boolean().optional(),
+  metricsIntervalSec: z.number().int().positive().optional(),
+});
+
+const MetricsLatestInputSchema = z.object({
+  serverId: z.string().min(1),
+  names: z.array(z.string()).optional(),
 });
 
 const ServerIdInputSchema = z.object({
@@ -127,9 +135,39 @@ export const pushAgentConfigFn = createServerFn({ method: "POST" })
         v: 1,
         id: nextUlid(null),
         op: "config",
-        body: { autoUpdate: data.autoUpdate },
+        body: {
+          autoUpdate: data.autoUpdate,
+          metricsEnabled: data.metricsEnabled,
+          metricsIntervalSec: data.metricsIntervalSec,
+        },
       });
       return ok();
+    } finally {
+      db.close();
+    }
+  });
+
+export const fetchMetricsLatestFn = createServerFn({ method: "POST" })
+  .validator(MetricsLatestInputSchema)
+  .handler(async ({ data }) => {
+    await requireSession();
+    const db = await loadAgentDb();
+    try {
+      const server = await findServerById(db, data.serverId);
+      if (!server?.id) throw new AgentTaggedError({ _tag: "ServerNotFound" });
+      if (!server.deviceId) return err({ _tag: "SessionNotConnected" as const });
+      const stub = getAgentSessionStub(env, server.deviceId);
+      const id = nextUlid(null);
+      const reply = (await stub.requestFromAgent({
+        v: 1,
+        id,
+        op: "metrics.latest",
+        body: { names: data.names },
+      })) as Envelope | null;
+      if (!reply || reply.op === "error") {
+        return err({ _tag: "SessionNotConnected" as const });
+      }
+      return ok({ body: reply.body ?? null });
     } finally {
       db.close();
     }

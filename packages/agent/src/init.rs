@@ -177,7 +177,7 @@ fn systemctl(args: &[&str]) -> anyhow::Result<()> {
 }
 
 fn prompt_line(label: &str, default: Option<&str>) -> anyhow::Result<String> {
-  eprint!("{label}");
+  io::stderr().write_all(label.as_bytes())?;
   io::stderr().flush()?;
   let mut line = String::new();
   io::stdin().lock().read_line(&mut line)?;

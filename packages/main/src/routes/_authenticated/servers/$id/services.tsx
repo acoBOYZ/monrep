@@ -33,7 +33,7 @@ function ServerServicesPage() {
       onCancel={ops.cancel}
       toolbar={
         <SearchInput
-          className="max-w-xs"
+          className="w-full max-w-md"
           placeholder="Filter units…"
           value={ops.filter}
           onValueChange={ops.setFilter}

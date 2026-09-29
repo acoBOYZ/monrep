@@ -15,15 +15,29 @@ pub struct AgentSettings {
   /// When true, daemon periodically checks GitHub for a newer binary.
   #[serde(default = "default_true", alias = "autoUpdate")]
   pub auto_update: bool,
+  /// When true, scrape host metrics into local SQLite.
+  #[serde(default = "default_true", alias = "metricsEnabled")]
+  pub metrics_enabled: bool,
+  /// Scrape interval seconds (min 5).
+  #[serde(default = "default_interval", alias = "metricsIntervalSec")]
+  pub metrics_interval_sec: u64,
 }
 
 fn default_true() -> bool {
   true
 }
 
+fn default_interval() -> u64 {
+  30
+}
+
 impl Default for AgentSettings {
   fn default() -> Self {
-    Self { auto_update: true }
+    Self {
+      auto_update: true,
+      metrics_enabled: true,
+      metrics_interval_sec: 30,
+    }
   }
 }
 
@@ -84,6 +98,31 @@ pub fn auto_update_enabled() -> bool {
   load_settings().map(|s| s.auto_update).unwrap_or(true)
 }
 
+pub fn apply_metrics_config(
+  enabled: Option<bool>,
+  interval_sec: Option<u64>,
+) -> Result<AgentSettings> {
+  let mut settings = load_settings()?;
+  if let Some(v) = enabled {
+    settings.metrics_enabled = v;
+  }
+  if let Some(v) = interval_sec {
+    settings.metrics_interval_sec = v.max(5);
+  }
+  save_settings(&settings)?;
+  Ok(settings)
+}
+
+pub fn metrics_enabled() -> bool {
+  load_settings().map(|s| s.metrics_enabled).unwrap_or(true)
+}
+
+pub fn metrics_interval_sec() -> u64 {
+  load_settings()
+    .map(|s| s.metrics_interval_sec.max(5))
+    .unwrap_or(30)
+}
+
 pub fn settings_file_exists() -> bool {
   config::settings_path().map(|p| p.exists()).unwrap_or(false)
 }
@@ -98,7 +137,14 @@ mod tests {
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     let path = dir.join("config.json");
-    save_settings_to(&path, &AgentSettings { auto_update: false }).unwrap();
+    save_settings_to(
+      &path,
+      &AgentSettings {
+        auto_update: false,
+        ..Default::default()
+      },
+    )
+    .unwrap();
     let loaded = load_settings_from(&path).unwrap();
     assert!(!loaded.auto_update);
     let _ = fs::remove_dir_all(&dir);

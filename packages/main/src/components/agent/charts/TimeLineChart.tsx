@@ -3,9 +3,8 @@ import { cn } from "@monrep/utils";
 import { defineChart, lineY } from "@tanstack/charts";
 import { crosshair } from "@tanstack/charts/crosshair";
 import { Chart } from "@tanstack/charts/react";
-import { tooltip } from "@tanstack/charts/tooltip";
 import { ChartEmpty } from "./ChartEmpty";
-import { CHART_MOTION, CHART_PALETTE_CLASS, timeAxis, valueAxis } from "./chartTheme";
+import { CHART_MOTION, CHART_PALETTE_CLASS, chartTooltip, timeAxis, valueAxis } from "./chartTheme";
 import { useSeriesChartColor } from "./useSeriesChartColor";
 
 type TimeLineChartProps = {
@@ -15,6 +14,7 @@ type TimeLineChartProps = {
   height: number;
   yLabel: string;
   yDomain?: [number, number];
+  formatValue?: (n: number) => string;
   ariaLabel: string;
   emptyMessage?: string;
 };
@@ -26,6 +26,7 @@ export function TimeLineChart({
   height,
   yLabel,
   yDomain,
+  formatValue,
   ariaLabel,
   emptyMessage,
 }: TimeLineChartProps) {
@@ -52,9 +53,9 @@ export function TimeLineChart({
       color: {
         scale: seriesColor.scale,
       },
-      tooltip,
+      tooltip: chartTooltip(yLabel, formatValue),
     });
-  }, [data, from, seriesColor, to, yDomain, yLabel]);
+  }, [data, formatValue, from, seriesColor, to, yDomain, yLabel]);
 
   if (!definition) {
     return (

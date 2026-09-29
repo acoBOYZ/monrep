@@ -16,12 +16,8 @@ export function FleetRow({ server, latest, msgs }: FleetRowProps) {
   const lastSeen = server.lastSeenAt;
   const lastMs = lastSeen ? Date.parse(lastSeen) : Number.NaN;
   const lastRelative = Number.isFinite(lastMs) ? formatRelative(lastMs) : "—";
-  const cores = latest?.cores;
+  const cpuPct = latest?.cpuPct;
   const load1 = latest?.load1;
-  const loadPct =
-    load1 !== undefined && typeof cores === "number" && cores > 0
-      ? Math.min(100, (load1 / cores) * 100)
-      : undefined;
   const memPct = latest?.memPct;
 
   return (
@@ -43,13 +39,13 @@ export function FleetRow({ server, latest, msgs }: FleetRowProps) {
         </ImpactFlash>
       </TableCell>
       <TableCell>
-        {load1 !== undefined ? (
+        {cpuPct !== undefined ? (
           <TooltipTrigger
-            content={`${load1.toFixed(2)} / ${latest?.load5?.toFixed(2) ?? "—"} / ${latest?.load15?.toFixed(2) ?? "—"}`}
+            content={`CPU ${cpuPct.toFixed(1)}% · load ${load1?.toFixed(2) ?? "—"} / ${latest?.load5?.toFixed(2) ?? "—"} / ${latest?.load15?.toFixed(2) ?? "—"}`}
           >
             <div className="flex min-w-20 flex-col gap-1">
-              <span className="font-mono text-xs tabular-nums">{load1.toFixed(2)}</span>
-              {loadPct !== undefined ? <Progress value={loadPct} className="w-full" /> : null}
+              <span className="font-mono text-xs tabular-nums">{cpuPct.toFixed(1)}%</span>
+              <Progress value={cpuPct} className="w-full" />
             </div>
           </TooltipTrigger>
         ) : (

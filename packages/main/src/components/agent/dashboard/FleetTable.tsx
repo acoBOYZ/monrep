@@ -33,7 +33,7 @@ export function FleetTable({ servers, isReady, latest, errors }: FleetTableProps
           <TableRow className="h-10 hover:bg-transparent">
             <TableHead className={TABLE_HEAD_CLASS}>Name</TableHead>
             <TableHead className={TABLE_HEAD_CLASS}>Status</TableHead>
-            <TableHead className={TABLE_HEAD_CLASS}>Load 1m</TableHead>
+            <TableHead className={TABLE_HEAD_CLASS}>CPU %</TableHead>
             <TableHead className={TABLE_HEAD_CLASS}>Mem %</TableHead>
             <TableHead className={TABLE_HEAD_CLASS}>Msgs</TableHead>
             <TableHead className={TABLE_HEAD_CLASS}>Last seen</TableHead>

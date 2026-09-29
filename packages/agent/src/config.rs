@@ -23,3 +23,8 @@ pub fn cred_path() -> anyhow::Result<PathBuf> {
 pub fn settings_path() -> anyhow::Result<PathBuf> {
   Ok(config_dir()?.join("config.json"))
 }
+
+/// Path to local metrics SQLite DB.
+pub fn metrics_db_path() -> anyhow::Result<PathBuf> {
+  Ok(config_dir()?.join("metrics.sqlite"))
+}

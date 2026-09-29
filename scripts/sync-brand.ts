@@ -45,6 +45,14 @@ if (!existsSync(BRAND_PATH)) {
 
 const brand = JSON.parse(readFileSync(BRAND_PATH, "utf8")) as Brand;
 
+const rootPkg = JSON.parse(readFileSync(join(REPO_ROOT, "package.json"), "utf8")) as {
+  version?: string;
+};
+const agentVersion = String(rootPkg.version ?? "").replace(/^v/, "");
+if (!agentVersion) {
+  throw new Error("package.json is missing a version (needed for AGENT_VERSION)");
+}
+
 const githubRepo = `${brand.githubOwner}/${brand.githubRepo}`;
 const controlPlaneOrigin = brand.controlPlaneOrigin.replace(/\/$/, "");
 const installPath = `/${brand.installPath.replace(/^\/+|\/+$/g, "")}`;
@@ -88,6 +96,7 @@ export const INSTALL_URL = ${JSON.stringify(installUrl)} as const;
 export const INSTALL_COMMAND = ${JSON.stringify(installCommand)} as const;
 export const RELEASE_ASSET_PREFIX = ${JSON.stringify(brand.releaseAssetPrefix)} as const;
 export const ADMIN_EMAIL_DOMAIN = ${JSON.stringify(brand.adminEmailDomain)} as const;
+export const AGENT_VERSION = ${JSON.stringify(agentVersion)} as const;
 export const FRAME_ANCESTORS = ${JSON.stringify(frameAncestors)} as const;
 `,
 );

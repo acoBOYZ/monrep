@@ -25,17 +25,25 @@ type DockerPsJson = {
   Ports?: string;
 };
 
-type SystemctlUnitJson = {
-  unit?: string;
-  load?: string;
-  active?: string;
-  sub?: string;
-  description?: string;
-};
+const UNIT_PLAIN_RE = /^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*(.*)$/;
 
-/** Strip `[err] ` prefixes from sample lines before JSON parse. */
+/** Strip `[err] ` prefixes from sample lines before parse. */
 function rawLines(lines: Array<string>): Array<string> {
   return lines.map((line) => (line.startsWith("[err] ") ? line.slice(6) : line));
+}
+
+function isSpawnOrSystemctlError(line: string): boolean {
+  return (
+    line.startsWith("exit ") ||
+    line.startsWith("Failed to") ||
+    line.startsWith("Unknown") ||
+    /command not found|no such file|os error|permission denied|not found/i.test(line)
+  );
+}
+
+function isServiceUnitName(unit: string): boolean {
+  // list-units --type=service always uses *.service (incl. foo@bar.service)
+  return unit.endsWith(".service");
 }
 
 export function parseDockerPsNdjson(lines: Array<string>): {
@@ -81,56 +89,53 @@ export function parseDockerPsNdjson(lines: Array<string>): {
   return { containers, parseError: null };
 }
 
-export function parseSystemctlUnitsJson(lines: Array<string>): {
+export function parseSystemctlUnitsPlain(lines: Array<string>): {
   units: Array<SystemdUnit>;
   parseError: string | null;
 } {
-  const text = rawLines(lines).join("\n").trim();
-  if (!text) return { units: [], parseError: null };
+  const units: Array<SystemdUnit> = [];
+  const joined = rawLines(lines).join("\n").trim();
+  if (!joined) return { units, parseError: null };
 
-  const start = text.indexOf("[");
-  const end = text.lastIndexOf("]");
-  if (start < 0 || end < start) {
-    const hint = text.slice(0, 200);
-    return {
-      units: [],
-      parseError:
-        hint.includes("Failed to") || hint.includes("Unknown")
-          ? hint
-          : "systemd JSON output unavailable — open PTY for interactive control.",
-    };
-  }
+  for (const line of rawLines(lines)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed === "busy") continue;
+    if (isSpawnOrSystemctlError(trimmed)) {
+      return { units: [], parseError: trimmed.slice(0, 200) };
+    }
+    // Legend / footer noise from older systemctl without --no-legend
+    if (/^(UNIT|LOAD|ACTIVE|SUB|DESCRIPTION)\b/i.test(trimmed)) continue;
+    if (/^(\d+ loaded units listed|\s*To show all)/i.test(trimmed)) continue;
 
-  try {
-    const rows = JSON.parse(text.slice(start, end + 1)) as Array<SystemctlUnitJson>;
-    const units = rows
-      .map((row) => ({
-        unit: row.unit ?? "",
-        load: row.load ?? "",
-        active: row.active ?? "",
-        sub: row.sub ?? "",
-        description: row.description ?? "",
-      }))
-      .filter((u) => u.unit.length > 0);
-
-    units.sort((a, b) => {
-      const af = a.active === "failed" || a.sub === "failed" || a.sub === "activating" ? 0 : 1;
-      const bf = b.active === "failed" || b.sub === "failed" || b.sub === "activating" ? 0 : 1;
-      if (af !== bf) return af - bf;
-      return a.unit.localeCompare(b.unit);
+    const m = UNIT_PLAIN_RE.exec(trimmed);
+    if (!m) {
+      return { units: [], parseError: trimmed.slice(0, 200) || "could not parse systemctl list" };
+    }
+    const [, unit, load, active, sub, description] = m;
+    if (!unit || !isServiceUnitName(unit)) {
+      return { units: [], parseError: trimmed.slice(0, 200) || "could not parse systemctl list" };
+    }
+    units.push({
+      unit,
+      load: load ?? "",
+      active: active ?? "",
+      sub: sub ?? "",
+      description: (description ?? "").trim(),
     });
-
-    return { units, parseError: null };
-  } catch {
-    return {
-      units: [],
-      parseError: "Could not parse systemctl JSON — open PTY for interactive control.",
-    };
   }
+
+  units.sort((a, b) => {
+    const af = a.active === "failed" || a.sub === "failed" || a.sub === "activating" ? 0 : 1;
+    const bf = b.active === "failed" || b.sub === "failed" || b.sub === "activating" ? 0 : 1;
+    if (af !== bf) return af - bf;
+    return a.unit.localeCompare(b.unit);
+  });
+
+  return { units, parseError: null };
 }
 
 export function countFailedSystemdUnits(lines: Array<string>): number {
-  const { units, parseError } = parseSystemctlUnitsJson(lines);
+  const { units, parseError } = parseSystemctlUnitsPlain(lines);
   if (parseError) return 0;
   return units.filter((u) => u.active === "failed" || u.sub === "failed").length;
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { cancelSessionWsDestroy, getSessionWs, scheduleSessionWsDestroy } from "./sessionWs";
+import { getSessionWs } from "./sessionWs";
 import { SessionWsContext } from "./sessionWsContext";
 import type { ReactNode } from "react";
 import type { EnvelopeHandler, SessionEnvelope, SessionWsStatus } from "./sessionWs";
@@ -17,9 +17,9 @@ export function SessionWsProvider({ serverId, children }: SessionWsProviderProps
   const [status, setStatus] = useState<SessionWsStatus>(client.status);
 
   useEffect(() => {
-    cancelSessionWsDestroy(serverId);
     const c = getSessionWs(serverId);
-    c.open();
+    c.attach();
+    c.open("provider-mount");
     const onStatus = (nextReady: boolean, nextStatus: SessionWsStatus) => {
       setReady(nextReady);
       setStatus(nextStatus);
@@ -27,7 +27,7 @@ export function SessionWsProvider({ serverId, children }: SessionWsProviderProps
     c.onStatus(onStatus);
     return () => {
       c.offStatus(onStatus);
-      scheduleSessionWsDestroy(serverId);
+      c.detach();
     };
   }, [serverId]);
 

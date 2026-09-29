@@ -41,26 +41,35 @@ export function ServicesUnitsTable({
   const showSkeleton = loading && items.length === 0;
 
   return (
-    <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40">
-      <ScrollArea className="h-full min-h-0">
-        <Table className="table-fixed">
+    <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40">
+      <ScrollArea className="h-full min-h-0 min-w-0">
+        <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="h-10 hover:bg-transparent">
-              <TableHead className={TABLE_HEAD_CLASS}>Unit</TableHead>
+              <TableHead className={cn(TABLE_HEAD_CLASS, "w-[42%] md:w-[30%]")}>Unit</TableHead>
               <TableHead className={cn(TABLE_HEAD_CLASS, "w-28")}>Active</TableHead>
-              <TableHead className={cn(TABLE_HEAD_CLASS, "w-[36%]")}>Description</TableHead>
-              <TableHead className={cn(TABLE_HEAD_CLASS, "w-36 text-right")}>Actions</TableHead>
+              <TableHead className={cn(TABLE_HEAD_CLASS, "hidden md:table-cell md:w-[38%]")}>
+                Description
+              </TableHead>
+              <TableHead className={cn(TABLE_HEAD_CLASS, "w-28 text-right")}>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {showSkeleton
               ? Array.from({ length: 6 }, (_, i) => (
                   <TableRow key={i} className="h-10">
-                    {Array.from({ length: 4 }, (_c, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full max-w-32" />
-                      </TableCell>
-                    ))}
+                    <TableCell className="max-w-0 overflow-hidden">
+                      <Skeleton className="h-4 w-full max-w-32" />
+                    </TableCell>
+                    <TableCell className="max-w-0 overflow-hidden">
+                      <Skeleton className="h-4 w-full max-w-16" />
+                    </TableCell>
+                    <TableCell className="hidden max-w-0 overflow-hidden md:table-cell">
+                      <Skeleton className="h-4 w-full max-w-40" />
+                    </TableCell>
+                    <TableCell className="overflow-hidden">
+                      <Skeleton className="ms-auto h-4 w-16" />
+                    </TableCell>
                   </TableRow>
                 ))
               : null}

@@ -2,6 +2,7 @@ export type MetricPoint = {
   serverId: string;
   runId: string;
   at: number;
+  cpuPct?: number;
   load1?: number;
   load5?: number;
   load15?: number;

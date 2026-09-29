@@ -4,7 +4,7 @@ import { useOpsList } from "@/components/agent/hooks/useOpsList";
 import { useOpsSelection } from "@/components/agent/hooks/useOpsSelection";
 import { useOpsServer } from "@/components/agent/hooks/useOpsServer";
 import { SYSTEMD_LIST_ARGV, countFailedUnits } from "@/components/agent/utils/opsListArgv";
-import { parseSystemctlUnitsJson } from "@/components/agent/utils/opsParse";
+import { parseSystemctlUnitsPlain } from "@/components/agent/utils/opsParse";
 
 export function useServicesOpsPage(serverId: string) {
   const { server, isReady, online } = useOpsServer(serverId);
@@ -23,7 +23,7 @@ export function useServicesOpsPage(serverId: string) {
     online: Boolean(online),
     listArgv: SYSTEMD_LIST_ARGV,
     parse: (lines) => {
-      const { units, parseError } = parseSystemctlUnitsJson(lines);
+      const { units, parseError } = parseSystemctlUnitsPlain(lines);
       return { items: units, parseError };
     },
   });
@@ -48,7 +48,11 @@ export function useServicesOpsPage(serverId: string) {
   }, [refreshList, selection.selectedKey, selection.clearSelection]);
 
   const systemdUnavailable = Boolean(
-    listError?.includes("systemctl") || listError?.includes("Could not parse systemctl"),
+    listError &&
+    (/systemctl|systemd|command not found|Failed to|Unknown|could not parse|no such file|os error/i.test(
+      listError,
+    ) ||
+      listError.startsWith("exit ")),
   );
   const listErrorVariant = systemdUnavailable ? ("default" as const) : ("destructive" as const);
   const listErrorMessage = systemdUnavailable

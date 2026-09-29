@@ -129,6 +129,9 @@ async fn slim_session(cred: &DeviceCred, health: &mut HealthBus) -> anyhow::Resu
   let run_slots = Arc::new(Semaphore::new(MAX_RUNS));
   let ptys = crate::ops::pty::new_pty_map();
   let pty_slots = Arc::new(Semaphore::new(crate::ops::pty::MAX_PTYS));
+  let metrics_db = Arc::new(crate::metrics::MetricsDb::open(
+    &std::env::temp_dir().join(format!("monrep-mock-metrics-{}.sqlite", std::process::id())),
+  )?);
 
   let hello = Envelope::new(
     format!("hello-{}", cred.device_id),
@@ -158,10 +161,18 @@ async fn slim_session(cred: &DeviceCred, health: &mut HealthBus) -> anyhow::Resu
                 let run_slots = run_slots.clone();
                 let ptys = ptys.clone();
                 let pty_slots = pty_slots.clone();
+                let metrics_db = metrics_db.clone();
                 tokio::spawn(async move {
-                  if let Err(e) =
-                    dispatch::dispatch(env.clone(), tx.clone(), runs, run_slots, ptys, pty_slots)
-                      .await
+                  if let Err(e) = dispatch::dispatch(
+                    env.clone(),
+                    tx.clone(),
+                    runs,
+                    run_slots,
+                    ptys,
+                    pty_slots,
+                    metrics_db,
+                  )
+                  .await
                   {
                     let _ = tx
                       .send(Envelope {

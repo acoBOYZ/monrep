@@ -16,7 +16,6 @@ import type {
 	EnrollTokenDoSchema,
 	PasskeyDoSchema,
 	RuntimeConfigDoSchema,
-	SampleDoSchema,
 	SecurityDoSchema,
 	ServerDoSchema,
 	TotpDoSchema,
@@ -32,8 +31,6 @@ export type TEnrollTokenDo = z.infer<typeof EnrollTokenDoSchema>;
 export type TPasskeyDo = z.infer<typeof PasskeyDoSchema>;
 
 export type TRuntimeConfigDo = z.infer<typeof RuntimeConfigDoSchema>;
-
-export type TSampleDo = z.infer<typeof SampleDoSchema>;
 
 export type TSecurityDo = z.infer<typeof SecurityDoSchema>;
 

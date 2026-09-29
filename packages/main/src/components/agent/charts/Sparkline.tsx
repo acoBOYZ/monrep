@@ -1,17 +1,24 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { cn } from "@monrep/utils";
 import { areaY, defineChart, lineY } from "@tanstack/charts";
 import { Chart } from "@tanstack/charts/react";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
+import { tooltip } from "@tanstack/charts/tooltip";
 import { scaleUtc } from "d3-scale";
-import { CHART_MOTION, CHART_PALETTE_CLASS } from "./chartTheme";
+import {
+  CHART_MOTION,
+  CHART_PALETTE_CLASS,
+  formatChartNumber,
+  formatChartTime,
+} from "./chartTheme";
 
 type SparklineProps = {
   data: Array<{ id: string; at: Date; value: number }>;
   color: string;
+  unit?: string;
 };
 
-export function Sparkline({ data, color }: SparklineProps) {
+export function Sparkline({ data, color, unit }: SparklineProps) {
   const xDomain = useMemo((): [Date, Date] => {
     if (data.length === 0) return [new Date(0), new Date(1)];
     let min = data[0]?.at.getTime() ?? 0;
@@ -24,6 +31,11 @@ export function Sparkline({ data, color }: SparklineProps) {
     if (min === max) max += 1;
     return [new Date(min), new Date(max)];
   }, [data]);
+
+  const formatSpark = useCallback(
+    (n: number) => (unit === "%" ? `${n.toFixed(1)}%` : n.toFixed(2)),
+    [unit],
+  );
 
   const definition = useMemo(
     () =>
@@ -51,8 +63,13 @@ export function Sparkline({ data, color }: SparklineProps) {
         },
         guides: false,
         margin: 0,
+        tooltip: {
+          use: tooltip,
+          format: (point) =>
+            `${formatChartTime(point.xValue)} · ${formatChartNumber(point.yValue, formatSpark)}`,
+        },
       }),
-    [color, data, xDomain],
+    [color, data, formatSpark, xDomain],
   );
 
   return (

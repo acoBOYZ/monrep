@@ -1,65 +1,78 @@
-import { useMemo } from "react";
-import { and, eq, gte, inArray, lte, useLiveQuery } from "@tanstack/react-db";
-import { latestPerServer, sumErrorLines, windowStats } from "./aggregate";
-import { groupSamples } from "./groupRuns";
-import type { TSampleDo, TServerDo } from "@/db/types";
+import { useEffect, useMemo, useState } from "react";
+import { useLiveQuery } from "@tanstack/react-db";
+import { LATEST_METRIC_NAMES, latestPointsToMetric } from "./seriesMap";
+import type { MetricsLatestPoint } from "./seriesMap";
+import type { ErrorRun, HealthEvent, MetricPoint } from "./types";
+import type { TServerDo } from "@/db/types";
 import { useStreamDb } from "@/db/useStreamDb";
+import { fetchMetricsLatestFn } from "@/server/agent/functions";
 
-const METRIC_KINDS = ["monitor", "error", "overload"] as const;
-const EMPTY_SAMPLES: ReadonlyArray<TSampleDo> = [];
+const EMPTY_POINTS: ReadonlyArray<MetricPoint> = [];
+const EMPTY_ERRORS: ReadonlyArray<ErrorRun> = [];
+const EMPTY_HEALTH: ReadonlyArray<HealthEvent> = [];
 const EMPTY_SERVERS: Array<TServerDo> = [];
+const EMPTY_LATEST = new Map<string, MetricPoint>();
 
-export function useFleetMetrics(from: number, to: number) {
-  const { db, isReady: agentReady } = useStreamDb("agent");
-  const { db: aldb, isReady: liveReady } = useStreamDb("agent_live");
-  const isReady = agentReady && liveReady;
-  const windowMs = to - from;
-  const prevFrom = from - windowMs;
-  const fromIso = new Date(prevFrom).toISOString();
-  const toIso = new Date(to).toISOString();
-  const rangeFromIso = new Date(from).toISOString();
+function parseLatestPoints(body: unknown): Array<MetricsLatestPoint> {
+  if (!body || typeof body !== "object") return [];
+  const points = (body as { points?: unknown }).points;
+  if (!Array.isArray(points)) return [];
+  const out: Array<MetricsLatestPoint> = [];
+  for (const row of points) {
+    if (!row || typeof row !== "object") continue;
+    const r = row as { name?: unknown; at?: unknown; value?: unknown; dims?: unknown };
+    if (typeof r.name !== "string") continue;
+    const at = typeof r.at === "number" ? r.at : Number(r.at);
+    const value = typeof r.value === "number" ? r.value : Number(r.value);
+    if (!Number.isFinite(at) || !Number.isFinite(value)) continue;
+    out.push({
+      name: r.name,
+      at,
+      value,
+      dims: typeof r.dims === "string" ? r.dims : "{}",
+    });
+  }
+  return out;
+}
 
-  const samplesLive = useLiveQuery({
-    query: (q) => {
-      if (!aldb) return null;
-      return q
-        .from({ s: aldb.collections.sample })
-        .where(({ s }) =>
-          and(gte(s.at, fromIso), lte(s.at, toIso), inArray(s.kind, [...METRIC_KINDS])),
-        );
-    },
-  });
+async function fetchLatestMap(ids: ReadonlyArray<string>): Promise<Map<string, MetricPoint>> {
+  const entries = await Promise.all(
+    ids.map(async (serverId) => {
+      try {
+        const res = await fetchMetricsLatestFn({
+          data: { serverId, names: [...LATEST_METRIC_NAMES] },
+        });
+        if (!res.ok) return null;
+        const point = latestPointsToMetric(serverId, parseLatestPoints(res.body));
+        return point ? ([serverId, point] as const) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  const map = new Map<string, MetricPoint>();
+  for (const e of entries) {
+    if (e) map.set(e[0], e[1]);
+  }
+  return map;
+}
 
-  const healthLive = useLiveQuery({
-    query: (q) => {
-      if (!aldb) return null;
-      return q
-        .from({ s: aldb.collections.sample })
-        .where(({ s }) => and(eq(s.kind, "health"), gte(s.at, rangeFromIso), lte(s.at, toIso)))
-        .orderBy(({ s }) => s.at, "desc")
-        .limit(12);
-    },
-  });
+function avgField(
+  latest: Map<string, MetricPoint>,
+  key: "cpuPct" | "load1" | "memPct",
+): number | undefined {
+  let sum = 0;
+  let n = 0;
+  for (const p of latest.values()) {
+    const v = p[key];
+    if (v === undefined) continue;
+    sum += v;
+    n += 1;
+  }
+  return n > 0 ? sum / n : undefined;
+}
 
-  const serversLive = useLiveQuery({
-    query: (q) => {
-      if (!db) return null;
-      return q.from({ s: db.collections.server }).orderBy(({ s }) => s.name, "asc");
-    },
-  });
-
-  const samples = samplesLive.data ?? EMPTY_SAMPLES;
-  const healthRows = healthLive.data ?? EMPTY_SAMPLES;
-  const servers = serversLive.data ?? EMPTY_SERVERS;
-
-  const parsed = useMemo(() => groupSamples(samples), [samples]);
-  const health = useMemo(() => groupSamples(healthRows).health, [healthRows]);
-
-  const points = parsed.metrics.filter((p) => p.at >= from && p.at <= to);
-  const prevPoints = parsed.metrics.filter((p) => p.at >= prevFrom && p.at < from);
-  const errors = parsed.errors.filter((e) => e.at >= from && e.at <= to);
-  const latest = latestPerServer(parsed.metrics);
-
+function countStatuses(servers: ReadonlyArray<TServerDo>) {
   let online = 0;
   let offline = 0;
   let pending = 0;
@@ -68,18 +81,76 @@ export function useFleetMetrics(from: number, to: number) {
     else if (s.status === "offline") offline += 1;
     else if (s.status === "pending") pending += 1;
   }
-  const counts = { online, offline, pending, total: servers.length };
+  return { online, offline, pending, total: servers.length };
+}
 
-  const cur = windowStats(points, from, to);
-  const prev = windowStats(prevPoints, prevFrom, from);
+/**
+ * Fleet KPIs from agent stream presence + metrics.latest per online server.
+ * No multi-server historical dump over Cloudflare.
+ */
+export function useFleetMetrics(_from: number, _to: number) {
+  const { db, isReady: agentReady } = useStreamDb("agent");
+  const serversLive = useLiveQuery({
+    query: (q) => {
+      if (!db) return null;
+      return q.from({ s: db.collections.server }).orderBy(({ s }) => s.name, "asc");
+    },
+  });
+  const servers = serversLive.data ?? EMPTY_SERVERS;
+
+  const onlineIds = useMemo(
+    () =>
+      servers
+        .filter((s) => s.status === "online" && s.id)
+        .map((s) => s.id!)
+        .sort()
+        .join(","),
+    [servers],
+  );
+
+  const [fetched, setFetched] = useState<{ key: string; map: Map<string, MetricPoint> }>({
+    key: "",
+    map: EMPTY_LATEST,
+  });
+
+  useEffect(() => {
+    const ids = onlineIds ? onlineIds.split(",") : [];
+    if (ids.length === 0) return;
+    const key = onlineIds;
+    let cancelled = false;
+    void fetchLatestMap(ids).then((map) => {
+      if (!cancelled) setFetched({ key, map });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onlineIds]);
+
+  const latest =
+    onlineIds.length === 0 ? EMPTY_LATEST : fetched.key === onlineIds ? fetched.map : EMPTY_LATEST;
+  const kpiReady = onlineIds.length === 0 || fetched.key === onlineIds;
+  const counts = countStatuses(servers);
+
   const kpis = {
-    avgLoad1: cur.avgLoad1,
-    prevAvgLoad1: prev.avgLoad1,
-    avgMemPct: cur.avgMemPct,
-    prevAvgMemPct: prev.avgMemPct,
-    errorLines: sumErrorLines(parsed.errors, from, to),
-    prevErrorLines: sumErrorLines(parsed.errors, prevFrom, from),
+    avgCpuPct: avgField(latest, "cpuPct"),
+    prevAvgCpuPct: undefined as number | undefined,
+    avgLoad1: avgField(latest, "load1"),
+    prevAvgLoad1: undefined as number | undefined,
+    avgMemPct: avgField(latest, "memPct"),
+    prevAvgMemPct: undefined as number | undefined,
+    errorLines: 0,
+    prevErrorLines: 0,
   };
 
-  return { isReady, servers, points, prevPoints, errors, health, latest, counts, kpis };
+  return {
+    isReady: agentReady && kpiReady,
+    servers,
+    points: EMPTY_POINTS,
+    prevPoints: EMPTY_POINTS,
+    errors: EMPTY_ERRORS,
+    health: EMPTY_HEALTH,
+    latest,
+    counts,
+    kpis,
+  };
 }

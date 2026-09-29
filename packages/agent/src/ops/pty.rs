@@ -8,9 +8,11 @@ use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
 use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 use tokio::sync::{Mutex, OwnedSemaphorePermit, Semaphore, mpsc, oneshot};
+use tokio::time::timeout;
 
-/// Max concurrent PTY sessions per tunnel.
+/// Max concurrent PTY sessions per agent process.
 pub const MAX_PTYS: usize = 2;
 const READ_CHUNK: usize = 32 * 1024;
 const CLOSED_EARLY_CAP: usize = 64;
@@ -80,21 +82,24 @@ pub async fn handle_open(
     .unwrap_or_else(default_shell);
   let req_id = env.id.clone();
 
-  let Ok(permit) = pty_slots.clone().try_acquire_owned() else {
-    let _ = out
-      .send(Envelope {
-        v: PROTO_V,
-        id: req_id.clone(),
-        op: Op::Result,
-        body: Some(serde_json::json!({
-          "ok": false,
-          "busy": true,
-          "message": "pty busy",
-          "pty_id": req_id,
-        })),
-      })
-      .await;
-    return Ok(());
+  let permit = match acquire_pty_slot(ptys.clone(), pty_slots.clone()).await {
+    Some(p) => p,
+    None => {
+      let _ = out
+        .send(Envelope {
+          v: PROTO_V,
+          id: req_id.clone(),
+          op: Op::Result,
+          body: Some(serde_json::json!({
+            "ok": false,
+            "busy": true,
+            "message": "pty busy",
+            "pty_id": req_id,
+          })),
+        })
+        .await;
+      return Ok(());
+    }
   };
 
   let pty_id = req_id.clone();
@@ -399,6 +404,33 @@ fn terminate_pty_session(inner: Arc<std::sync::Mutex<PtySessionInner>>) {
 
 fn default_shell() -> String {
   std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into())
+}
+
+/// Take a PTY slot; if full, close existing sessions (orphans after browser remount) and wait.
+async fn acquire_pty_slot(ptys: PtyMap, pty_slots: Arc<Semaphore>) -> Option<OwnedSemaphorePermit> {
+  if let Ok(p) = pty_slots.clone().try_acquire_owned() {
+    return Some(p);
+  }
+  let victims = {
+    let mut reg = ptys.lock().await;
+    let ids: Vec<String> = reg.sessions.keys().cloned().collect();
+    let mut out = Vec::with_capacity(ids.len());
+    for id in ids {
+      if let Some(session) = reg.sessions.remove(&id) {
+        out.push(session);
+      }
+    }
+    out
+  };
+  for session in victims {
+    let _ = session.close.send(());
+    let inner = session.inner;
+    let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
+  }
+  match timeout(Duration::from_secs(2), pty_slots.acquire_owned()).await {
+    Ok(Ok(p)) => Some(p),
+    _ => None,
+  }
 }
 
 type PtyReader = Box<dyn Read + Send>;
