@@ -74,7 +74,12 @@ function ServerServicesPage() {
         onStop={handleStop}
         onRestart={handleRestart}
       />
-      <OpsOutputPanel title={ops.selected?.unit} output={ops.output} busy={ops.busy} />
+      <OpsOutputPanel
+        className="min-h-0 flex-1"
+        title={ops.selected?.unit}
+        output={ops.output}
+        busy={ops.busy}
+      />
     </EntityOpsChrome>
   );
 }

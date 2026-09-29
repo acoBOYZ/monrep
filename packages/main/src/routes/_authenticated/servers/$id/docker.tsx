@@ -32,7 +32,6 @@ function ServerDockerPage() {
 
   return (
     <EntityOpsChrome
-      layout="stack"
       serverId={id}
       serverName={ops.server.name}
       title="Docker"
