@@ -1,125 +1,43 @@
-# @react/ui
+# `@monrep/ui`
 
-Shared UI component library for the monorepo.  
-Built with **React + Tailwind CSS** and consumed directly as source by apps and workspace packages.
+Shared UI. React + Tailwind. Consumed as **source** by apps (no build step in this package).
 
----
+## What’s inside
 
-## ⚠️ Important: Tailwind Setup (Required)
+| Import | Role |
+| --- | --- |
+| `@monrep/ui/base` | Primitives: Button, Input, Table, Badge, Dialog, … |
+| `@monrep/ui/components` | Higher-level composed pieces |
+| `@monrep/ui/func` | Functional UI: `ImpactFlash`, virtualizers, … |
+| `@monrep/ui/terminal` | Terminal surface |
+| `@monrep/ui/globals.css` | Design tokens + base styles |
 
-This package **uses Tailwind CSS**.
+## How to use
 
-Tailwind only generates styles for files listed in `content`.  
-Because `@react/ui` is consumed as **source**, **every app or package that uses it MUST include its source path in their `tailwind.config.ts`.**
+In the app CSS (see `packages/main/src/tailwind.css`):
 
-If you skip this step, **styles will silently be missing**.
-
----
-
-## ✅ Required `tailwind.config.ts` Change
-
-This `tailwind.config.ts` **lives inside `@react/ui`**.
-
-Whenever another workspace package uses `@react/ui`, its source path must be added here.
-
-```ts
-import type { Config } from "tailwindcss";
-import { resolve } from "path";
-
-const config = {
-  content: [
-    /**
-     * REQUIRED: local @react/ui sources
-     */
-    resolve(__dirname, "src/**/*.{ts,tsx}"),
-
-    /**
-     * REQUIRED: workspace packages that consume @react/ui
-     */
-    resolve(__dirname, "../file-preview/src/**/*.{ts,tsx}"),
-    resolve(__dirname, "../file-uploader/src/**/*.{ts,tsx}"),
-
-    // Add more packages here when they start using @react/ui:
-    // resolve(__dirname, "../some-package/src/**/*.{ts,tsx}"),
-  ],
-  theme: {},
-  plugins: [],
-} satisfies Config;
-
-export default config;
+```css
+@import "tailwindcss";
+@import "@monrep/ui/globals.css";
 ```
 
-🔴 This step is **mandatory**.
-
----
-
-## ❓ Why this is necessary
-
-- Tailwind does **not** scan compiled output
-- Tailwind does **not** scan `node_modules`
-- Workspace packages are imported as source
-
-➡️ Tailwind can only see class names if you explicitly point to the package `src` directory.
-
----
-
-## 🧠 Rule of Thumb
-
-If a package renders JSX with Tailwind classes,  
-**its `src` path must be listed in every consuming Tailwind config.**
-
-This applies to:
-- `@react/ui`
-- `@react/file-preview`
-- `@react/file-uploader`
-- any future UI/design packages
-
----
-
-## 🧩 Example Usage
+Apps use `@tailwindcss/vite`. That scans workspace source, including this package, so you do not maintain a separate old-style `content: []` list of dead packages.
 
 ```tsx
-import { Button, NativeEmojiPicker, SmartPopoverTrigger } from "@react/ui";
+import { Button } from "@monrep/ui/base";
+import { ImpactFlash } from "@monrep/ui/func";
 
-export function Example() {
-  return (
-      <SmartPopoverTrigger
-        content={({ close }) => (
-          <NativeEmojiPicker
-            onChange={(value) => {
-              appendText(value);
-              close();
-            }}
-          />
-        )}
-      >
-      <Button variant="primary">
-        Click me
-        <StickerIcon className="size-5" />
-      </Button>
-    </SmartPopoverTrigger>
-  );
-}
+<Button variant="outline">Refresh</Button>
 ```
 
-⚠️ This will not style correctly unless Tailwind is configured as shown above.
+```bash
+bun run --cwd packages/ui typecheck
+bun run --cwd packages/ui lint
+bun run --cwd packages/ui fmt
+```
 
-### Terminal (`@monrep/ui/terminal`)
+## Related
 
-Hosts should trim `children` / line arrays (e.g. last 1000 lines) for long sessions—the terminal uses overflow scroll, not a virtualizer.
-
----
-
-## 🚫 Common Mistakes
-
-- Forgetting to add `@react/ui/src` to `content`
-- Assuming Tailwind scans workspace packages automatically
-- Relying on compiled output
-- Not restarting the dev server after config changes
-
----
-
-## ✅ Final Note
-
-If UI styles are broken, **check Tailwind config first**.  
-Almost all issues here are configuration-related, not component bugs.
+- Hooks used inside UI: [packages/hooks/README.md](../hooks/README.md)
+- Utils (`cn`, …): [packages/utils/README.md](../utils/README.md)
+- Main app: [packages/main/README.md](../main/README.md)

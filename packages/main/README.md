@@ -36,7 +36,7 @@ Never import `@/db/codegen/*` or `*.gen.ts` in app code.
 2. `bun run codegen` (or `-- --package main`)
 3. Wire the catalog:
 
-**Client** — import + mount the host (not a provider). Importing `DOHost` runs `bindDoApp()` at module load so hooks like `useStreamsReady` see a bound catalog; `<DOHost />` only acquires streams.
+**Client:** import + mount the host (not a provider). Importing `DOHost` runs `bindDoApp()` at module load so hooks like `useStreamsReady` see a bound catalog. `<DOHost />` only acquires streams.
 
 ```tsx
 import { DOHost } from "@/db/host";
@@ -44,7 +44,7 @@ import { DOHost } from "@/db/host";
 <DOHost />
 ```
 
-**Worker / serverFn** — call `bindDoApp()` once (avoids pulling the React host into the isolate):
+**Worker / serverFn:** call `bindDoApp()` once (avoids pulling the React host into the isolate):
 
 ```ts
 import { bindDoApp } from "@/db/host";
@@ -103,5 +103,6 @@ bun run codegen -- --package main
 
 ## Related
 
+- New Worker apps from templates: [packages/.templates/README.md](../.templates/README.md) (`bun run create:app <name>`)
 - [`@monrep/codegen` README](../codegen/README.md). CLI, config, multi-package
 - [`@monrep/db` README](../db/README.md). DSL + stream runtime library
