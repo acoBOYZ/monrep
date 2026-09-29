@@ -1,5 +1,6 @@
 import { SearchInput } from "@monrep/ui/components";
 import { createFileRoute } from "@tanstack/react-router";
+import type { DockerContainer } from "@/components/agent/utils/opsParse";
 import { DockerContainersTable } from "@/components/agent/docker/DockerContainersTable";
 import { useDockerOpsPage } from "@/components/agent/docker/useDockerOpsPage";
 import { EntityOpsChrome } from "@/components/agent/ops/EntityOpsChrome";
@@ -16,6 +17,18 @@ function ServerDockerPage() {
 
   if (!ops.isReady) return <ServerDetailSkeleton />;
   if (!ops.server) return <ServerDetailNotFound />;
+
+  const handleStart = (container: DockerContainer) => {
+    ops.runVerb(["docker", "start", container.id], container.id, ops.refresh);
+  };
+
+  const handleStop = (container: DockerContainer) => {
+    ops.runVerb(["docker", "stop", container.id], container.id, ops.refresh);
+  };
+
+  const handleRestart = (container: DockerContainer) => {
+    ops.runVerb(["docker", "restart", container.id], container.id, ops.refresh);
+  };
 
   return (
     <EntityOpsChrome
@@ -36,6 +49,7 @@ function ServerDockerPage() {
           placeholder="Filter containers…"
           value={ops.filter}
           onValueChange={ops.setFilter}
+          clearable
         />
       }
     >
@@ -44,9 +58,9 @@ function ServerDockerPage() {
         items={ops.filtered}
         disabled={ops.disabled}
         loading={ops.loading || (ops.busy && ops.items.length === 0)}
-        onStart={(c) => ops.runVerb(["docker", "start", c.id], c.id, ops.refresh)}
-        onStop={(c) => ops.runVerb(["docker", "stop", c.id], c.id, ops.refresh)}
-        onRestart={(c) => ops.runVerb(["docker", "restart", c.id], c.id, ops.refresh)}
+        onStart={handleStart}
+        onStop={handleStop}
+        onRestart={handleRestart}
       />
     </EntityOpsChrome>
   );

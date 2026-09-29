@@ -62,9 +62,7 @@ export function DockerContainersTable({
             {!showSkeleton && items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-8">
-                  <span className="text-sm text-muted-foreground">
-                    No containers (or Docker unavailable).
-                  </span>
+                  <span className="text-sm text-cool">No containers (or Docker unavailable).</span>
                 </TableCell>
               </TableRow>
             ) : null}

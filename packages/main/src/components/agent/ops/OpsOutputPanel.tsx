@@ -66,14 +66,14 @@ export function OpsOutputPanel({ title, subtitle, output, busy, className }: Ops
                   variant="icon"
                   text={output}
                   disabled={!output}
-                  className="static size-8 w-8 rounded-md border border-border hover:bg-muted/50"
+                  className="static size-8 rounded-md border border-border hover:bg-muted/50"
                 />
               </TooltipTrigger>
             </div>
           ) : null}
         </div>
       </div>
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 flex-1 overflow-y-auto">
         {hasSelection ? (
           <ImpactFlash watch={output}>
             <pre className="p-3 font-mono text-[11px] leading-relaxed wrap-break-word whitespace-pre-wrap">
