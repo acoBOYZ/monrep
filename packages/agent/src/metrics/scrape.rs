@@ -163,11 +163,8 @@ fn read_cpu_ticks_macos() -> Option<(u64, u64)> {
 }
 
 fn scrape_mem(at: i64, out: &mut Vec<MetricPoint>) {
-  if scrape_mem_proc(at, out) {
-    return;
-  }
-  #[cfg(target_os = "macos")]
-  {
+  if !scrape_mem_proc(at, out) {
+    #[cfg(target_os = "macos")]
     scrape_mem_macos(at, out);
   }
 }
