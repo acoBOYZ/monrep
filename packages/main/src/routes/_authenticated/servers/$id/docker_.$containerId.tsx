@@ -19,7 +19,6 @@ function ServerDockerContainerLogsPage() {
   const label = ops.container?.name ?? containerId;
   return (
     <EntityOpsChrome
-      layout="stack"
       serverId={id}
       serverName={ops.server.name}
       title={label}

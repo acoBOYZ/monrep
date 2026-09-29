@@ -19,7 +19,6 @@ type EntityOpsChromeProps = {
   error: string | null;
   listError: string | null;
   listErrorVariant?: "default" | "destructive";
-  layout?: "split" | "stack";
   onRefresh: () => void;
   onCancel: () => void;
   toolbar?: ReactNode;
@@ -37,7 +36,6 @@ export function EntityOpsChrome({
   error,
   listError,
   listErrorVariant = "destructive",
-  layout = "split",
   onRefresh,
   onCancel,
   toolbar,
@@ -79,21 +77,22 @@ export function EntityOpsChrome({
             aria-label="Page actions"
             className="ms-auto flex shrink-0 flex-wrap items-center gap-2"
           >
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={!online || busy}
-              onClick={onRefresh}
-            >
-              <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" aria-hidden />
-              Refresh
-            </Button>
             {busy ? (
               <Button type="button" variant="outline" size="sm" onClick={onCancel}>
                 Cancel
               </Button>
-            ) : null}
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={!online}
+                onClick={onRefresh}
+              >
+                <HugeiconsIcon icon={ArrowReloadHorizontalIcon} className="size-4" aria-hidden />
+                Refresh
+              </Button>
+            )}
             <Button
               nativeButton={false}
               className="border border-dashed"
@@ -125,13 +124,7 @@ export function EntityOpsChrome({
         </Alert>
       ) : null}
 
-      <div
-        className={
-          layout === "stack"
-            ? "flex h-fit max-h-[calc(100svh-13rem)] min-h-0 flex-col gap-4"
-            : "grid h-fit max-h-[calc(100svh-13rem)] min-h-0 gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]"
-        }
-      >
+      <div className="flex h-[calc(100svh-13rem)] min-h-0 flex-col gap-4 overflow-hidden *:min-h-0">
         {children}
       </div>
     </main>

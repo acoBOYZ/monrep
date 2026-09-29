@@ -1,8 +1,10 @@
-import { TerminalIcon } from "@hugeicons/core-free-icons";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
+import { ArrowDown01Icon, TerminalIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Badge, CopyableButton, ScrollArea, TooltipTrigger } from "@monrep/ui/base";
-import { ImpactFlash } from "@monrep/ui/func";
+import { Badge, Button, CopyableButton, TooltipTrigger } from "@monrep/ui/base";
+import { ImpactFlash, RowVirtualizer } from "@monrep/ui/func";
 import { cn } from "@monrep/utils";
+import type { RowVirtualizerScrollHandle } from "@monrep/ui/func";
 
 type OpsOutputPanelProps = {
   title?: string;
@@ -12,14 +14,44 @@ type OpsOutputPanelProps = {
   className?: string;
 };
 
-function lineCount(text: string): number {
-  if (!text) return 0;
-  return text.split("\n").length;
+const estimateSize = () => 20;
+
+function outputLineContent(index: number, line: string) {
+  return (
+    <div className="group flex gap-3 rounded-sm px-2 hover:bg-muted/40">
+      <span
+        className="w-[3ch] shrink-0 text-end text-muted-foreground/50 tabular-nums select-none group-hover:text-muted-foreground"
+        aria-hidden
+      >
+        {index + 1}
+      </span>
+      <span className="min-w-0 flex-1 wrap-break-word whitespace-pre-wrap text-foreground">
+        {line || " "}
+      </span>
+    </div>
+  );
 }
 
 export function OpsOutputPanel({ title, subtitle, output, busy, className }: OpsOutputPanelProps) {
-  const lines = lineCount(output);
+  const scrollControlRef = useRef<RowVirtualizerScrollHandle | null>(null);
+  const [pinnedToEnd, setPinnedToEnd] = useState(true);
   const hasSelection = Boolean(title);
+  const lines = useMemo(() => (output ? output.split("\n") : []), [output]);
+  const isEmpty = hasSelection && !busy && lines.length === 0;
+
+  const stickToEnd = useEffectEvent(() => {
+    scrollControlRef.current?.scrollToEnd("instant");
+  });
+
+  useEffect(() => {
+    if (!pinnedToEnd || lines.length === 0) return;
+    stickToEnd();
+  }, [lines.length, pinnedToEnd]);
+
+  const handleJumpToLatest = () => {
+    scrollControlRef.current?.scrollToEnd("smooth");
+    setPinnedToEnd(true);
+  };
 
   return (
     <section
@@ -56,9 +88,9 @@ export function OpsOutputPanel({ title, subtitle, output, busy, className }: Ops
               aria-label="Output options"
               className="flex flex-1 flex-wrap items-center justify-end gap-2 sm:flex-none"
             >
-              <ImpactFlash watch={lines}>
+              <ImpactFlash watch={lines.length}>
                 <Badge variant="muted" className="tabular-nums">
-                  {lines} lines
+                  {lines.length} lines
                 </Badge>
               </ImpactFlash>
               <TooltipTrigger content="Copy output">
@@ -73,25 +105,53 @@ export function OpsOutputPanel({ title, subtitle, output, busy, className }: Ops
           ) : null}
         </div>
       </div>
-      <ScrollArea className="min-h-0 flex-1 overflow-y-auto">
-        {hasSelection ? (
-          <ImpactFlash watch={output}>
-            <pre className="p-3 font-mono text-[11px] leading-relaxed wrap-break-word whitespace-pre-wrap">
-              {output || "—"}
-            </pre>
-          </ImpactFlash>
-        ) : (
-          <div className="flex h-full min-h-32 flex-col items-center justify-center gap-2 p-8 text-center">
-            <span className="flex size-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-              <HugeiconsIcon icon={TerminalIcon} className="size-5" aria-hidden />
-            </span>
-            <p className="text-sm font-medium">No output yet</p>
-            <p className="max-w-xs text-xs text-muted-foreground">
-              Select a unit, then run Logs or Status to stream output here.
-            </p>
-          </div>
-        )}
-      </ScrollArea>
+
+      {!hasSelection ? (
+        <div className="flex h-full min-h-32 flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+          <span className="flex size-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+            <HugeiconsIcon icon={TerminalIcon} className="size-5" aria-hidden />
+          </span>
+          <p className="text-sm font-medium">No output yet</p>
+          <p className="max-w-xs text-xs text-muted-foreground">
+            Select a unit, then run Logs or Status to stream output here.
+          </p>
+        </div>
+      ) : isEmpty ? (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
+          <span className="flex size-10 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+            <HugeiconsIcon icon={TerminalIcon} className="size-5" aria-hidden />
+          </span>
+          <p className="text-sm font-medium">No output yet</p>
+          <p className="max-w-xs text-xs text-muted-foreground">
+            Output will appear here as soon as the command writes to stdout or stderr.
+          </p>
+        </div>
+      ) : (
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <RowVirtualizer
+            className="min-h-0 flex-1 px-1 py-2 font-mono text-[11px] leading-relaxed"
+            data={lines}
+            estimateSize={estimateSize}
+            overscan={12}
+            getItemKey={(index) => index}
+            scrollControlRef={scrollControlRef}
+            onScrollToEnd={setPinnedToEnd}
+            itemContent={outputLineContent}
+          />
+          {!pinnedToEnd && lines.length > 0 ? (
+            <Button
+              type="button"
+              size="xs"
+              variant="secondary"
+              onClick={handleJumpToLatest}
+              className="absolute bottom-3 left-1/2 rounded-full shadow-md"
+            >
+              <HugeiconsIcon icon={ArrowDown01Icon} className="size-3.5" aria-hidden />
+              Jump to latest
+            </Button>
+          ) : null}
+        </div>
+      )}
     </section>
   );
 }
