@@ -96,7 +96,7 @@ export function EntityOpsChrome({
             ) : null}
             <Button
               nativeButton={false}
-              variant="ghost"
+              className="border border-dashed"
               size="sm"
               render={<Link to="/servers/$id" params={{ id: serverId }} />}
             >

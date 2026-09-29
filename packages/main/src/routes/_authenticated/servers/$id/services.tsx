@@ -1,5 +1,6 @@
 import { SearchInput } from "@monrep/ui/components";
 import { createFileRoute } from "@tanstack/react-router";
+import type { SystemdUnit } from "@/components/agent/utils/opsParse";
 import { EntityOpsChrome } from "@/components/agent/ops/EntityOpsChrome";
 import { OpsOutputPanel } from "@/components/agent/ops/OpsOutputPanel";
 import { ServerDetailNotFound } from "@/components/agent/servers/ServerDetailNotFound";
@@ -17,6 +18,26 @@ function ServerServicesPage() {
 
   if (!ops.isReady) return <ServerDetailSkeleton />;
   if (!ops.server) return <ServerDetailNotFound />;
+
+  const handleStatus = (unit: SystemdUnit) => {
+    ops.runAndShow(["systemctl", "status", unit.unit, "--no-pager", "-l"], unit.unit);
+  };
+
+  const handleLogs = (unit: SystemdUnit) => {
+    ops.runAndShow(["journalctl", "-u", unit.unit, "-n", "200", "--no-pager"], unit.unit);
+  };
+
+  const handleStart = (unit: SystemdUnit) => {
+    ops.runVerb(["systemctl", "start", unit.unit], unit.unit, ops.refresh);
+  };
+
+  const handleStop = (unit: SystemdUnit) => {
+    ops.runVerb(["systemctl", "stop", unit.unit], unit.unit, ops.refresh);
+  };
+
+  const handleRestart = (unit: SystemdUnit) => {
+    ops.runVerb(["systemctl", "restart", unit.unit], unit.unit, ops.refresh);
+  };
 
   return (
     <EntityOpsChrome
@@ -37,6 +58,7 @@ function ServerServicesPage() {
           placeholder="Filter units…"
           value={ops.filter}
           onValueChange={ops.setFilter}
+          clearable
         />
       }
     >
@@ -46,15 +68,11 @@ function ServerServicesPage() {
         disabled={ops.disabled}
         loading={ops.loading || (ops.busy && ops.items.length === 0)}
         onSelect={ops.select}
-        onStatus={(u) =>
-          ops.runAndShow(["systemctl", "status", u.unit, "--no-pager", "-l"], u.unit)
-        }
-        onLogs={(u) =>
-          ops.runAndShow(["journalctl", "-u", u.unit, "-n", "200", "--no-pager"], u.unit)
-        }
-        onStart={(u) => ops.runVerb(["systemctl", "start", u.unit], u.unit, ops.refresh)}
-        onStop={(u) => ops.runVerb(["systemctl", "stop", u.unit], u.unit, ops.refresh)}
-        onRestart={(u) => ops.runVerb(["systemctl", "restart", u.unit], u.unit, ops.refresh)}
+        onStatus={handleStatus}
+        onLogs={handleLogs}
+        onStart={handleStart}
+        onStop={handleStop}
+        onRestart={handleRestart}
       />
       <OpsOutputPanel title={ops.selected?.unit} output={ops.output} busy={ops.busy} />
     </EntityOpsChrome>

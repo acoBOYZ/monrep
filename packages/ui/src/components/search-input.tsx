@@ -1,5 +1,5 @@
 import { useImperativeHandle, useRef } from "react";
-import { CircleX, SearchIcon } from "@hugeicons/core-free-icons";
+import { CircleXIcon, Search01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
 import { useSearchDraft } from "./search-input.hooks";
@@ -44,7 +44,7 @@ export const SearchInput = ({
   return (
     <div className={cn("relative w-full", parentClass)}>
       <HugeiconsIcon
-        icon={SearchIcon}
+        icon={Search01Icon}
         className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 opacity-70"
         size={16}
         strokeWidth={1.8}
@@ -77,7 +77,7 @@ export const SearchInput = ({
           aria-label="Clear search"
           className="absolute top-1/2 right-2 -translate-y-1/2 opacity-70 hover:opacity-100"
         >
-          <HugeiconsIcon icon={CircleX} className="size-4" />
+          <HugeiconsIcon icon={CircleXIcon} className="size-4" />
         </button>
       )}
     </div>

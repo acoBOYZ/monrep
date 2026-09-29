@@ -41,8 +41,8 @@ export function ServicesUnitsTable({
   const showSkeleton = loading && items.length === 0;
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40">
-      <ScrollArea className="h-full min-h-0 min-w-0">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40">
+      <ScrollArea className="h-full min-h-0 overflow-y-auto">
         <Table className="w-full table-fixed">
           <TableHeader>
             <TableRow className="h-10 hover:bg-transparent">
@@ -58,25 +58,18 @@ export function ServicesUnitsTable({
             {showSkeleton
               ? Array.from({ length: 6 }, (_, i) => (
                   <TableRow key={i} className="h-10">
-                    <TableCell className="max-w-0 overflow-hidden">
-                      <Skeleton className="h-4 w-full max-w-32" />
-                    </TableCell>
-                    <TableCell className="max-w-0 overflow-hidden">
-                      <Skeleton className="h-4 w-full max-w-16" />
-                    </TableCell>
-                    <TableCell className="hidden max-w-0 overflow-hidden md:table-cell">
-                      <Skeleton className="h-4 w-full max-w-40" />
-                    </TableCell>
-                    <TableCell className="overflow-hidden">
-                      <Skeleton className="ms-auto h-4 w-16" />
-                    </TableCell>
+                    {Array.from({ length: 5 }, (_c, j) => (
+                      <TableCell key={j}>
+                        <Skeleton className="h-4 w-full max-w-32" />
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))
               : null}
             {!showSkeleton && items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-8">
-                  <span className="text-sm text-muted-foreground">No matching units.</span>
+                  <span className="text-sm text-cool">No matching units.</span>
                 </TableCell>
               </TableRow>
             ) : null}
