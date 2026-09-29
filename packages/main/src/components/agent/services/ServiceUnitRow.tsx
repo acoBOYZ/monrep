@@ -1,3 +1,5 @@
+import { File02Icon, InformationCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Badge, Button, TableCell, TableRow, TooltipTrigger } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import type { SystemdUnit } from "@/components/agent/utils/opsParse";
@@ -40,46 +42,57 @@ export function ServiceUnitRow({
       data-state={selected ? "selected" : undefined}
       onClick={() => onSelect(unit.unit)}
     >
-      <TableCell className="truncate font-mono text-xs font-medium">
-        <TooltipTrigger content={unit.unit} className="max-w-full min-w-0">
-          <span className="truncate">{unit.unit}</span>
+      <TableCell className="max-w-0 overflow-hidden font-mono text-xs font-medium">
+        <TooltipTrigger content={unit.unit} className="block max-w-full min-w-0">
+          <span className="block truncate">{unit.unit}</span>
         </TooltipTrigger>
       </TableCell>
       <ImpactFlash
         watch={stateKey}
         render={(p) => (
-          <TableCell {...p}>
-            <TooltipTrigger content={stateKey}>
-              <Badge variant={unitStateVariant(unit.active, unit.sub)}>{activeLabel(unit)}</Badge>
+          <TableCell {...p} className="max-w-0 overflow-hidden">
+            <TooltipTrigger content={stateKey} className="block max-w-full min-w-0">
+              <Badge
+                variant={unitStateVariant(unit.active, unit.sub)}
+                className="max-w-full truncate"
+              >
+                {activeLabel(unit)}
+              </Badge>
             </TooltipTrigger>
           </TableCell>
         )}
       />
-      <TableCell className="truncate text-muted-foreground">
-        <TooltipTrigger content={unit.description || "—"} className="max-w-full min-w-0">
-          <span className="truncate text-sm">{unit.description || "—"}</span>
+      <TableCell className="hidden max-w-0 overflow-hidden text-muted-foreground md:table-cell">
+        <TooltipTrigger content={unit.description || "—"} className="block max-w-full min-w-0">
+          <span className="block truncate text-sm">{unit.description || "—"}</span>
         </TooltipTrigger>
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
-        <div className="flex justify-end gap-1">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={disabled}
-            onClick={() => onLogs(unit)}
-          >
-            Logs
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            disabled={disabled}
-            onClick={() => onStatus(unit)}
-          >
-            Status
-          </Button>
+      <TableCell className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-0.5">
+          <TooltipTrigger content="Logs">
+            <Button
+              type="button"
+              size="iconxs"
+              variant="ghost"
+              disabled={disabled}
+              aria-label="Logs"
+              onClick={() => onLogs(unit)}
+            >
+              <HugeiconsIcon icon={File02Icon} className="size-3.5" aria-hidden />
+            </Button>
+          </TooltipTrigger>
+          <TooltipTrigger content="Status">
+            <Button
+              type="button"
+              size="iconxs"
+              variant="ghost"
+              disabled={disabled}
+              aria-label="Status"
+              onClick={() => onStatus(unit)}
+            >
+              <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5" aria-hidden />
+            </Button>
+          </TooltipTrigger>
           <OpsActionsMenu
             name={unit.unit}
             disabled={disabled}

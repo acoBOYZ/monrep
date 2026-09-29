@@ -24,7 +24,6 @@ import type {
 	TEnrollTokenDo,
 	TPasskeyDo,
 	TRuntimeConfigDo,
-	TSampleDo,
 	TSecurityDo,
 	TServerDo,
 	TTotpDo,
@@ -51,18 +50,6 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
   sdb.collections.server.createIndex((r) => r.status, { indexType: BasicIndex });
   sdb.collections.server.createIndex((r) => r.deviceId, { indexType: BasicIndex });
   sdb.collections.server.createIndex((r) => r.createdAt, { indexType: BasicIndex });
-  return sdb;
-};
-
-const createAgentLiveStreamDB = (opts: CreateDoModuleDbOpts) => {
-  const sdb = createDoStreamDB(DO_MODULE_STATE["agent_live"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["agent_live"] }, ({ db, state }) => ({
-      upsertSample: createUpsertStreamAction({ db, helpers: state.sample, collection: db.collections.sample, primaryKey: "id", schema: DO_MODULES["agent_live"].collections.sample.Schema, insertGens: DO_MODULES["agent_live"].collections.sample.insertGens, updateGens: DO_MODULES["agent_live"].collections.sample.updateGens }),
-      deleteSample: createDeleteStreamAction({ db, helpers: state.sample, collection: db.collections.sample }),
-  }));
-  sdb.collections.sample.createIndex((r) => r.serverId, { indexType: BasicIndex });
-  sdb.collections.sample.createIndex((r) => r.kind, { indexType: BasicIndex });
-  sdb.collections.sample.createIndex((r) => r.at, { indexType: BasicIndex });
-  sdb.collections.sample.createIndex((r) => r.runId, { indexType: BasicIndex });
   return sdb;
 };
 
@@ -93,7 +80,6 @@ const createAuthStreamDB = (opts: CreateDoModuleDbOpts) => {
 
 const DO_MODULE_DB_FACTORY_IMPL = {
   "agent": createAgentStreamDB,
-  "agent_live": createAgentLiveStreamDB,
   "audit": createAuditStreamDB,
   "auth": createAuthStreamDB,
 }
@@ -112,10 +98,6 @@ export type TDoModuleActionDefinitions = {
     deleteRuntimeConfig: ActionDefinition<string | Array<string>>;
     upsertServer: ActionDefinition<TServerDo | Array<TServerDo>>;
     deleteServer: ActionDefinition<string | Array<string>>;
-  };
-  "agent_live": {
-    upsertSample: ActionDefinition<TSampleDo | Array<TSampleDo>>;
-    deleteSample: ActionDefinition<string | Array<string>>;
   };
   "audit": {
     upsertSecurity: ActionDefinition<TSecurityDo | Array<TSecurityDo>>;

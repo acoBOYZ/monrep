@@ -34,6 +34,14 @@ pub enum Op {
   PtyResize,
   #[serde(rename = "pty.close")]
   PtyClose,
+  #[serde(rename = "metrics.query")]
+  MetricsQuery,
+  #[serde(rename = "metrics.latest")]
+  MetricsLatest,
+  #[serde(rename = "metrics.names")]
+  MetricsNames,
+  #[serde(rename = "events.query")]
+  EventsQuery,
   Result,
   Error,
   Event,

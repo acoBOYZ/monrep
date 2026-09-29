@@ -8,7 +8,17 @@ export const SYSTEMD_LIST_ARGV = [
   "--type=service",
   "--all",
   "--no-pager",
-  "--output=json",
+  "--no-legend",
+  "--plain",
+] as const;
+
+export const SYSTEMD_FAILED_ARGV = [
+  "systemctl",
+  "--failed",
+  "--type=service",
+  "--no-pager",
+  "--no-legend",
+  "--plain",
 ] as const;
 
 export function countBadDocker(items: Array<DockerContainer>): number {

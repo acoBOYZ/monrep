@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSessionRun } from "./useSessionRun";
+import { SYSTEMD_FAILED_ARGV } from "@/components/agent/utils/opsListArgv";
 import {
   countFailedSystemdUnits,
   countUnhealthyDocker,
@@ -23,7 +24,7 @@ export function useOpsGlance(serverId: string, online: boolean) {
         setDockerTotal(containers.length);
         setDockerBad(countUnhealthyDocker(lines));
         setPhase("services");
-        return runAsync(["systemctl", "--failed", "--type=service", "--no-pager", "--output=json"]);
+        return runAsync([...SYSTEMD_FAILED_ARGV]);
       })
       .then((lines) => {
         setServicesFailed(countFailedSystemdUnits(lines));

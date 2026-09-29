@@ -2,6 +2,7 @@ import { ViewTransition } from "react";
 import { ExpandIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Button } from "@monrep/ui/base";
+import { cn } from "@monrep/utils";
 import { ChartExpandDialog } from "./ChartExpandDialog";
 import { ChartSeriesLegend } from "./ChartSeriesLegend";
 import { useChartExpand } from "./useChartExpand";
@@ -18,6 +19,7 @@ type ChartCardProps = {
   formatSeriesValue?: (value: number) => string;
   renderChart: (opts: { height: number }) => ReactNode;
   expanded: ReactNode;
+  className?: string;
 };
 
 export function ChartCard({
@@ -28,6 +30,7 @@ export function ChartCard({
   formatSeriesValue,
   renderChart,
   expanded,
+  className,
 }: ChartCardProps) {
   const { open, openDialog, closeDialog } = useChartExpand();
   const transitionName = `chart-${id}`;
@@ -36,7 +39,10 @@ export function ChartCard({
   return (
     <section
       aria-label={heading}
-      className="group flex min-w-0 flex-col gap-3 rounded-lg border border-border/60 bg-card/40 p-3 transition-colors hover:bg-card/60"
+      className={cn(
+        "group flex min-w-0 flex-col gap-3 rounded-lg border border-border/60 bg-card/40 p-3 transition-colors hover:bg-card/60",
+        className,
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-col gap-1.5">

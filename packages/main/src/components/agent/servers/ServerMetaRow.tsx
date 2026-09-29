@@ -1,5 +1,6 @@
 import {
   Clock01Icon,
+  CloudSyncIcon,
   CpuIcon,
   FingerPrintIcon,
   HardDriveIcon,
@@ -7,17 +8,22 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { storeTimer } from "@monrep/runtime";
-import { CopyableButton, TooltipTrigger } from "@monrep/ui/base";
+import { Button, CopyableButton, TooltipTrigger } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import { formatRelative, toDateTimeAttr } from "@monrep/utils";
 import { useSelector } from "@tanstack/react-store";
+import { isAgentBehindDesired } from "./agentVersion";
 import type { ReactNode } from "react";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { MetricPoint } from "@/components/agent/metrics/types";
-import type { TServerDo } from "@/db/types";
+import { AGENT_VERSION } from "@/brand.gen";
+import { useRuntimeConfig } from "@/components/agent/hooks/useRuntimeConfig";
 
 type ServerMetaRowProps = {
-  server: TServerDo;
+  serverId: string;
+  agentVersion?: string;
+  serverDeviceId?: string;
+  serverLastSeenAt?: string;
   latest?: MetricPoint;
 };
 
@@ -41,19 +47,26 @@ function MetaCell({ icon, label, children }: MetaCellProps) {
 
 const Empty = () => <span className="font-mono text-muted-foreground">—</span>;
 
-export function ServerMetaRow({ server, latest }: ServerMetaRowProps) {
+export function ServerMetaRow({
+  serverId,
+  agentVersion,
+  serverDeviceId,
+  serverLastSeenAt,
+  latest,
+}: ServerMetaRowProps) {
+  const { triggerUpdate, pending } = useRuntimeConfig(serverId);
   const secondTick = useSelector(storeTimer, (s) => s.secondTick);
-  const lastSeenIso = server.lastSeenAt;
-  const lastSeenMs = lastSeenIso ? Date.parse(lastSeenIso) : Number.NaN;
+  const lastSeenMs = serverLastSeenAt ? Date.parse(serverLastSeenAt) : Number.NaN;
   const lastSeenValid = Number.isFinite(lastSeenMs);
   const lastSeenRelative = lastSeenValid ? formatRelative(lastSeenMs, secondTick * 1000) : "—";
-  const lastSeenFull = lastSeenValid ? toDateTimeAttr(lastSeenIso) : undefined;
+  const lastSeenFull = lastSeenValid ? toDateTimeAttr(serverLastSeenAt) : undefined;
+  const updateAvailable = isAgentBehindDesired(agentVersion, AGENT_VERSION);
 
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       <MetaCell icon={FingerPrintIcon} label="Device">
-        {server.deviceId ? (
-          <CopyableButton variant="inline" text={server.deviceId} className="font-mono" />
+        {serverDeviceId ? (
+          <CopyableButton variant="inline" text={serverDeviceId} className="font-mono" />
         ) : (
           <Empty />
         )}
@@ -73,9 +86,23 @@ export function ServerMetaRow({ server, latest }: ServerMetaRowProps) {
         )}
       </MetaCell>
       <MetaCell icon={PackageIcon} label="Agent">
-        <ImpactFlash watch={server.agentVersion} className="truncate font-mono text-foreground">
-          v{server.agentVersion ?? "—"}
-        </ImpactFlash>
+        <div className="flex w-full items-center justify-between gap-2">
+          <ImpactFlash watch={agentVersion} className="truncate font-mono text-foreground">
+            v{agentVersion ?? "—"}
+          </ImpactFlash>
+          {updateAvailable ? (
+            <Button
+              variant="success"
+              size="iconxs"
+              className="h-4.75 gap-1"
+              onClick={triggerUpdate}
+              disabled={pending}
+            >
+              <HugeiconsIcon icon={CloudSyncIcon} className="size-3.5" aria-hidden />
+              <span className="text-xs">Update now</span>
+            </Button>
+          ) : null}
+        </div>
       </MetaCell>
       <MetaCell icon={CpuIcon} label="Cores">
         {latest?.cores !== undefined ? (

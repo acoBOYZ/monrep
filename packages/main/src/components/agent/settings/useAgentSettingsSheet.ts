@@ -1,18 +1,22 @@
-import { useCollectorsDraft } from "./useCollectorsDraft";
 import { useRuntimeConfig } from "@/components/agent/hooks/useRuntimeConfig";
 
 export function useAgentSettingsSheet(serverId: string, onOpenChange: (open: boolean) => void) {
   const runtime = useRuntimeConfig(serverId);
-  const draftState = useCollectorsDraft(runtime.collectors);
 
   const handleOpenChange = (next: boolean) => {
-    if (next) draftState.reset();
     onOpenChange(next);
   };
 
-  const handleSaveCollectors = () => {
-    runtime.save({ collectors: draftState.commit() });
+  const handleSaveMetrics = () => {
+    runtime.save({
+      backgroundEnabled: runtime.metricsEnabled,
+      metricsIntervalSec: runtime.metricsIntervalSec,
+    });
   };
 
-  return { ...runtime, ...draftState, handleOpenChange, handleSaveCollectors };
+  const resetToDefaults = () => {
+    runtime.save({ backgroundEnabled: true, metricsIntervalSec: 30, autoUpdate: true });
+  };
+
+  return { ...runtime, handleOpenChange, handleSaveMetrics, resetToDefaults, dirty: false };
 }

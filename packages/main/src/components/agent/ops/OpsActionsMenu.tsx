@@ -24,8 +24,8 @@ export function OpsActionsMenu({
       className="w-44 p-1"
       content={createOpsActionsMenuRenderer({ name, onStart, onStop, onRestart })}
     >
-      <Button type="button" size="sm" variant="ghost" disabled={disabled} aria-label="Actions">
-        <HugeiconsIcon icon={MoreVertical} className="size-4" aria-hidden />
+      <Button type="button" size="iconxs" variant="ghost" disabled={disabled} aria-label="Actions">
+        <HugeiconsIcon icon={MoreVertical} className="size-3.5" aria-hidden />
       </Button>
     </SmartPopoverTrigger>
   );

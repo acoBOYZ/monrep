@@ -29,7 +29,7 @@ type PtyPaneProps = {
 };
 
 export function PtyPane({ wsReady }: PtyPaneProps) {
-  const { send, setPane } = useSessionWs();
+  const { send, setPane, subscribeRun } = useSessionWs();
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -137,14 +137,27 @@ export function PtyPane({ wsReady }: PtyPaneProps) {
     setPane(api);
     fit.fit();
     const openId = nextUlid(null);
+    const unsub = subscribeRun(openId, (env) => {
+      if (env.op === "result" && env.body?.ok && typeof env.body.pty_id === "string") {
+        ptyIdRef.current = openId;
+        unsub();
+        return;
+      }
+      if (env.op === "error" || (env.op === "result" && env.body?.ok === false)) {
+        unsub();
+      }
+    });
     const ok = send({
       v: 1,
       id: openId,
       op: "pty.open",
       body: { cols: term.cols, rows: term.rows },
     });
-    if (ok) ptyIdRef.current = openId;
-  }, [wsReady, send, setPane]);
+    if (!ok) unsub();
+    return () => {
+      unsub();
+    };
+  }, [wsReady, send, setPane, subscribeRun]);
 
   useEffect(() => {
     requestAnimationFrame(() => {

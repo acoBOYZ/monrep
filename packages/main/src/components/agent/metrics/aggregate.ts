@@ -1,6 +1,7 @@
 import type { MetricPoint } from "./types";
 
 const MERGE_FIELDS = [
+  "cpuPct",
   "load1",
   "load5",
   "load15",
@@ -48,7 +49,9 @@ export function windowStats(
   points: ReadonlyArray<MetricPoint>,
   from: number,
   to: number,
-): { avgLoad1?: number; avgMemPct?: number; maxLoad1?: number } {
+): { avgCpuPct?: number; avgLoad1?: number; avgMemPct?: number; maxLoad1?: number } {
+  let cpuSum = 0;
+  let cpuCount = 0;
   let loadSum = 0;
   let loadCount = 0;
   let memSum = 0;
@@ -57,6 +60,10 @@ export function windowStats(
 
   for (const p of points) {
     if (p.at < from || p.at > to) continue;
+    if (p.cpuPct !== undefined) {
+      cpuSum += p.cpuPct;
+      cpuCount += 1;
+    }
     if (p.load1 !== undefined) {
       loadSum += p.load1;
       loadCount += 1;
@@ -69,6 +76,7 @@ export function windowStats(
   }
 
   return {
+    avgCpuPct: cpuCount > 0 ? cpuSum / cpuCount : undefined,
     avgLoad1: loadCount > 0 ? loadSum / loadCount : undefined,
     avgMemPct: memCount > 0 ? memSum / memCount : undefined,
     maxLoad1,
@@ -94,7 +102,7 @@ export function delta(current?: number, previous?: number): number | undefined {
 
 export function toSeries(
   points: ReadonlyArray<MetricPoint>,
-  key: "load1" | "load5" | "load15" | "memPct" | "diskPct",
+  key: "cpuPct" | "load1" | "load5" | "load15" | "memPct" | "diskPct",
   labelOf: (p: MetricPoint) => string,
 ): Array<{ id: string; at: Date; value: number; series: string }> {
   // TanStack Charts stack/line marks require one value per (at, series).

@@ -1,8 +1,6 @@
-import { FleetCharts } from "./FleetCharts";
 import { FleetHeader } from "./FleetHeader";
 import { FleetKpis } from "./FleetKpis";
 import { FleetTable } from "./FleetTable";
-import { HealthEventsFeed } from "./HealthEventsFeed";
 import { useFleetMetrics } from "@/components/agent/metrics/useFleetMetrics";
 import { useMetricRange } from "@/components/agent/metrics/useMetricRange";
 
@@ -23,20 +21,14 @@ export function FleetDashboardPage() {
         loading={!fleet.isReady}
         online={fleet.counts.online}
         total={fleet.counts.total}
-        points={fleet.points}
-        errors={fleet.errors}
         kpis={fleet.kpis}
       />
-      <FleetCharts from={from} to={to} points={fleet.points} servers={fleet.servers} />
-      <div className="grid items-start gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <FleetTable
-          servers={fleet.servers}
-          isReady={fleet.isReady}
-          latest={fleet.latest}
-          errors={fleet.errors}
-        />
-        <HealthEventsFeed health={fleet.health} />
-      </div>
+      <FleetTable
+        servers={fleet.servers}
+        isReady={fleet.isReady}
+        latest={fleet.latest}
+        errors={fleet.errors}
+      />
     </main>
   );
 }

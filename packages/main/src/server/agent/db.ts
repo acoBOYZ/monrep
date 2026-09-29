@@ -1,11 +1,5 @@
 import { eq, queryOnce } from "@tanstack/react-db";
-import type {
-  TDeviceCredDo,
-  TEnrollTokenDo,
-  TRuntimeConfigDo,
-  TSampleDo,
-  TServerDo,
-} from "@/db/types";
+import type { TDeviceCredDo, TEnrollTokenDo, TRuntimeConfigDo, TServerDo } from "@/db/types";
 import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 import { bindDoApp } from "@/db/host";
 import { openServerStream } from "@/server/doStream";
@@ -13,18 +7,10 @@ import { openServerStream } from "@/server/doStream";
 bindDoApp();
 
 export type AgentDb = Awaited<ReturnType<typeof loadAgentDb>>;
-export type AgentLiveDb = Awaited<ReturnType<typeof loadAgentLiveDb>>;
 
 export const loadAgentDb = async () => {
   const stream = await openServerStream("agent");
   const db = DO_MODULE_DB_FACTORIES.agent({ stream });
-  await db.preload();
-  return db;
-};
-
-export const loadAgentLiveDb = async () => {
-  const stream = await openServerStream("agent_live");
-  const db = DO_MODULE_DB_FACTORIES.agent_live({ stream });
   await db.preload();
   return db;
 };
@@ -62,14 +48,6 @@ export const listEnrollTokensByServerId = async (
   queryOnce({
     query: (q) =>
       q.from({ t: db.collections.enroll_token }).where(({ t }) => eq(t.serverId, serverId)),
-  });
-
-export const listSamplesByServerId = async (
-  db: AgentLiveDb,
-  serverId: string,
-): Promise<Array<TSampleDo>> =>
-  queryOnce({
-    query: (q) => q.from({ s: db.collections.sample }).where(({ s }) => eq(s.serverId, serverId)),
   });
 
 export const findDeviceCredByDeviceId = async (

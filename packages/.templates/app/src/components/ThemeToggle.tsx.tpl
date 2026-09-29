@@ -1,4 +1,4 @@
-import { Computer, Moon, Sun } from "@hugeicons/core-free-icons";
+import { Computer, Moon01Icon, Sun } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { setTheme, storeTheme } from "@monrep/runtime";
 import { Button } from "@monrep/ui/base";
@@ -34,7 +34,7 @@ export function ThemeToggle() {
       ) : theme === "light" ? (
         <HugeiconsIcon icon={Sun} className="size-5" />
       ) : (
-        <HugeiconsIcon icon={Moon} className="size-5" />
+        <HugeiconsIcon icon={Moon01Icon} className="size-5" />
       )}
     </Button>
   );

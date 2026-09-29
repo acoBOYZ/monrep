@@ -63,12 +63,13 @@ const upgradeBrowserSessionWs = async (request: Request, env: Env): Promise<Resp
     const stub = getAgentSessionStub(env, server.deviceId);
     const doUrl = new URL("https://agent-session/browser-ws");
     doUrl.searchParams.set("serverId", serverId);
-    return stub.fetch(
+    const res = await stub.fetch(
       new Request(doUrl.toString(), {
         method: "GET",
         headers: request.headers,
       }),
     );
+    return res;
   } finally {
     db.close();
   }

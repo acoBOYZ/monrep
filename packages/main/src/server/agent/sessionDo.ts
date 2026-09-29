@@ -1,28 +1,12 @@
-/** Agent session Durable Object — hibernatable WSS + collector alarm. */
+/** Agent session Durable Object — hibernatable WSS (metrics live on the agent). */
 
 import { nextUlid } from "@monrep/utils/ulid";
 import { DurableObject } from "cloudflare:workers";
 import { z } from "zod";
-import {
-  clearBrowserOwnedPtys,
-  ownedPtyIds,
-  ptyIdFromClosedResult,
-  removeOwnedPtyFromBrowsers,
-  trackBrowserPtyEnvelope,
-} from "./browserPtyOwnership";
 import { BrowserReplyRouter } from "./browserReplyRouter";
-import { parseCollectorsJson } from "./catalog";
-import {
-  findDeviceCredByDeviceId,
-  findRuntimeConfig,
-  findServerById,
-  loadAgentDb,
-  loadAgentLiveDb,
-} from "./db";
-import { PRUNE_RETRY_DELAY_MS, pruneServerSamples } from "./samplePrune";
+import { findDeviceCredByDeviceId, findRuntimeConfig, findServerById, loadAgentDb } from "./db";
 import { AgentTaggedError, agentErrorMessage, agentErrorStatus } from "./schemas";
 import { verifyDeviceAccessToken } from "./service";
-import type { SampleKindSchema } from "@/db/do/agent_live";
 import { AuthEnvSchema } from "@/server/auth/schemas";
 
 const PROTO_V = 1;
@@ -39,6 +23,10 @@ const OpSchema = z.enum([
   "pty.data",
   "pty.resize",
   "pty.close",
+  "metrics.query",
+  "metrics.latest",
+  "metrics.names",
+  "events.query",
   "result",
   "error",
   "event",
@@ -53,25 +41,10 @@ export const EnvelopeSchema = z.object({
 export type Envelope = z.infer<typeof EnvelopeSchema>;
 
 type SocketRole = "agent" | "browser";
-type SocketAttachment = { role: SocketRole; ptyIds?: Array<string> };
+type SocketAttachment = { role: SocketRole };
 
-type SampleKind = z.infer<typeof SampleKindSchema>;
-
-const collectorKind = (name: string): SampleKind => {
-  if (name === "monitor" || name === "error" || name === "overload" || name === "health") {
-    return name;
-  }
-  return "other";
-};
-
-type DueMap = Record<string, number>;
-
-type PendingCollectorRun = {
-  collector: string;
-  kind: SampleKind;
-  /** epoch ms when the run was sent */
-  at: number;
-};
+/** Heartbeat must not hammer Hyperdrive — presence at most every 5 minutes. */
+const PRESENCE_MIN_INTERVAL_MS = 5 * 60 * 1000;
 
 type PendingInteractiveRun = {
   kind: "interactive";
@@ -80,12 +53,14 @@ type PendingInteractiveRun = {
   at: number;
 };
 
-type PendingRun = PendingCollectorRun | PendingInteractiveRun;
+type PendingRun = PendingInteractiveRun;
 
 const PENDING_TTL_MS = 15 * 60 * 1000;
+const ALARM_IDLE_MS = 60_000;
 
 export class AgentSession extends DurableObject<Env> {
   private readonly browserReplyRouter = new BrowserReplyRouter();
+  private readonly pendingAgentReplies = new Map<string, (env: Envelope) => void>();
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -149,19 +124,14 @@ export class AgentSession extends DurableObject<Env> {
     } satisfies PendingInteractiveRun);
   }
 
-  private async releaseBrowserOwnedPtys(ws: WebSocket): Promise<void> {
-    const ptyIds = ownedPtyIds(ws);
-    clearBrowserOwnedPtys(ws);
-    await Promise.all(
-      ptyIds.map((ptyId) =>
-        this.sendEnvelope({
-          v: PROTO_V,
-          id: nextUlid(null),
-          op: "pty.close",
-          body: { pty_id: ptyId },
-        }),
-      ),
-    );
+  private closeAgentSockets(): void {
+    for (const ws of this.socketsWithRole("agent")) {
+      try {
+        ws.close(1000, "replaced");
+      } catch (e) {
+        console.error("[agent-session] close agent socket failed", e);
+      }
+    }
   }
 
   private sendToBrowsers(envelope: Envelope): void {
@@ -211,25 +181,49 @@ export class AgentSession extends DurableObject<Env> {
   }
 
   async webSocketClose(
-    ws: WebSocket,
+    _ws: WebSocket,
     _code: number,
     _reason: string,
     _wasClean: boolean,
   ): Promise<void> {
-    if (this.socketRole(ws) === "browser") {
-      await this.releaseBrowserOwnedPtys(ws);
-    }
+    // PTY lifetime ≠ browser socket — only explicit pty.close from UI kills shells.
     if (this.socketsWithRole("agent").length === 0) {
       await this.setPresence("offline");
       await this.ctx.storage.deleteAlarm();
     }
   }
 
-  async webSocketError(ws: WebSocket, error: unknown): Promise<void> {
+  webSocketError(_ws: WebSocket, error: unknown): void {
     console.error("[agent-session] ws error", error);
-    if (this.socketRole(ws) === "browser") {
-      await this.releaseBrowserOwnedPtys(ws);
-    }
+  }
+
+  /** Send to agent and wait for matching result/error (fleet metrics.latest). */
+  async requestFromAgent(envelope: Envelope, timeoutMs = 8_000): Promise<Envelope | null> {
+    return await new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        this.pendingAgentReplies.delete(envelope.id);
+        resolve(null);
+      }, timeoutMs);
+      this.pendingAgentReplies.set(envelope.id, (env) => {
+        clearTimeout(timer);
+        this.pendingAgentReplies.delete(envelope.id);
+        resolve(env);
+      });
+      void this.sendEnvelope(envelope).then((result) => {
+        if (!result.ok) {
+          clearTimeout(timer);
+          this.pendingAgentReplies.delete(envelope.id);
+          resolve(null);
+        }
+      });
+    });
+  }
+
+  private settleAgentReply(envelope: Envelope): boolean {
+    const waiter = this.pendingAgentReplies.get(envelope.id);
+    if (!waiter) return false;
+    waiter(envelope);
+    return true;
   }
 
   async alarm(): Promise<void> {
@@ -238,65 +232,8 @@ export class AgentSession extends DurableObject<Env> {
       await this.ctx.storage.deleteAlarm();
       return;
     }
-
     await this.expirePendingRuns();
-
-    const [db, adb] = await Promise.all([loadAgentDb(), loadAgentLiveDb()]);
-    try {
-      const prune = await pruneServerSamples(adb, meta.serverId);
-      const config = await findRuntimeConfig(db, meta.serverId);
-      if (!config?.backgroundEnabled) {
-        await this.scheduleNextAlarm(prune.hasMore ? PRUNE_RETRY_DELAY_MS : 30_000);
-        return;
-      }
-      const collectors = parseCollectorsJson(config.collectorsJson);
-      const due = (await this.ctx.storage.get<DueMap>("due")) ?? {};
-      const now = Date.now();
-      let nextDelayMs = 30_000;
-      const dueRuns: Array<{
-        name: string;
-        runId: string;
-        argv: Array<string>;
-        kind: SampleKind;
-      }> = [];
-
-      for (const [name, spec] of Object.entries(collectors)) {
-        if (!spec.enabled || spec.argv.length === 0) continue;
-        const intervalMs = Math.max(5, spec.intervalSec) * 1000;
-        nextDelayMs = Math.min(nextDelayMs, intervalMs);
-        const last = due[name] ?? 0;
-        if (now - last < intervalMs) continue;
-        due[name] = now;
-        dueRuns.push({
-          name,
-          runId: nextUlid(null),
-          argv: spec.argv,
-          kind: collectorKind(name),
-        });
-      }
-
-      await Promise.all(
-        dueRuns.map(async ({ name, runId, argv, kind }) => {
-          await this.sendEnvelope({
-            v: PROTO_V,
-            id: runId,
-            op: "run",
-            body: { argv, collector: name },
-          });
-          await this.ctx.storage.put(`pending:${runId}`, {
-            collector: name,
-            kind,
-            at: now,
-          } satisfies PendingRun);
-        }),
-      );
-      await this.ctx.storage.put("due", due);
-      await this.scheduleNextAlarm(
-        prune.hasMore ? Math.min(nextDelayMs, PRUNE_RETRY_DELAY_MS) : nextDelayMs,
-      );
-    } finally {
-      db.close();
-    }
+    await this.scheduleNextAlarm(ALARM_IDLE_MS);
   }
 
   private async handleUpgrade(request: Request): Promise<Response> {
@@ -359,6 +296,8 @@ export class AgentSession extends DurableObject<Env> {
       db.close();
     }
 
+    this.closeAgentSockets();
+
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
     pair[1].serializeAttachment({ role: "agent" } satisfies SocketAttachment);
@@ -379,24 +318,26 @@ export class AgentSession extends DurableObject<Env> {
     if (meta && meta.serverId !== serverId) {
       return new Response(JSON.stringify({ error: "server mismatch" }), { status: 403 });
     }
-    if (this.socketsWithRole("agent").length === 0) {
+    const agentCount = this.socketsWithRole("agent").length;
+    if (agentCount === 0) {
       return new Response(JSON.stringify({ error: "SessionNotConnected" }), { status: 409 });
     }
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
-    pair[1].serializeAttachment({ role: "browser", ptyIds: [] } satisfies SocketAttachment);
+    pair[1].serializeAttachment({ role: "browser" } satisfies SocketAttachment);
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
 
-  private async onBrowserEnvelope(ws: WebSocket, envelope: Envelope): Promise<void> {
+  private async onBrowserEnvelope(_ws: WebSocket, envelope: Envelope): Promise<void> {
     switch (envelope.op) {
       case "pty.open":
       case "pty.data":
       case "pty.resize":
-      case "pty.close": {
-        if (envelope.op === "pty.open" || envelope.op === "pty.close") {
-          trackBrowserPtyEnvelope(ws, envelope.op, envelope.id, envelope.body);
-        }
+      case "pty.close":
+      case "metrics.query":
+      case "metrics.latest":
+      case "metrics.names":
+      case "events.query": {
         this.browserReplyRouter.trackBrowserEnvelope(envelope);
         const result = await this.sendEnvelope(envelope);
         if (!result.ok) {
@@ -447,7 +388,7 @@ export class AgentSession extends DurableObject<Env> {
         break;
       }
       case "heartbeat": {
-        await this.setPresence("online");
+        await this.touchPresenceIfDue();
         break;
       }
       case "pty.data":
@@ -458,38 +399,32 @@ export class AgentSession extends DurableObject<Env> {
         break;
       }
       case "result": {
+        if (this.settleAgentReply(envelope)) break;
         if (this.browserReplyRouter.shouldForwardResult(envelope)) {
           this.sendToBrowsers(envelope);
           this.browserReplyRouter.afterForwardResult(envelope);
-          const body = envelope.body;
-          if (body && typeof body === "object" && (body as { closed?: unknown }).closed === true) {
-            const ptyId = ptyIdFromClosedResult(body, envelope.id);
-            removeOwnedPtyFromBrowsers(this.socketsWithRole("browser"), ptyId);
-          }
           break;
         }
-        if (await this.forwardInteractive(envelope)) break;
-        await this.persistSample(envelope);
+        await this.forwardInteractive(envelope);
         break;
       }
       case "event": {
         if (await this.forwardInteractive(envelope)) break;
-        await this.persistSample(envelope);
         break;
       }
       case "agent.health": {
-        await this.persistSample(envelope);
+        // Health is stored on the agent SQLite; ignore for CF streams.
         break;
       }
       case "error": {
         console.error("[agent-session] agent error frame", envelope.body);
+        if (this.settleAgentReply(envelope)) break;
         if (this.browserReplyRouter.shouldForwardError(envelope)) {
           this.sendToBrowsers(envelope);
           this.browserReplyRouter.afterForwardError(envelope);
           break;
         }
-        if (await this.forwardInteractive(envelope)) break;
-        await this.persistSample(envelope);
+        await this.forwardInteractive(envelope);
         break;
       }
       default:
@@ -497,54 +432,15 @@ export class AgentSession extends DurableObject<Env> {
     }
   }
 
-  /** Live ops: relay to browsers only; never open agent_live streams. */
+  /** Live ops: relay to browsers only. */
   private async forwardInteractive(envelope: Envelope): Promise<boolean> {
     const pending = await this.ctx.storage.get<PendingRun>(`pending:${envelope.id}`);
-    if (!pending || pending.kind !== "interactive") return false;
+    if (!pending) return false;
     this.sendToBrowsers(envelope);
-    if (envelope.op === "result" || envelope.op === "error") {
+    if (envelope.op !== "event") {
       await this.ctx.storage.delete(`pending:${envelope.id}`);
     }
     return true;
-  }
-
-  private async persistSample(envelope: Envelope): Promise<void> {
-    const meta = await this.sessionMeta();
-    if (!meta) return;
-
-    let kind: SampleKind = "other";
-    let collector: string | undefined;
-    if (envelope.op === "agent.health") {
-      kind = "health";
-    } else {
-      const pending = await this.ctx.storage.get<PendingRun>(`pending:${envelope.id}`);
-      if (pending?.kind === "interactive") return;
-      if (pending) {
-        kind = pending.kind;
-        collector = pending.collector;
-        if (envelope.op === "result" || envelope.op === "error") {
-          await this.ctx.storage.delete(`pending:${envelope.id}`);
-        }
-      }
-    }
-
-    const db = await loadAgentLiveDb();
-    try {
-      await db.actions.upsertSample({
-        serverId: meta.serverId,
-        kind,
-        at: new Date().toISOString(),
-        runId: envelope.op === "agent.health" ? undefined : envelope.id,
-        payloadJson: JSON.stringify({
-          id: envelope.id,
-          op: envelope.op,
-          collector,
-          body: envelope.body ?? null,
-        }),
-      }).isPersisted.promise;
-    } finally {
-      db.close();
-    }
   }
 
   private async persistAgentVersion(envelope: Envelope): Promise<void> {
@@ -572,6 +468,13 @@ export class AgentSession extends DurableObject<Env> {
     }
   }
 
+  private async touchPresenceIfDue(): Promise<void> {
+    const last = await this.ctx.storage.get<number>("lastPresenceAt");
+    const now = Date.now();
+    if (typeof last === "number" && now - last < PRESENCE_MIN_INTERVAL_MS) return;
+    await this.setPresence("online");
+  }
+
   private async setPresence(status: "online" | "offline"): Promise<void> {
     const meta = await this.sessionMeta();
     if (!meta) return;
@@ -590,6 +493,11 @@ export class AgentSession extends DurableObject<Env> {
         agentVersion: server.agentVersion,
         createdAt: server.createdAt,
       }).isPersisted.promise;
+      if (status === "online") {
+        await this.ctx.storage.put("lastPresenceAt", Date.now());
+      } else {
+        await this.ctx.storage.delete("lastPresenceAt");
+      }
     } finally {
       db.close();
     }
@@ -602,11 +510,13 @@ export class AgentSession extends DurableObject<Env> {
     try {
       const config = await findRuntimeConfig(db, meta.serverId);
       const autoUpdate = config?.autoUpdate ?? true;
+      const metricsEnabled = config?.backgroundEnabled ?? true;
+      const metricsIntervalSec = config?.metricsIntervalSec ?? 30;
       await this.sendEnvelope({
         v: PROTO_V,
         id: nextUlid(null),
         op: "config",
-        body: { autoUpdate },
+        body: { autoUpdate, metricsEnabled, metricsIntervalSec },
       });
     } finally {
       db.close();

@@ -1,21 +1,18 @@
 //! Outbound WSS tunnel to the pinned control plane only.
+//! Transport only — PTYs/runs live on [`crate::runtime::Runtime`].
 
 use crate::dispatch;
 use crate::error::{AgentError, Result};
 use crate::health::HealthBus;
 use crate::http;
-use crate::ops::pty::{self, MAX_PTYS, PtyMap};
-use crate::ops::registry::{self, RunRegistry};
-use crate::ops::run::MAX_RUNS;
 use crate::proto::{Envelope, HelloBody, Op, PROTO_V};
+use crate::runtime::Runtime;
 use crate::store::{self, DeviceCred};
 use crate::tls;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use std::sync::Arc;
 use std::time::Duration;
 use tokio::net::TcpStream;
-use tokio::sync::{Semaphore, mpsc};
 use tokio::time::{Interval, MissedTickBehavior, interval, timeout};
 use tokio_tungstenite::{
   MaybeTlsStream, WebSocketStream,
@@ -26,22 +23,15 @@ use tokio_tungstenite::{
   },
 };
 
-const OUT_QUEUE: usize = 64;
 const WSS_CONNECT_TIMEOUT: Duration = Duration::from_secs(30);
 
 type WsStream = WebSocketStream<MaybeTlsStream<TcpStream>>;
 type WsWrite = SplitSink<WsStream, Message>;
 type WsRead = SplitStream<WsStream>;
 
-struct Session {
+struct Tunnel {
   write: WsWrite,
   read: WsRead,
-  out_tx: mpsc::Sender<Envelope>,
-  out_rx: mpsc::Receiver<Envelope>,
-  runs: RunRegistry,
-  run_slots: Arc<Semaphore>,
-  ptys: PtyMap,
-  pty_slots: Arc<Semaphore>,
   heartbeat: Interval,
   hb_n: u64,
   auto_update_on: bool,
@@ -63,13 +53,21 @@ pub fn to_ws_url(control_url: &str) -> anyhow::Result<String> {
   Ok(ws)
 }
 
-/// Dial control plane and run until disconnect / error.
-pub async fn run_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<()> {
-  let mut session = open_session(cred, health).await?;
-  session_loop(&mut session, health).await
+/// Dial control plane and run until disconnect / error. Does not own PTYs.
+pub async fn run_session(
+  cred: &DeviceCred,
+  health: &mut HealthBus,
+  runtime: &mut Runtime,
+) -> Result<()> {
+  let mut tunnel = open_tunnel(cred, health, runtime).await?;
+  session_loop(&mut tunnel, health, runtime).await
 }
 
-async fn open_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<Session> {
+async fn open_tunnel(
+  cred: &DeviceCred,
+  health: &mut HealthBus,
+  runtime: &mut Runtime,
+) -> Result<Tunnel> {
   store::assert_pinned_url(cred, &cred.control_url)?;
   let ws_url = to_ws_url(&cred.control_url).map_err(AgentError::Other)?;
 
@@ -116,9 +114,8 @@ async fn open_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<Sessi
     "tunnel up",
   );
 
-  let (out_tx, out_rx) = mpsc::channel::<Envelope>(OUT_QUEUE);
   for env in health.drain() {
-    if out_tx.send(env).await.is_err() {
+    if runtime.out_tx.send(env).await.is_err() {
       return Err(AgentError::Other(anyhow::anyhow!("out queue closed")));
     }
   }
@@ -132,7 +129,7 @@ async fn open_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<Sessi
     },
   )
   .map_err(AgentError::Other)?;
-  if out_tx.send(hello).await.is_err() {
+  if runtime.out_tx.send(hello).await.is_err() {
     return Err(AgentError::Other(anyhow::anyhow!("out queue closed")));
   }
 
@@ -143,15 +140,9 @@ async fn open_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<Sessi
   ));
   update_tick.set_missed_tick_behavior(MissedTickBehavior::Delay);
 
-  Ok(Session {
+  Ok(Tunnel {
     write,
     read,
-    out_tx,
-    out_rx,
-    runs: registry::new_registry(),
-    run_slots: Arc::new(Semaphore::new(MAX_RUNS)),
-    ptys: pty::new_pty_map(),
-    pty_slots: Arc::new(Semaphore::new(MAX_PTYS)),
     heartbeat,
     hb_n: 0,
     auto_update_on: crate::settings::auto_update_enabled(),
@@ -159,52 +150,58 @@ async fn open_session(cred: &DeviceCred, health: &mut HealthBus) -> Result<Sessi
   })
 }
 
-async fn session_loop(session: &mut Session, health: &mut HealthBus) -> Result<()> {
+async fn session_loop(
+  tunnel: &mut Tunnel,
+  health: &mut HealthBus,
+  runtime: &mut Runtime,
+) -> Result<()> {
   loop {
-    let auto_update_on = session.auto_update_on;
+    let auto_update_on = tunnel.auto_update_on;
     tokio::select! {
-      msg = session.read.next() => {
-        handle_read(session, health, msg).await?;
+      msg = tunnel.read.next() => {
+        handle_read(tunnel, health, runtime, msg).await?;
       }
-      Some(env) = session.out_rx.recv() => {
-        send_text(&mut session.write, &env).await?;
+      Some(env) = runtime.out_rx.recv() => {
+        send_text(&mut tunnel.write, &env).await?;
       }
-      _ = session.heartbeat.tick() => {
-        session.hb_n += 1;
+      _ = tunnel.heartbeat.tick() => {
+        tunnel.hb_n += 1;
         let env = Envelope {
           v: PROTO_V,
-          id: format!("hb-{}", session.hb_n),
+          id: format!("hb-{}", tunnel.hb_n),
           op: Op::Heartbeat,
-          body: Some(serde_json::json!({ "n": session.hb_n })),
+          body: Some(serde_json::json!({ "n": tunnel.hb_n })),
         };
-        send_text(&mut session.write, &env).await?;
+        send_text(&mut tunnel.write, &env).await?;
       }
-      _ = session.update_tick.tick(), if auto_update_on => {
-        try_auto_update(session, health).await?;
+      _ = tunnel.update_tick.tick(), if auto_update_on => {
+        try_auto_update(tunnel, health, runtime).await?;
       }
     }
   }
 }
 
 async fn handle_read(
-  session: &mut Session,
+  tunnel: &mut Tunnel,
   health: &mut HealthBus,
+  runtime: &Runtime,
   msg: Option<std::result::Result<Message, tokio_tungstenite::tungstenite::Error>>,
 ) -> Result<()> {
   match msg {
     Some(Ok(Message::Text(text))) => {
       match serde_json::from_str::<Envelope>(&text) {
         Ok(env) => {
-          let tx = session.out_tx.clone();
-          let runs = session.runs.clone();
-          let run_slots = session.run_slots.clone();
-          let ptys = session.ptys.clone();
-          let pty_slots = session.pty_slots.clone();
+          let tx = runtime.out_tx.clone();
+          let runs = runtime.runs.clone();
+          let run_slots = runtime.run_slots.clone();
+          let ptys = runtime.ptys.clone();
+          let pty_slots = runtime.pty_slots.clone();
+          let metrics_db = runtime.metrics_db.clone();
           tokio::spawn(async move {
             let tx_err = tx.clone();
             let req_id = env.id.clone();
             let work = tokio::spawn(async move {
-              dispatch::dispatch(env, tx, runs, run_slots, ptys, pty_slots).await
+              dispatch::dispatch(env, tx, runs, run_slots, ptys, pty_slots, metrics_db).await
             });
             match work.await {
               Ok(Ok(())) => {}
@@ -248,7 +245,7 @@ async fn handle_read(
       Ok(())
     }
     Some(Ok(Message::Ping(p))) => {
-      let _ = session.write.send(Message::Pong(p)).await;
+      let _ = tunnel.write.send(Message::Pong(p)).await;
       Ok(())
     }
     Some(Ok(Message::Close(_))) | None => {
@@ -267,7 +264,11 @@ async fn send_text(write: &mut WsWrite, env: &Envelope) -> Result<()> {
     .map_err(|e| AgentError::Other(anyhow::anyhow!("websocket write: {e}")))
 }
 
-async fn try_auto_update(session: &mut Session, health: &mut HealthBus) -> Result<()> {
+async fn try_auto_update(
+  tunnel: &mut Tunnel,
+  health: &mut HealthBus,
+  runtime: &mut Runtime,
+) -> Result<()> {
   match crate::update::check_for_update().await {
     Ok(Some(info)) => {
       health.emit(
@@ -275,8 +276,8 @@ async fn try_auto_update(session: &mut Session, health: &mut HealthBus) -> Resul
         "auto_update",
         format!("checking {}", info.tag),
       );
-      while let Ok(env) = session.out_rx.try_recv() {
-        let _ = send_text(&mut session.write, &env).await;
+      while let Ok(env) = runtime.out_rx.try_recv() {
+        let _ = send_text(&mut tunnel.write, &env).await;
       }
       health.emit(
         crate::proto::HealthLevel::Info,

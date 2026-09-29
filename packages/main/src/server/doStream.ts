@@ -16,7 +16,7 @@ import type { TDoModuleId } from "@/db/types";
  * Opens a module stream for Worker-side writes.
  * Uses the logical URL (`/_streams/<moduleId>`) like the browser client, but resolves
  * the Durable Object via the physical epoch path — same rewrite as createPublicStreamsHandler.
- * Epoch modules (e.g. agent_live utc-hour) must not write to the logical DO name.
+ * Epoch modules must not write to the logical DO name.
  */
 export const openServerStream = async (moduleId: TDoModuleId): Promise<DurableStream> => {
   const pathname = streamPath(moduleId);

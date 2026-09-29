@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@monrep/hooks": "workspace:^",
-    "@tanstack/react-store": "^0.11.1"
+    "@tanstack/react-store": "^0.11.2"
   },
   "devDependencies": {
     "@types/react": "^19.3.0",

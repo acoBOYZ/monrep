@@ -1,8 +1,6 @@
 import { base64ToBytes } from "@monrep/utils";
 import type { PaneApi } from "@/components/agent/pty/ptyTypes";
 
-const DESTROY_DELAY_MS = 80;
-
 export type SessionEnvelope = {
   v: number;
   id: string;
@@ -26,6 +24,9 @@ export type SessionWsStatus = "connecting" | "connected" | "ready" | "disconnect
 type StatusListener = (ready: boolean, status: SessionWsStatus) => void;
 export type EnvelopeHandler = (envelope: SessionEnvelope) => void;
 
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_MS = 15_000;
+
 class SessionWsClient {
   readonly serverId: string;
   pane: PaneApi | null = null;
@@ -33,14 +34,42 @@ class SessionWsClient {
   status: SessionWsStatus = "connecting";
 
   private ws: WebSocket | null = null;
+  /** Provider attach refcount (survives React Strict Mode mount/unmount/remount). */
+  private attachCount = 0;
   /** Envelope id of the outstanding/active `pty.open` (same id used as pty_id). */
   private activePtyOpenId: string | null = null;
   private readonly statusListeners = new Set<StatusListener>();
   private readonly envelopeListeners = new Set<EnvelopeHandler>();
   private readonly runListeners = new Map<string, Set<EnvelopeHandler>>();
+  private reconnectAttempt = 0;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(serverId: string) {
     this.serverId = serverId;
+  }
+
+  private get live(): boolean {
+    return this.attachCount > 0;
+  }
+
+  /** Provider mount: keep socket alive across TCP drops. */
+  attach(): void {
+    this.attachCount += 1;
+  }
+
+  /**
+   * Provider unmount. Defers teardown one microtask so React Strict Mode
+   * remount can re-attach without killing a CONNECTING handshake.
+   */
+  detach(): void {
+    this.attachCount = Math.max(0, this.attachCount - 1);
+    if (this.attachCount > 0) return;
+    queueMicrotask(() => {
+      if (this.attachCount > 0) return;
+      this.clearReconnectTimer();
+      this.destroy();
+      if (clients.get(this.serverId) === this) clients.delete(this.serverId);
+    });
   }
 
   onStatus(listener: StatusListener): void {
@@ -79,8 +108,10 @@ class SessionWsClient {
     if (!pane) this.activePtyOpenId = null;
   }
 
-  open(): void {
+  /** Only SessionWsProvider should open. Metrics/PTY wait for ready. */
+  open(_source = "unknown"): void {
     if (typeof window === "undefined") return;
+    if (!this.live) return;
     const existing = this.ws;
     if (
       existing &&
@@ -89,6 +120,7 @@ class SessionWsClient {
       return;
     }
 
+    this.clearReconnectTimer();
     this.setStatus("connecting", false);
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${proto}//${window.location.host}/api/agent/session-ws?serverId=${encodeURIComponent(this.serverId)}`;
@@ -97,6 +129,7 @@ class SessionWsClient {
 
     ws.onopen = () => {
       if (this.ws !== ws) return;
+      this.reconnectAttempt = 0;
       this.setStatus("connected", true);
     };
 
@@ -108,8 +141,17 @@ class SessionWsClient {
     ws.onclose = () => {
       if (this.ws !== ws) return;
       this.ws = null;
+      const delay = Math.min(
+        RECONNECT_BASE_MS * 2 ** Math.min(this.reconnectAttempt, 4),
+        RECONNECT_MAX_MS,
+      );
       this.setStatus("disconnected", false);
-      this.pane?.writeln("\r\n[disconnected]");
+      if (!this.live) return;
+      this.reconnectAttempt += 1;
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        if (this.live) this.open("onclose-reconnect");
+      }, delay);
     };
 
     ws.onerror = () => {
@@ -127,8 +169,15 @@ class SessionWsClient {
     return true;
   }
 
-  destroy(): void {
+  private clearReconnectTimer(): void {
+    if (this.reconnectTimer == null) return;
+    clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
+  }
+
+  private destroy(): void {
     const ws = this.ws;
+    this.clearReconnectTimer();
     this.ws = null;
     this.pane = null;
     this.activePtyOpenId = null;
@@ -137,6 +186,7 @@ class SessionWsClient {
     this.runListeners.clear();
     this.ready = false;
     this.status = "disconnected";
+    this.reconnectAttempt = 0;
     if (!ws) return;
     ws.onopen = null;
     ws.onmessage = null;
@@ -191,18 +241,25 @@ class SessionWsClient {
       if (env.body?.ok && typeof env.body.pty_id === "string") {
         this.setStatus("ready", true);
       }
-      if (env.body?.closed) pane?.writeln("\r\n[pty closed]");
+      if (env.body?.closed) {
+        pane?.writeln("\r\n[pty closed]");
+        if (this.activePtyOpenId && env.id === this.activePtyOpenId) {
+          this.activePtyOpenId = null;
+        }
+      }
       if (env.body?.busy) pane?.writeln("\r\n[pty busy]");
       if (env.body?.ok === false && env.body.message) {
         pane?.writeln(`\r\n[error] ${env.body.message}`);
-        this.setStatus("error", this.ready);
+        // PTY failure ≠ transport failure — keep socket usable for metrics/retry.
+        if (this.activePtyOpenId && env.id === this.activePtyOpenId) {
+          this.activePtyOpenId = null;
+        }
       }
       return;
     }
 
     if (env.body?.message) {
       pane?.writeln(`\r\n[error] ${env.body.message}`);
-      this.setStatus("error", this.ready);
     }
   }
 
@@ -214,7 +271,6 @@ class SessionWsClient {
 }
 
 const clients = new Map<string, SessionWsClient>();
-const pendingDestroy = new Map<string, ReturnType<typeof setTimeout>>();
 
 export const getSessionWs = (serverId: string): SessionWsClient => {
   let client = clients.get(serverId);
@@ -223,26 +279,6 @@ export const getSessionWs = (serverId: string): SessionWsClient => {
     clients.set(serverId, client);
   }
   return client;
-};
-
-export const cancelSessionWsDestroy = (serverId: string): void => {
-  const timer = pendingDestroy.get(serverId);
-  if (timer === undefined) return;
-  clearTimeout(timer);
-  pendingDestroy.delete(serverId);
-};
-
-/** Schedule destroy; cancelled if Provider remounts (Strict Mode). */
-export const scheduleSessionWsDestroy = (serverId: string): void => {
-  cancelSessionWsDestroy(serverId);
-  const timer = setTimeout(() => {
-    pendingDestroy.delete(serverId);
-    const client = clients.get(serverId);
-    if (!client) return;
-    client.destroy();
-    clients.delete(serverId);
-  }, DESTROY_DELAY_MS);
-  pendingDestroy.set(serverId, timer);
 };
 
 const paneMatches = (pane: PaneApi | null, env: SessionEnvelope): pane is PaneApi => {

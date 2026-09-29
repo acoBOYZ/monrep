@@ -5,8 +5,11 @@ import {
   Settings03Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { SmartPopoverTrigger } from "@monrep/ui/base";
+import { HealthEventsPopoverContent } from "./HealthEventsPopoverContent";
 import type { HealthEvent } from "@/components/agent/metrics/types";
 import { useOpsGlance } from "@/components/agent/hooks/useOpsGlance";
+import { OpsGlanceFace } from "@/components/agent/ops/OpsGlanceFace";
 import { OpsGlanceTile } from "@/components/agent/ops/OpsGlanceTile";
 import {
   dockerDetail,
@@ -63,15 +66,27 @@ export function ServerOpsGlance({ serverId, online, health }: ServerOpsGlancePro
           badgeVariant={services.variant}
           badgeLabel={services.label}
         />
-        <OpsGlanceTile
-          label="Health"
-          detail={healthGlance.detail}
-          icon={Activity01Icon}
-          to="/dashboard"
-          watch={healthGlance.watch}
-          badgeVariant={healthGlance.badgeVariant}
-          badgeLabel={healthGlance.badgeLabel}
-        />
+        <SmartPopoverTrigger
+          side="top-start"
+          className="w-90 p-2"
+          triggerClassName="min-w-0"
+          content={<HealthEventsPopoverContent health={health} />}
+        >
+          <button
+            type="button"
+            className="w-full min-w-0"
+            aria-label={`Health: ${healthGlance.badgeLabel}. ${healthGlance.detail}`}
+          >
+            <OpsGlanceFace
+              label="Health"
+              detail={healthGlance.detail}
+              icon={Activity01Icon}
+              watch={healthGlance.watch}
+              badgeVariant={healthGlance.badgeVariant}
+              badgeLabel={healthGlance.badgeLabel}
+            />
+          </button>
+        </SmartPopoverTrigger>
       </div>
     </section>
   );

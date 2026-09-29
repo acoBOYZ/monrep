@@ -12,10 +12,11 @@ type Waiter = {
 };
 
 const READY_TIMEOUT_MS = 10_000;
+const MAX_RUN_LINES = 2000;
 
 const waitSessionWsReady = (serverId: string): Promise<void> => {
   const client = getSessionWs(serverId);
-  client.open();
+  // Provider owns open(); ops only wait for ready.
   if (client.ready) return Promise.resolve();
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
@@ -36,7 +37,7 @@ const appendEventLine = (lines: Array<string>, envelope: SessionEnvelope): Array
   const line = envelope.body?.line;
   if (typeof line !== "string") return lines;
   const next = envelope.body?.stream === "stderr" ? [...lines, `[err] ${line}`] : [...lines, line];
-  return next.length > 500 ? next.slice(-500) : next;
+  return next.length > MAX_RUN_LINES ? next.slice(-MAX_RUN_LINES) : next;
 };
 
 const applyTerminal = (lines: Array<string>, envelope: SessionEnvelope): Array<string> => {

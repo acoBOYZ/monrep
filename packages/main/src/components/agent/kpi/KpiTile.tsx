@@ -39,9 +39,9 @@ export function KpiTile({
   const showSpark = spark !== undefined && spark.length >= 2;
 
   return (
-    <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 transition-colors hover:bg-card/60">
+    <div className="flex min-h-31 min-w-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 transition-colors hover:bg-card/60">
       <div className="flex flex-col gap-2 px-3 pt-3 pb-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex h-3.5 items-center gap-1.5 text-xs text-muted-foreground">
           {icon ? (
             <HugeiconsIcon
               icon={icon}
@@ -52,7 +52,7 @@ export function KpiTile({
           ) : null}
           <span className="truncate">{label}</span>
         </div>
-        <div className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1">
+        <div className="flex min-h-9 min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1">
           <ImpactFlash watch={value}>
             <span className="text-2xl font-semibold tracking-tight tabular-nums sm:text-3xl">
               {value}
@@ -64,11 +64,9 @@ export function KpiTile({
           ) : null}
         </div>
       </div>
-      {showSpark ? (
-        <div className="mt-auto w-full">
-          <Sparkline data={[...spark]} color={sparkColor} />
-        </div>
-      ) : null}
+      <div className="mt-auto w-full shrink-0">
+        {showSpark ? <Sparkline data={[...spark]} color={sparkColor} unit={unit} /> : null}
+      </div>
     </div>
   );
 }
