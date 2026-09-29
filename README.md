@@ -9,10 +9,10 @@ One control plane. Many servers. No jumping between terminals every time somethi
 ## The idea
 
 
-| Piece                   | What it does                                                                                                                       |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Web app**             | Dashboard. Live view. Trigger updates, restarts, open a shell, watch logs.                                                         |
-| **CLI agent**           | Runs on the server as a single binary. Talks to the web app over a realtime channel. Executes what you ask.                        |
+| Piece                   | What it does                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **Web app**             | Dashboard. Live view. Trigger updates, restarts, open a shell, watch logs.                                                        |
+| **CLI agent**           | Runs on the server as a single binary. Talks to the web app over a realtime channel. Executes what you ask.                       |
 | **CI (GitHub for now)** | Builds images / binaries. When source changes you can push updates the same way CF / Vercel / Netlify feel, but for *your* fleet. |
 
 
@@ -53,7 +53,7 @@ If you just cloned this: start from [ROADMAP.md](./ROADMAP.md) for “what exist
 
 HTTPS on Vite matters for StreamDB: browsers cap ~6 concurrent HTTP/1.1 sockets per host; TLS brings HTTP/2 multiplexing so many live stream requests don’t queue.
 
-Brand / domains are **per deploy**: copy [`brand.json.example`](./brand.json.example) → `brand.json` (gitignored) and edit, or let `setup:dev` / `bun run sync:brand` create it from the example. Generated `*.gen.*` and `scripts/install-agent.sh` are also local.
+Brand / domains are **per deploy**: copy `[brand.json.example](./brand.json.example)` → `brand.json` (gitignored) and edit, or let `setup:dev` / `bun run sync:brand` create it from the example. Generated `*.gen.`* and `scripts/install-agent.sh` are also local.
 
 ```bash
 bun install
@@ -75,7 +75,8 @@ curl -fsSL https://monrep.dev/install | bash
 sudo monrep init --url https://<your-app> --token <one-time>
 ```
 
-Local bind to Vite main (`https://localhost:5274`): see [`packages/agent/README.md`](./packages/agent/README.md) **Local (main + agent)**. `bun run --cwd packages/agent local`.
+Local bind to Vite main (`https://localhost:5274`): see `[packages/agent/README.md](./packages/agent/README.md)` **Local (main + agent)**. `bun run --cwd packages/agent local`.
+
 ```bash
 bun run dev # or bun run --cwd packages/main dev 
 bun run --cwd packages/agent local -- --token <token>
@@ -83,21 +84,18 @@ bun run --cwd packages/agent local -- --token <token>
 bun run --cwd packages/agent local
 ```
 
-Install URL and release asset names come from your local `brand.json` (see `brand.json.example`). After edits: `bun run sync:brand`. Details: [`packages/agent/README.md`](./packages/agent/README.md). Progress: [`ROADMAP.md`](./ROADMAP.md).
+Install URL and release asset names come from your local `brand.json` (see `brand.json.example`). After edits: `bun run sync:brand`. Details: `[packages/agent/README.md](./packages/agent/README.md)`. Progress: `[ROADMAP.md](./ROADMAP.md)`.
 
 ## Contributing
 
 Issues and PRs welcome. Keep changes lean.
 
-Full rules (quality gates, import/polish house style, and **installing `/monrep` + Intent skills** for AI agents): **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
+Full rules (quality gates, import/polish house style, and **installing** `/monrep` **+ Intent skills** for AI agents): **[CONTRIBUTING.md](./CONTRIBUTING.md)**.
 
-Short version: don’t edit generated files under `packages/db`. Change the source and run `bun run codegen`. Agent hard rules live in [`AGENTS.md`](./AGENTS.md); if you code with Cursor, run `bun run skills:install` and keep the **monrep** skill in sync.
+Short version: don’t edit generated files under `packages/db`. Change the source and run `bun run codegen`. Agent hard rules live in `[AGENTS.md](./AGENTS.md)`; if you code with Cursor, run `bun run skills:install` and keep the **monrep** skill in sync.
+
+Questions or ideas → open an issue, or say hi in a PR.
 
 ## License
 
 MIT. See `package.json`.
-
----
-
-Built by [Ahmet Cevdet Öztürk](https://github.com/acoBOYZ).  
-Questions or ideas → open an issue, or say hi in a PR.
