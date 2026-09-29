@@ -90,13 +90,12 @@ function countStatuses(servers: ReadonlyArray<TServerDo>) {
  */
 export function useFleetMetrics(_from: number, _to: number) {
   const { db, isReady: agentReady } = useStreamDb("agent");
-  const serversLive = useLiveQuery({
+  const { data: servers = EMPTY_SERVERS } = useLiveQuery({
     query: (q) => {
       if (!db) return null;
       return q.from({ s: db.collections.server }).orderBy(({ s }) => s.name, "asc");
     },
   });
-  const servers = serversLive.data ?? EMPTY_SERVERS;
 
   const onlineIds = useMemo(
     () =>

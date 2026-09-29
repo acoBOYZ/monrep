@@ -112,7 +112,7 @@ export function DockerLogsPanel({
               value={String(tail)}
               onValueChange={(value) => onTailChange(Number(value) as LogTail)}
             >
-              <TabsList size="sm" aria-label="Tail lines">
+              <TabsList aria-label="Tail lines">
                 {LOG_TAIL_OPTIONS.map((option) => (
                   <TabsTrigger key={option} value={String(option)} className="tabular-nums">
                     {option}

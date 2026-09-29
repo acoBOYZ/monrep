@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import {
-  Activity01Icon,
-  AlertCircleIcon,
-  Chip02Icon,
+  AlertDiamondIcon,
+  CpuIcon,
   HardDriveIcon,
+  RamMemoryIcon,
 } from "@hugeicons/core-free-icons";
 import type { ErrorRun, MetricPoint } from "@/components/agent/metrics/types";
 import { SERIES_COLOR } from "@/components/agent/charts/chartTheme";
@@ -66,7 +66,7 @@ export function ServerKpiStrip({
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
       <KpiTile
         label="CPU used"
-        icon={Activity01Icon}
+        icon={CpuIcon}
         value={latest?.cpuPct !== undefined ? latest.cpuPct.toFixed(1) : "—"}
         unit={latest?.cpuPct !== undefined ? "%" : undefined}
         delta={delta(latest?.cpuPct, kpis.prevAvgCpuPct)}
@@ -78,7 +78,7 @@ export function ServerKpiStrip({
       />
       <KpiTile
         label="Memory used"
-        icon={Chip02Icon}
+        icon={RamMemoryIcon}
         value={latest?.memPct !== undefined ? latest.memPct.toFixed(1) : "—"}
         unit={latest?.memPct !== undefined ? "%" : undefined}
         delta={delta(latest?.memPct, kpis.prevAvgMemPct)}
@@ -102,7 +102,7 @@ export function ServerKpiStrip({
       />
       <KpiTile
         label="New kernel messages"
-        icon={AlertCircleIcon}
+        icon={AlertDiamondIcon}
         value={String(kpis.errorLines)}
         delta={delta(kpis.errorLines, kpis.prevErrorLines)}
         deltaFormat={(d) => `${d > 0 ? "+" : ""}${d}`}

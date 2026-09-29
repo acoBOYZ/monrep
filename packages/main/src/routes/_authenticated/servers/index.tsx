@@ -1,3 +1,5 @@
+import { AddSquareIcon, DashboardCircleIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { Badge, Button } from "@monrep/ui/base";
 import { useLiveQuery } from "@tanstack/react-db";
 import { Link, createFileRoute } from "@tanstack/react-router";
@@ -26,10 +28,17 @@ function ServersPage() {
           <Badge variant="muted">{rows.length}</Badge>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button nativeButton={false} variant="outline" render={<Link to="/dashboard" />}>
+          <Button
+            nativeButton={false}
+            variant="outline"
+            size="sm"
+            render={<Link to="/dashboard" />}
+          >
+            <HugeiconsIcon icon={DashboardCircleIcon} className="size-4" />
             Dashboard
           </Button>
-          <Button nativeButton={false} render={<Link to="/servers/new" />}>
+          <Button nativeButton={false} size="sm" render={<Link to="/servers/new" />}>
+            <HugeiconsIcon icon={AddSquareIcon} className="size-4" />
             Add server
           </Button>
         </div>

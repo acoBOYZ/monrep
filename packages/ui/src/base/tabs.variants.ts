@@ -6,7 +6,7 @@ export const tabsListVariants = cva(
     variants: {
       size: {
         xs: "h-7 rounded-sm p-0.5",
-        default: "h-9 rounded-sm p-0.75",
+        default: "h-8 rounded-sm p-0.5",
         sm: "h-8 rounded-sm p-0.5",
         md: "h-9 rounded-sm p-0.75",
         lg: "h-10 rounded-md p-1",

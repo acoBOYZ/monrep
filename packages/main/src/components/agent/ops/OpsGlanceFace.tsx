@@ -11,6 +11,7 @@ export type OpsGlanceFaceProps = {
   label: string;
   detail: string;
   icon: IconSvgElement;
+  iconClassName?: string;
   watch: string | number;
   badgeVariant: NonNullable<BadgeProps["variant"]>;
   badgeLabel: string;
@@ -26,6 +27,7 @@ export function OpsGlanceFace({
   label,
   detail,
   icon,
+  iconClassName,
   watch,
   badgeVariant,
   badgeLabel,
@@ -35,7 +37,7 @@ export function OpsGlanceFace({
   return (
     <span className={cn(TILE_CLASS, className)}>
       <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted/60 text-muted-foreground transition-colors group-hover:text-foreground">
-        <HugeiconsIcon icon={icon} className="size-4" aria-hidden />
+        <HugeiconsIcon icon={icon} className={cn("size-6 text-cool", iconClassName)} aria-hidden />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">

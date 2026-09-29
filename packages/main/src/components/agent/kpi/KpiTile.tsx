@@ -64,8 +64,27 @@ export function KpiTile({
           ) : null}
         </div>
       </div>
-      <div className="mt-auto w-full shrink-0">
-        {showSpark ? <Sparkline data={[...spark]} color={sparkColor} unit={unit} /> : null}
+      <div className="mt-auto h-10 w-full shrink-0">
+        {showSpark ? (
+          <Sparkline data={[...spark]} color={sparkColor} unit={unit} />
+        ) : (
+          <div className="flex h-full items-center px-3" aria-hidden>
+            <svg
+              viewBox="0 0 120 16"
+              preserveAspectRatio="none"
+              className="h-6 w-full text-cool/50"
+            >
+              <path
+                d="M0 8 Q15 8 30 8 T60 8 T90 8 T120 8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.25"
+                strokeDasharray="3 4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        )}
       </div>
     </div>
   );

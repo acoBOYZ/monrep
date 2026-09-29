@@ -1,3 +1,4 @@
+import { CpuIcon, RamMemoryIcon, ServerIcon } from "@hugeicons/core-free-icons";
 import { SERIES_COLOR } from "@/components/agent/charts/chartTheme";
 import { KpiTile } from "@/components/agent/kpi/KpiTile";
 import { delta } from "@/components/agent/metrics/aggregate";
@@ -25,6 +26,7 @@ export function FleetKpis({ loading, online, total, kpis }: FleetKpisProps) {
         value={`${online}/${total}`}
         sparkColor={SERIES_COLOR(0)}
         loading={loading}
+        icon={ServerIcon}
       />
       <KpiTile
         label="CPU used"
@@ -35,6 +37,7 @@ export function FleetKpis({ loading, online, total, kpis }: FleetKpisProps) {
         invert
         sparkColor={SERIES_COLOR(0)}
         loading={loading}
+        icon={CpuIcon}
       />
       <KpiTile
         label="Memory used"
@@ -45,6 +48,7 @@ export function FleetKpis({ loading, online, total, kpis }: FleetKpisProps) {
         invert
         sparkColor={SERIES_COLOR(1)}
         loading={loading}
+        icon={RamMemoryIcon}
       />
     </div>
   );

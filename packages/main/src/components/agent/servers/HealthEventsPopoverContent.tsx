@@ -1,7 +1,7 @@
 import {
-  Activity01Icon,
   Alert01Icon,
   AlertCircleIcon,
+  CpuIcon,
   InformationCircleIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -80,7 +80,7 @@ export function HealthEventsPopoverContent({ health }: HealthEventsPopoverConten
     return (
       <div className="flex flex-col items-center gap-2 px-3 py-6 text-center">
         <span className="flex size-8 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
-          <HugeiconsIcon icon={Activity01Icon} className="size-4" aria-hidden />
+          <HugeiconsIcon icon={CpuIcon} className="size-4" aria-hidden />
         </span>
         <p className="text-xs font-medium">No health events</p>
         <p className="text-[0.6875rem] text-muted-foreground">
