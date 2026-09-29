@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.3] - 2026-09-29
+
+### 🐛 Bug Fixes
+
+- Macos platform scrape_mem cause early return which needed in linux by @acoBOYZ
+
+- Metrics leave Cloudflare samples. agent scrapes into local SQLite; UI queries over session WS (`metrics.*` / `events.query`). by @acoBOYZ
+
+- Speed up agent CI: shared rust cache, path-filter jobs, `--locked` everywhere. release bumps Cargo.lock too. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #45 from acoBOYZ/fix-tcp-layer by @acoBOYZ in #45
+
+- Merge pull request #44 from acoBOYZ/fix-faster-actions by @acoBOYZ in #44
+
+
 ## [0.7.2] - 2026-09-28
 
 ### 🚀 Features
