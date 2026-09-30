@@ -4,7 +4,7 @@
   "private": true,
   "description": "Workspace-only Agent Skills for the monrep monorepo. React standards, quality gates, and conventions consumed via TanStack Intent (not published to npm)",
   "type": "module",
-  "author": "Ahmet Cevdet ÖZTÜRK",
+  "author": "ACO .",
   "license": "MIT",
   "homepage": "https://github.com/acoBOYZ/monrep",
   "repository": {
@@ -33,7 +33,7 @@
     "sync-versions": "bun ../../scripts/skills/sync-versions.ts"
   },
   "devDependencies": {
-    "@tanstack/intent": "^0.4.0",
+    "@tanstack/intent": "^0.5.0",
     "@types/bun": "^1.4.2"
   }
 }
