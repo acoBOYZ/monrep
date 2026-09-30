@@ -101,6 +101,18 @@ export const RuntimeConfigDoMeta = {
   indexes: __agent_do.collections.runtime_config.indexes,
 } as const;
 
+export const ServerLayoutDoSchema = __agent_do.collections.server_layout.Schema;
+export const ServerLayoutDoMeta = {
+  name: __agent_do.collections.server_layout.name,
+  streamModule: __agent_do.moduleId,
+  streamEpoch: __agent_do.streamEpoch,
+  streamLive: __agent_do.streamLive,
+  streamPersist: __agent_do.streamPersist,
+  type: __agent_do.collections.server_layout.name,
+  primaryKey: __agent_do.collections.server_layout.primaryKey,
+  indexes: __agent_do.collections.server_layout.indexes,
+} as const;
+
 export const SecurityDoSchema = __audit_do.collections.security.Schema;
 export const SecurityDoMeta = {
   name: __audit_do.collections.security.name,
@@ -194,6 +206,11 @@ export const DO_MODULE_STATE = {
       schema: __agent_do.collections.runtime_config.Schema, 
       type: __agent_do.collections.runtime_config.name, 
       primaryKey: __agent_do.collections.runtime_config.primaryKey 
+    },
+    server_layout: { 
+      schema: __agent_do.collections.server_layout.Schema, 
+      type: __agent_do.collections.server_layout.name, 
+      primaryKey: __agent_do.collections.server_layout.primaryKey 
     },
   },
   "audit": {

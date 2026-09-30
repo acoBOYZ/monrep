@@ -36,11 +36,9 @@ export async function runDoTypes(): Promise<void> {
       : ['import type { TDoModuleId } from "./do.gen";']),
     "",
     "export type { TDoModuleId };",
-    "",
-    ...collections.flatMap((r) => [
-      `export type T${r.exportName}Do = z.infer<typeof ${r.exportName}DoSchema>;`,
-      "",
-    ]),
+    ...collections.map(
+      (r) => `export type T${r.exportName}Do = z.infer<typeof ${r.exportName}DoSchema>;`,
+    ),
   ];
 
   await writeIfChanged(paths.typesGen, `${lines.join("\n").trimEnd()}\n`, "doTypes");

@@ -77,5 +77,20 @@ export default createDoModule("agent")({
         updatedAt: ctx.now,
       }),
     }),
+    server_layout: doTable({
+      primaryKey: "serverId",
+      indexes: ["serverId"],
+      schema: {
+        serverId: z.string(),
+        sections: z.array(z.enum(["meta", "metrics", "ops", "pty"])),
+        updatedAt: z.string().optional(),
+      },
+      onInsert: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
+      onUpdate: ({ ctx }) => ({
+        updatedAt: ctx.now,
+      }),
+    }),
   },
 });

@@ -26,6 +26,7 @@ import type {
 	TRuntimeConfigDo,
 	TSecurityDo,
 	TServerDo,
+	TServerLayoutDo,
 	TTotpDo,
 	TUserDo
 } from "./types.gen";
@@ -40,6 +41,8 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
       deleteRuntimeConfig: createDeleteStreamAction({ db, helpers: state.runtime_config, collection: db.collections.runtime_config }),
       upsertServer: createUpsertStreamAction({ db, helpers: state.server, collection: db.collections.server, primaryKey: "id", schema: DO_MODULES["agent"].collections.server.Schema, insertGens: DO_MODULES["agent"].collections.server.insertGens, updateGens: DO_MODULES["agent"].collections.server.updateGens }),
       deleteServer: createDeleteStreamAction({ db, helpers: state.server, collection: db.collections.server }),
+      upsertServerLayout: createUpsertStreamAction({ db, helpers: state.server_layout, collection: db.collections.server_layout, primaryKey: "serverId", schema: DO_MODULES["agent"].collections.server_layout.Schema, insertGens: DO_MODULES["agent"].collections.server_layout.insertGens, updateGens: DO_MODULES["agent"].collections.server_layout.updateGens }),
+      deleteServerLayout: createDeleteStreamAction({ db, helpers: state.server_layout, collection: db.collections.server_layout }),
   }));
   sdb.collections.device_cred.createIndex((r) => r.serverId, { indexType: BasicIndex });
   sdb.collections.device_cred.createIndex((r) => r.deviceId, { indexType: BasicIndex });
@@ -50,6 +53,7 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
   sdb.collections.server.createIndex((r) => r.status, { indexType: BasicIndex });
   sdb.collections.server.createIndex((r) => r.deviceId, { indexType: BasicIndex });
   sdb.collections.server.createIndex((r) => r.createdAt, { indexType: BasicIndex });
+  sdb.collections.server_layout.createIndex((r) => r.serverId, { indexType: BasicIndex });
   return sdb;
 };
 
@@ -98,6 +102,8 @@ export type TDoModuleActionDefinitions = {
     deleteRuntimeConfig: ActionDefinition<string | Array<string>>;
     upsertServer: ActionDefinition<TServerDo | Array<TServerDo>>;
     deleteServer: ActionDefinition<string | Array<string>>;
+    upsertServerLayout: ActionDefinition<TServerLayoutDo | Array<TServerLayoutDo>>;
+    deleteServerLayout: ActionDefinition<string | Array<string>>;
   };
   "audit": {
     upsertSecurity: ActionDefinition<TSecurityDo | Array<TSecurityDo>>;

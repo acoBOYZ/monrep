@@ -1,7 +1,7 @@
 import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { MetricRange } from "@/components/agent/metrics/types";
-import { RangeTabs } from "@/components/agent/charts/RangeTabs";
+import { RangeSelect } from "@/components/agent/charts/RangeSelect";
 
 type ServerMetricsToolbarProps = {
   range: MetricRange;
@@ -23,7 +23,7 @@ export function ServerMetricsToolbar({ range, onRangeChange }: ServerMetricsTool
         </div>
       </div>
       <div className="ms-auto shrink-0">
-        <RangeTabs value={range} onChange={onRangeChange} />
+        <RangeSelect value={range} onChange={onRangeChange} />
       </div>
     </div>
   );

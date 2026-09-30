@@ -4,12 +4,14 @@ import { SmartPopoverHost, Toaster, TooltipHost } from "@monrep/ui/base";
 import { DbClient, DbProvider } from "@tanstack/react-db";
 import type { ReactNode } from "react";
 
+const NON_IMPURTIVE_DB_CLIENT_FN = () => new DbClient();
+
 type Props = {
   children: ReactNode;
 };
 
 export function App({ children }: Props) {
-  const [dbClient] = useState(() => new DbClient());
+  const [dbClient] = useState(NON_IMPURTIVE_DB_CLIENT_FN);
 
   return (
     <DbProvider client={dbClient}>

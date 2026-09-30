@@ -30,13 +30,19 @@ export type HealthEvent = {
   message: string;
 };
 
-export type MetricRange = "30m" | "1h" | "6h" | "24h";
+export type MetricRange = "30m" | "1h" | "6h" | "24h" | "7d" | "30d";
 
 export const RANGE_MS: Record<MetricRange, number> = {
   "30m": 30 * 60 * 1000,
   "1h": 60 * 60 * 1000,
   "6h": 6 * 60 * 60 * 1000,
   "24h": 24 * 60 * 60 * 1000,
+  "7d": 7 * 24 * 60 * 60 * 1000,
+  "30d": 30 * 24 * 60 * 60 * 1000,
 };
 
-export const RANGES: ReadonlyArray<MetricRange> = ["30m", "1h", "6h", "24h"];
+export const RANGES: ReadonlyArray<MetricRange> = ["30m", "1h", "6h", "24h", "7d", "30d"];
+
+export function isMetricRange(value: unknown): value is MetricRange {
+  return typeof value === "string" && (RANGES as ReadonlyArray<string>).includes(value);
+}

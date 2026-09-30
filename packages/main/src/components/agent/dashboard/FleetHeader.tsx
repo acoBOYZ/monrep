@@ -4,7 +4,7 @@ import { Badge, Button } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 import { Link } from "@tanstack/react-router";
 import type { MetricRange } from "@/components/agent/metrics/types";
-import { RangeTabs } from "@/components/agent/charts/RangeTabs";
+import { RangeSelect } from "@/components/agent/charts/RangeSelect";
 
 type FleetHeaderProps = {
   online: number;
@@ -34,7 +34,7 @@ export function FleetHeader({ online, offline, pending, range, onRangeChange }: 
         ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <RangeTabs value={range} onChange={onRangeChange} />
+        <RangeSelect value={range} onChange={onRangeChange} />
         <Button nativeButton={false} size="sm" render={<Link to="/servers" />}>
           <HugeiconsIcon icon={ServerIcon} className="size-4" />
           Servers
