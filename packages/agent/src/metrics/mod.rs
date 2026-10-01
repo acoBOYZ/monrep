@@ -1,4 +1,4 @@
-//! Local metrics SQLite — timeseries + events, 30d retention.
+//! Local metrics SQLite — timeseries + events, tiered 30d retention.
 
 mod db;
 mod scrape;
@@ -13,20 +13,20 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::{Instant, MissedTickBehavior, interval, sleep_until};
 
-const RETENTION_MS: i64 = 30 * 24 * 60 * 60 * 1000;
-const PRUNE_EVERY: Duration = Duration::from_secs(60 * 60);
+const MAINTAIN_EVERY: Duration = Duration::from_secs(60 * 60);
 
 pub fn open_default() -> Result<MetricsDb> {
   let path = config::metrics_db_path().map_err(AgentError::Other)?;
   MetricsDb::open(&path)
 }
 
-/// Background scrape + prune. Survives tunnel reconnects (spawn once from supervisor).
+/// Background scrape + maintain (prune / downsample / vacuum). Survives tunnel reconnects.
 pub fn spawn_loop(db: Arc<MetricsDb>) {
   tokio::spawn(async move {
-    let mut prune_iv = interval(PRUNE_EVERY);
-    prune_iv.set_missed_tick_behavior(MissedTickBehavior::Delay);
-    prune_iv.tick().await;
+    let mut maintain_iv = interval(MAINTAIN_EVERY);
+    maintain_iv.set_missed_tick_behavior(MissedTickBehavior::Delay);
+    maintain_iv.tick().await;
+    let _ = db.maintain(now_ms());
 
     let mut next_scrape =
       Instant::now() + Duration::from_secs(settings::metrics_interval_sec().max(5));
@@ -41,9 +41,8 @@ pub fn spawn_loop(db: Arc<MetricsDb>) {
           next_scrape = Instant::now()
             + Duration::from_secs(settings::metrics_interval_sec().max(5));
         }
-        _ = prune_iv.tick() => {
-          let cutoff = now_ms() - RETENTION_MS;
-          let _ = db.prune_before(cutoff);
+        _ = maintain_iv.tick() => {
+          let _ = db.maintain(now_ms());
         }
       }
     }

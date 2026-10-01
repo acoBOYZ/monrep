@@ -60,6 +60,30 @@ pub struct MetricsDb {
   conn: Mutex<Connection>,
 }
 
+/// Names persisted for charts / fleet latest (must match UI seriesMap).
+pub const PERSIST_METRIC_NAMES: &[&str] = &[
+  "cpu.used_pct",
+  "cpu.load.1m",
+  "cpu.load.5m",
+  "cpu.load.15m",
+  "mem.used_pct",
+  "mem.used_bytes",
+  "mem.total_bytes",
+  "disk.used_pct",
+  "host.nproc",
+];
+
+const RAW_KEEP_MS: i64 = 24 * 60 * 60 * 1000;
+const MID_KEEP_MS: i64 = 7 * 24 * 60 * 60 * 1000;
+const RETENTION_MS: i64 = 30 * 24 * 60 * 60 * 1000;
+const STEP_5M_MS: i64 = 5 * 60 * 1000;
+const STEP_1H_MS: i64 = 60 * 60 * 1000;
+const VACUUM_AFTER_ROWS: usize = 1_000;
+
+fn is_persisted_name(name: &str) -> bool {
+  PERSIST_METRIC_NAMES.contains(&name)
+}
+
 impl MetricsDb {
   pub fn open(path: &Path) -> Result<Self> {
     if let Some(parent) = path.parent() {
@@ -93,6 +117,10 @@ impl MetricsDb {
   }
 
   pub fn insert_metrics(&self, points: &[MetricPoint]) -> Result<()> {
+    let points: Vec<&MetricPoint> = points
+      .iter()
+      .filter(|p| is_persisted_name(&p.name))
+      .collect();
     if points.is_empty() {
       return Ok(());
     }
@@ -143,6 +171,112 @@ impl MetricsDb {
       .execute("DELETE FROM events WHERE at < ?1", params![cutoff_ms])
       .map_err(|e| AgentError::Other(e.into()))?;
     Ok(m + e)
+  }
+
+  /// Drop non-allowlisted series, downsample old bands, prune >30d, vacuum when reclaiming.
+  pub fn maintain(&self, now_ms: i64) -> Result<usize> {
+    let mut touched = self.delete_non_allowlisted()?;
+    touched += self.prune_before(now_ms - RETENTION_MS)?;
+    // Older band first so mid-band rollups are not re-averaged into coarse later incorrectly
+    // on the same pass (coarse window is older than mid).
+    touched += self.downsample_band(now_ms - RETENTION_MS, now_ms - MID_KEEP_MS, STEP_1H_MS)?;
+    touched += self.downsample_band(now_ms - MID_KEEP_MS, now_ms - RAW_KEEP_MS, STEP_5M_MS)?;
+    if touched >= VACUUM_AFTER_ROWS {
+      self.vacuum()?;
+    }
+    Ok(touched)
+  }
+
+  fn delete_non_allowlisted(&self) -> Result<usize> {
+    let conn = self
+      .conn
+      .lock()
+      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let placeholders = PERSIST_METRIC_NAMES
+      .iter()
+      .map(|_| "?")
+      .collect::<Vec<_>>()
+      .join(",");
+    let sql = format!("DELETE FROM metrics WHERE name NOT IN ({placeholders})");
+    let mut stmt = conn
+      .prepare(&sql)
+      .map_err(|e| AgentError::Other(e.into()))?;
+    let n = stmt
+      .execute(rusqlite::params_from_iter(
+        PERSIST_METRIC_NAMES.iter().copied(),
+      ))
+      .map_err(|e| AgentError::Other(e.into()))?;
+    Ok(n)
+  }
+
+  /// Replace rows in `[from, to)` with `avg` buckets of `step_ms`.
+  fn downsample_band(&self, from: i64, to: i64, step_ms: i64) -> Result<usize> {
+    if to <= from || step_ms <= 0 {
+      return Ok(0);
+    }
+    let conn = self
+      .conn
+      .lock()
+      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let tx = conn
+      .unchecked_transaction()
+      .map_err(|e| AgentError::Other(e.into()))?;
+    let before: i64 = tx
+      .query_row(
+        "SELECT COUNT(*) FROM metrics WHERE at >= ?1 AND at < ?2",
+        params![from, to],
+        |row| row.get(0),
+      )
+      .map_err(|e| AgentError::Other(e.into()))?;
+    if before == 0 {
+      return Ok(0);
+    }
+    tx.execute_batch(
+      "
+      CREATE TEMP TABLE IF NOT EXISTS _metrics_agg (
+        at INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        value REAL NOT NULL,
+        dims TEXT NOT NULL
+      );
+      DELETE FROM _metrics_agg;
+      ",
+    )
+    .map_err(|e| AgentError::Other(e.into()))?;
+    tx.execute(
+      "INSERT INTO _metrics_agg (at, name, value, dims)
+       SELECT (at / ?1) * ?1, name, avg(value), dims
+       FROM metrics
+       WHERE at >= ?2 AND at < ?3
+       GROUP BY (at / ?1) * ?1, name, dims",
+      params![step_ms, from, to],
+    )
+    .map_err(|e| AgentError::Other(e.into()))?;
+    let deleted = tx
+      .execute(
+        "DELETE FROM metrics WHERE at >= ?1 AND at < ?2",
+        params![from, to],
+      )
+      .map_err(|e| AgentError::Other(e.into()))?;
+    tx.execute(
+      "INSERT INTO metrics (at, name, value, dims) SELECT at, name, value, dims FROM _metrics_agg",
+      [],
+    )
+    .map_err(|e| AgentError::Other(e.into()))?;
+    let _ = tx.execute_batch("DROP TABLE IF EXISTS _metrics_agg;");
+    tx.commit().map_err(|e| AgentError::Other(e.into()))?;
+    Ok(deleted)
+  }
+
+  fn vacuum(&self) -> Result<()> {
+    let conn = self
+      .conn
+      .lock()
+      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    conn
+      .execute_batch("VACUUM;")
+      .map_err(|e| AgentError::Other(e.into()))?;
+    Ok(())
   }
 
   pub fn query(&self, q: &QueryParams) -> Result<Vec<SeriesPoints>> {
@@ -432,5 +566,73 @@ mod tests {
     assert_eq!(series.len(), 1);
     assert_eq!(series[0].points.len(), 1);
     assert_eq!(db.prune_before(at + 1).unwrap(), 1);
+  }
+
+  #[test]
+  fn insert_skips_non_allowlisted() {
+    let db = tmp_db();
+    let at = 1_700_000_000_000i64;
+    db.insert_metrics(&[
+      MetricPoint {
+        at,
+        name: "net.rx_bytes".into(),
+        value: 1.0,
+        dims: r#"{"iface":"eth0"}"#.into(),
+      },
+      MetricPoint {
+        at,
+        name: "cpu.used_pct".into(),
+        value: 12.0,
+        dims: "{}".into(),
+      },
+    ])
+    .unwrap();
+    let series = db
+      .query(&QueryParams {
+        from: at - 1,
+        to: at + 1,
+        names: vec!["net.rx_bytes".into(), "cpu.used_pct".into()],
+        dims: None,
+        step_ms: None,
+        agg: QueryAgg::Avg,
+      })
+      .unwrap();
+    assert_eq!(series.len(), 1);
+    assert_eq!(series[0].name, "cpu.used_pct");
+  }
+
+  #[test]
+  fn maintain_downsamples_old_band() {
+    let db = tmp_db();
+    let now = 1_800_000_000_000i64;
+    // 48h ago — inside 24h–7d mid band (5m buckets)
+    let old = now - (48 * 60 * 60 * 1000);
+    for i in 0..10 {
+      db.insert_metrics(&[MetricPoint {
+        at: old + i * 30_000,
+        name: "cpu.used_pct".into(),
+        value: i as f64,
+        dims: "{}".into(),
+      }])
+      .unwrap();
+    }
+    let touched = db.maintain(now).unwrap();
+    assert!(touched >= 10);
+    let series = db
+      .query(&QueryParams {
+        from: old - 1,
+        to: old + 10 * 30_000,
+        names: vec!["cpu.used_pct".into()],
+        dims: None,
+        step_ms: None,
+        agg: QueryAgg::Avg,
+      })
+      .unwrap();
+    assert_eq!(series.len(), 1);
+    assert!(
+      series[0].points.len() < 10,
+      "expected fewer than raw points after 5m downsample, got {}",
+      series[0].points.len()
+    );
   }
 }

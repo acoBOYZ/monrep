@@ -41,16 +41,21 @@ export function KpiTile({
   return (
     <div className="flex min-h-31 min-w-0 flex-col overflow-hidden rounded-lg border border-border/60 bg-card/40 transition-colors hover:bg-card/60">
       <div className="flex flex-col gap-2 px-3 pt-3 pb-2">
-        <div className="flex h-3.5 items-center gap-1.5 text-xs text-muted-foreground">
-          {icon ? (
-            <HugeiconsIcon
-              icon={icon}
-              className="size-3.5 shrink-0"
-              style={{ color: sparkColor }}
-              aria-hidden
-            />
+        <div className="flex h-3.5 items-center justify-between gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            {icon ? (
+              <HugeiconsIcon
+                icon={icon}
+                className="size-3.5 shrink-0"
+                style={{ color: sparkColor }}
+                aria-hidden
+              />
+            ) : null}
+            <span className="truncate">{label}</span>
+          </div>
+          {deltaText && delta !== undefined ? (
+            <KpiDeltaBadge delta={delta} deltaText={deltaText} invert={invert} />
           ) : null}
-          <span className="truncate">{label}</span>
         </div>
         <div className="flex min-h-9 min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-1">
           <ImpactFlash watch={value}>
@@ -59,9 +64,6 @@ export function KpiTile({
             </span>
           </ImpactFlash>
           {unit ? <span className="text-sm text-muted-foreground">{unit}</span> : null}
-          {deltaText && delta !== undefined ? (
-            <KpiDeltaBadge delta={delta} deltaText={deltaText} invert={invert} />
-          ) : null}
         </div>
       </div>
       <div className="mt-auto h-10 w-full shrink-0">

@@ -3,6 +3,7 @@
 use crate::brand;
 use crate::error::{AgentError, Result};
 use fs_err as fs;
+use futures_util::StreamExt;
 use serde::Deserialize;
 use std::env::consts::{ARCH, OS};
 use std::io::Write;
@@ -16,6 +17,10 @@ use std::os::unix::process::CommandExt;
 
 pub use brand::RELEASE_REPO;
 pub const AUTO_UPDATE_INTERVAL_SECS: u64 = 6 * 60 * 60;
+
+const UPDATE_TMP_PREFIX: &str = ".monrep-update-";
+const UPDATE_TMP_SUFFIX: &str = ".tmp";
+const PREV_PREFIX: &str = ".monrep-prev-";
 
 #[derive(Debug, Clone)]
 pub struct ReleaseInfo {
@@ -122,24 +127,49 @@ pub async fn check_for_update() -> Result<Option<ReleaseInfo>> {
   }
 }
 
+fn is_update_artifact(name: &str) -> bool {
+  (name.starts_with(UPDATE_TMP_PREFIX) && name.ends_with(UPDATE_TMP_SUFFIX))
+    || name.starts_with(PREV_PREFIX)
+}
+
+/// Remove leftover `.monrep-update-*.tmp` / `.monrep-prev-*` beside the binary.
+fn purge_update_artifacts(dir: &Path, keep: Option<&Path>) {
+  let Ok(entries) = fs::read_dir(dir) else {
+    return;
+  };
+  for entry in entries.flatten() {
+    let path = entry.path();
+    if keep.is_some_and(|k| k == path.as_path()) {
+      continue;
+    }
+    let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
+      continue;
+    };
+    if is_update_artifact(name) {
+      let _ = fs::remove_file(&path);
+    }
+  }
+}
+
 async fn download_to(path: &Path, url: &str) -> Result<()> {
   let client = reqwest::Client::builder()
     .user_agent(format!("monrep/{}", env!("CARGO_PKG_VERSION")))
     .build()
     .map_err(|e| AgentError::Other(anyhow::anyhow!(e)))?;
-  let bytes = client
+  let response = client
     .get(url)
     .send()
     .await
     .map_err(|e| AgentError::Other(anyhow::anyhow!("download: {e}")))?
     .error_for_status()
-    .map_err(|e| AgentError::Other(anyhow::anyhow!("download: {e}")))?
-    .bytes()
-    .await
-    .map_err(|e| AgentError::Other(anyhow::anyhow!("download body: {e}")))?;
+    .map_err(|e| AgentError::Other(anyhow::anyhow!("download: {e}")))?;
   {
     let mut f = fs::File::create(path)?;
-    f.write_all(&bytes)?;
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+      let chunk = chunk.map_err(|e| AgentError::Other(anyhow::anyhow!("download body: {e}")))?;
+      f.write_all(&chunk)?;
+    }
     f.sync_all()?;
   }
   #[cfg(unix)]
@@ -163,10 +193,18 @@ pub async fn apply_update(info: &ReleaseInfo) -> Result<PathBuf> {
       exe.display()
     ))
   })?;
-  let tmp = parent.join(format!(".monrep-update-{}.tmp", std::process::id()));
-  download_to(&tmp, &info.download_url).await?;
+  purge_update_artifacts(parent, None);
 
-  let backup = parent.join(format!(".monrep-prev-{}", std::process::id()));
+  let tmp = parent.join(format!(
+    "{UPDATE_TMP_PREFIX}{}{UPDATE_TMP_SUFFIX}",
+    std::process::id()
+  ));
+  if let Err(e) = download_to(&tmp, &info.download_url).await {
+    let _ = fs::remove_file(&tmp);
+    return Err(e);
+  }
+
+  let backup = parent.join(format!("{PREV_PREFIX}{}", std::process::id()));
   if let Err(e) = fs::rename(&exe, &backup) {
     let _ = fs::remove_file(&tmp);
     return Err(AgentError::Other(anyhow::anyhow!(
@@ -181,6 +219,7 @@ pub async fn apply_update(info: &ReleaseInfo) -> Result<PathBuf> {
     )));
   }
   let _ = fs::remove_file(&backup);
+  purge_update_artifacts(parent, None);
   Ok(exe)
 }
 
@@ -214,5 +253,13 @@ mod tests {
     assert!(is_newer("v1.0.1", "1.0.0"));
     assert!(!is_newer("0.1.0", "0.1.0"));
     assert!(!is_newer("0.1.0", "0.2.0"));
+  }
+
+  #[test]
+  fn update_artifact_names() {
+    assert!(is_update_artifact(".monrep-update-123.tmp"));
+    assert!(is_update_artifact(".monrep-prev-456"));
+    assert!(!is_update_artifact("monrep"));
+    assert!(!is_update_artifact(".monrep-update-123"));
   }
 }

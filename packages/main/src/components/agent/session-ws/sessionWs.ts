@@ -177,6 +177,18 @@ class SessionWsClient {
 
   private destroy(): void {
     const ws = this.ws;
+    const ptyId = this.activePtyOpenId;
+    if (ptyId && ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(
+        JSON.stringify({
+          v: 1,
+          id: ptyId,
+          op: "pty.close",
+          body: { pty_id: ptyId },
+        } satisfies SessionEnvelope),
+      );
+      this.activePtyOpenId = null;
+    }
     this.clearReconnectTimer();
     this.ws = null;
     this.pane = null;

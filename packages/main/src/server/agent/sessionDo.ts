@@ -181,12 +181,23 @@ export class AgentSession extends DurableObject<Env> {
   }
 
   async webSocketClose(
-    _ws: WebSocket,
+    ws: WebSocket,
     _code: number,
     _reason: string,
     _wasClean: boolean,
   ): Promise<void> {
-    // PTY lifetime ≠ browser socket — only explicit pty.close from UI kills shells.
+    // Last browser gone → close agent PTYs (UI remount never reattaches; orphans waste slots).
+    if (this.socketRole(ws) === "browser" && this.socketsWithRole("browser").length === 0) {
+      const closes = this.browserReplyRouter.drainActivePtyIds().map((ptyId) =>
+        this.sendEnvelope({
+          v: PROTO_V,
+          id: nextUlid(null),
+          op: "pty.close",
+          body: { pty_id: ptyId },
+        }),
+      );
+      await Promise.all(closes);
+    }
     if (this.socketsWithRole("agent").length === 0) {
       await this.setPresence("offline");
       await this.ctx.storage.deleteAlarm();
