@@ -2,6 +2,55 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.4] - 2026-10-01
+
+### 🐛 Bug Fixes
+
+- Stop leaking PTY slots and ballooning the local metrics DB. scrape only what the UI charts, then downsample. by @acoBOYZ
+
+- Fmt by @acoBOYZ
+
+
+### 📚 Documentation
+
+- Refactored readme by @acoBOYZ
+
+- Package README factory. fill the gaps, trim the noise, point people at `create:app`. by @acoBOYZ
+
+
+### 🚜 Refactor
+
+- Server detail sections are drag-sortable and saved on the agent DO. range picker grows up to 30d. by @acoBOYZ
+
+
+### 🎨 Styling
+
+- Ops pages stop blowing past the viewport. output panel virtualizes + sticks to the end. by @acoBOYZ
+
+- KPI / glance icon pass + empty spark placeholder. fleet and server detail share the same look. by @acoBOYZ
+
+- Ops tables + search polish on docker/services. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #53 from acoBOYZ/fix-agent-memory-holders by @acoBOYZ in #53
+
+- Upgraded .lock by @acoBOYZ
+
+- Merge pull request #52 from acoBOYZ/refactor-monrep by @acoBOYZ in #52
+
+- Merge pull request #51 from acoBOYZ/style-table-overflow by @acoBOYZ in #51
+
+- Merge pull request #50 from acoBOYZ/style-dashboard-kpis by @acoBOYZ in #50
+
+- Merge pull request #49 from acoBOYZ/doc-readme by @acoBOYZ in #49
+
+- Merge pull request #48 from acoBOYZ/style-uix by @acoBOYZ in #48
+
+- Merge pull request #47 from acoBOYZ/doc-md-factory by @acoBOYZ in #47
+
+
 ## [0.7.3] - 2026-09-29
 
 ### 🐛 Bug Fixes
