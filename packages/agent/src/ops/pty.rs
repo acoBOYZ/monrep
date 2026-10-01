@@ -254,8 +254,13 @@ fn spawn_pty_reader(
       }
       drop(permit);
       if !explicit_close {
-        let mut reg = ptys.lock().await;
-        if reg.sessions.remove(&pty_id).is_some() {
+        let session = {
+          let mut reg = ptys.lock().await;
+          reg.sessions.remove(&pty_id)
+        };
+        if let Some(session) = session {
+          let inner = session.inner;
+          let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
           let _ = out
             .send(Envelope {
               v: PROTO_V,
@@ -386,12 +391,32 @@ pub async fn handle_close(env: &Envelope, ptys: PtyMap) -> anyhow::Result<()> {
     return Ok(());
   };
   drop(reg);
+  shutdown_session(session).await;
+  Ok(())
+}
+
+/// Kill every active PTY session (e.g. last browser disconnected).
+pub async fn close_all(ptys: PtyMap) {
+  let victims = {
+    let mut reg = ptys.lock().await;
+    let ids: Vec<String> = reg.sessions.keys().cloned().collect();
+    let mut out = Vec::with_capacity(ids.len());
+    for id in ids {
+      if let Some(session) = reg.sessions.remove(&id) {
+        out.push(session);
+      }
+    }
+    out
+  };
+  for session in victims {
+    shutdown_session(session).await;
+  }
+}
+
+async fn shutdown_session(session: PtySession) {
   let _ = session.close.send(());
   let inner = session.inner;
-  tokio::task::spawn_blocking(move || terminate_pty_session(inner))
-    .await
-    .ok();
-  Ok(())
+  let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
 }
 
 fn terminate_pty_session(inner: Arc<std::sync::Mutex<PtySessionInner>>) {
@@ -411,22 +436,7 @@ async fn acquire_pty_slot(ptys: PtyMap, pty_slots: Arc<Semaphore>) -> Option<Own
   if let Ok(p) = pty_slots.clone().try_acquire_owned() {
     return Some(p);
   }
-  let victims = {
-    let mut reg = ptys.lock().await;
-    let ids: Vec<String> = reg.sessions.keys().cloned().collect();
-    let mut out = Vec::with_capacity(ids.len());
-    for id in ids {
-      if let Some(session) = reg.sessions.remove(&id) {
-        out.push(session);
-      }
-    }
-    out
-  };
-  for session in victims {
-    let _ = session.close.send(());
-    let inner = session.inner;
-    let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
-  }
+  close_all(ptys).await;
   match timeout(Duration::from_secs(2), pty_slots.acquire_owned()).await {
     Ok(Ok(p)) => Some(p),
     _ => None,
@@ -645,6 +655,38 @@ mod tests {
     .await
     .expect("open r2 timed out")
     .expect("open r2 failed");
+
+    let body = recv_result(&mut rx).await;
+    assert_eq!(body.get("ok"), Some(&serde_json::json!(true)));
+    assert_ne!(body.get("busy"), Some(&serde_json::json!(true)));
+  }
+
+  #[tokio::test]
+  async fn close_all_releases_slot() {
+    let (tx, mut rx) = mpsc::channel(64);
+    let ptys = new_pty_map();
+    let pty_slots = Arc::new(Semaphore::new(1));
+
+    timeout(
+      Duration::from_secs(5),
+      handle_open(&open_env("a1"), tx.clone(), ptys.clone(), pty_slots.clone()),
+    )
+    .await
+    .expect("first open timed out")
+    .expect("first open failed");
+
+    let body = recv_result(&mut rx).await;
+    assert_eq!(body.get("ok"), Some(&serde_json::json!(true)));
+
+    close_all(ptys.clone()).await;
+
+    timeout(
+      Duration::from_secs(5),
+      handle_open(&open_env("a2"), tx, ptys, pty_slots),
+    )
+    .await
+    .expect("second open timed out")
+    .expect("second open failed");
 
     let body = recv_result(&mut rx).await;
     assert_eq!(body.get("ok"), Some(&serde_json::json!(true)));

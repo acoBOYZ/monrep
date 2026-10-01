@@ -9,6 +9,7 @@ import type { ErrorRun, MetricPoint } from "@/components/agent/metrics/types";
 import { SERIES_COLOR } from "@/components/agent/charts/chartTheme";
 import { KpiTile } from "@/components/agent/kpi/KpiTile";
 import { delta, toSeries } from "@/components/agent/metrics/aggregate";
+import { formatGiB } from "@/components/agent/metrics/formatBytes";
 
 type ServerKpiStripProps = {
   loading: boolean;
@@ -33,6 +34,24 @@ function avgDisk(points: ReadonlyArray<MetricPoint>): number | undefined {
     n += 1;
   }
   return n > 0 ? sum / n : undefined;
+}
+
+function memoryKpiValue(latest?: MetricPoint): { value: string; unit?: string } {
+  const used = latest?.memUsedBytes;
+  const total = latest?.memTotalBytes;
+  if (
+    used !== undefined &&
+    total !== undefined &&
+    Number.isFinite(used) &&
+    Number.isFinite(total) &&
+    total > 0
+  ) {
+    return { value: `${formatGiB(used)} / ${formatGiB(total)}`, unit: "GB" };
+  }
+  if (latest?.memPct !== undefined) {
+    return { value: latest.memPct.toFixed(1), unit: "%" };
+  }
+  return { value: "—" };
 }
 
 export function ServerKpiStrip({
@@ -61,6 +80,7 @@ export function ServerKpiStrip({
   );
 
   const prevDisk = useMemo(() => avgDisk(prevPoints), [prevPoints]);
+  const memKpi = memoryKpiValue(latest);
 
   return (
     <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
@@ -79,8 +99,8 @@ export function ServerKpiStrip({
       <KpiTile
         label="Memory used"
         icon={RamMemoryIcon}
-        value={latest?.memPct !== undefined ? latest.memPct.toFixed(1) : "—"}
-        unit={latest?.memPct !== undefined ? "%" : undefined}
+        value={memKpi.value}
+        unit={memKpi.unit}
         delta={delta(latest?.memPct, kpis.prevAvgMemPct)}
         deltaFormat={(d) => `${d > 0 ? "+" : ""}${d.toFixed(1)}%`}
         invert

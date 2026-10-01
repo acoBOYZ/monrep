@@ -3,7 +3,6 @@
 use super::db::MetricPoint;
 use super::now_ms;
 use std::fs;
-use std::path::Path;
 use std::sync::Mutex;
 
 /// Previous CPU tick counters for delta-based `cpu.used_pct`.
@@ -11,14 +10,12 @@ static PREV_CPU_TICKS: Mutex<Option<(u64, u64)>> = Mutex::new(None);
 
 pub fn scrape_host() -> Vec<MetricPoint> {
   let at = now_ms();
-  let mut out = Vec::with_capacity(32);
+  let mut out = Vec::with_capacity(16);
   scrape_load(at, &mut out);
   scrape_cpu_used(at, &mut out);
   scrape_mem(at, &mut out);
   scrape_disk(at, &mut out);
-  scrape_net(at, &mut out);
   scrape_host_meta(at, &mut out);
-  scrape_docker(at, &mut out);
   out
 }
 
@@ -176,8 +173,6 @@ fn scrape_mem_proc(at: i64, out: &mut Vec<MetricPoint>) -> bool {
   let mut total_kb = None;
   let mut avail_kb = None;
   let mut free_kb = None;
-  let mut swap_total = None;
-  let mut swap_free = None;
   for line in raw.lines() {
     let mut parts = line.split_whitespace();
     let Some(key) = parts.next() else { continue };
@@ -188,8 +183,6 @@ fn scrape_mem_proc(at: i64, out: &mut Vec<MetricPoint>) -> bool {
       "MemTotal:" => total_kb = Some(val),
       "MemAvailable:" => avail_kb = Some(val),
       "MemFree:" => free_kb = Some(val),
-      "SwapTotal:" => swap_total = Some(val),
-      "SwapFree:" => swap_free = Some(val),
       _ => {}
     }
   }
@@ -200,17 +193,8 @@ fn scrape_mem_proc(at: i64, out: &mut Vec<MetricPoint>) -> bool {
   let used = (total_kb - avail).max(0.0);
   push(out, at, "mem.total_bytes", total_kb * 1024.0, "{}");
   push(out, at, "mem.used_bytes", used * 1024.0, "{}");
-  push(out, at, "mem.available_bytes", avail * 1024.0, "{}");
   if total_kb > 0.0 {
     push(out, at, "mem.used_pct", (used / total_kb) * 100.0, "{}");
-  }
-  if let (Some(st), Some(sf)) = (swap_total, swap_free) {
-    let su = (st - sf).max(0.0);
-    push(out, at, "swap.total_bytes", st * 1024.0, "{}");
-    push(out, at, "swap.used_bytes", su * 1024.0, "{}");
-    if st > 0.0 {
-      push(out, at, "swap.used_pct", (su / st) * 100.0, "{}");
-    }
   }
   true
 }
@@ -241,7 +225,6 @@ fn scrape_mem_macos(at: i64, out: &mut Vec<MetricPoint>) {
   let used_pct = (used as f64 / total as f64) * 100.0;
   push(out, at, "mem.total_bytes", total as f64, "{}");
   push(out, at, "mem.used_bytes", used as f64, "{}");
-  push(out, at, "mem.available_bytes", avail as f64, "{}");
   push(out, at, "mem.used_pct", used_pct, "{}");
 }
 
@@ -360,58 +343,13 @@ fn scrape_disk_unix(at: i64, out: &mut Vec<MetricPoint>) {
     let avail = s.f_bavail as f64 * bsize;
     let used = (total - avail).max(0.0);
     let dims = format!(r#"{{"mount":"{mount}"}}"#);
-    push(out, at, "disk.total_bytes", total, &dims);
-    push(out, at, "disk.used_bytes", used, &dims);
     if total > 0.0 {
       push(out, at, "disk.used_pct", (used / total) * 100.0, &dims);
     }
   }
 }
 
-fn scrape_net(at: i64, out: &mut Vec<MetricPoint>) {
-  let Ok(raw) = fs::read_to_string("/proc/net/dev") else {
-    return;
-  };
-  for line in raw.lines().skip(2) {
-    let line = line.trim();
-    let Some((iface, rest)) = line.split_once(':') else {
-      continue;
-    };
-    let iface = iface.trim();
-    if iface == "lo" || iface.is_empty() {
-      continue;
-    }
-    let cols: Vec<&str> = rest.split_whitespace().collect();
-    if cols.len() < 9 {
-      continue;
-    }
-    let Ok(rx) = cols[0].parse::<f64>() else {
-      continue;
-    };
-    let Ok(tx) = cols[8].parse::<f64>() else {
-      continue;
-    };
-    let dims = format!(r#"{{"iface":"{iface}"}}"#);
-    push(out, at, "net.rx_bytes", rx, &dims);
-    push(out, at, "net.tx_bytes", tx, &dims);
-  }
-}
-
 fn scrape_host_meta(at: i64, out: &mut Vec<MetricPoint>) {
-  if let Ok(raw) = fs::read_to_string("/proc/uptime")
-    && let Some(up) = raw
-      .split_whitespace()
-      .next()
-      .and_then(|s| s.parse::<f64>().ok())
-  {
-    push(out, at, "host.uptime_sec", up, "{}");
-  } else {
-    #[cfg(target_os = "macos")]
-    {
-      scrape_uptime_macos(at, out);
-    }
-  }
-
   if let Ok(raw) = fs::read_to_string("/proc/cpuinfo") {
     let n = raw.lines().filter(|l| l.starts_with("processor")).count() as f64;
     if n > 0.0 {
@@ -422,46 +360,4 @@ fn scrape_host_meta(at: i64, out: &mut Vec<MetricPoint>) {
   if let Ok(n) = std::thread::available_parallelism() {
     push(out, at, "host.nproc", n.get() as f64, "{}");
   }
-}
-
-#[cfg(target_os = "macos")]
-fn scrape_uptime_macos(at: i64, out: &mut Vec<MetricPoint>) {
-  #[repr(C)]
-  struct Timeval {
-    tv_sec: i64,
-    tv_usec: i32,
-  }
-  let mut boot = Timeval {
-    tv_sec: 0,
-    tv_usec: 0,
-  };
-  let mut len = std::mem::size_of_val(&boot);
-  let Ok(name) = std::ffi::CString::new("kern.boottime") else {
-    return;
-  };
-  let rc = unsafe {
-    libc::sysctlbyname(
-      name.as_ptr(),
-      &mut boot as *mut _ as *mut libc::c_void,
-      &mut len,
-      std::ptr::null_mut(),
-      0,
-    )
-  };
-  if rc != 0 || boot.tv_sec <= 0 {
-    return;
-  }
-  let now = std::time::SystemTime::now()
-    .duration_since(std::time::UNIX_EPOCH)
-    .map(|d| d.as_secs() as i64)
-    .unwrap_or(0);
-  let up = (now - boot.tv_sec).max(0) as f64;
-  push(out, at, "host.uptime_sec", up, "{}");
-}
-
-fn scrape_docker(at: i64, out: &mut Vec<MetricPoint>) {
-  if !Path::new("/var/run/docker.sock").exists() {
-    return;
-  }
-  let _ = (at, out);
 }

@@ -1,17 +1,13 @@
 //! Paths for the local agent config / credential store.
 
-use directories::ProjectDirs;
+use directories::BaseDirs;
 use std::path::PathBuf;
 
-const QUALIFIER: &str = "dev";
-const ORGANIZATION: &str = "monrep";
-const APPLICATION: &str = "agent";
-
-/// XDG-style config directory for this agent (`…/monrep/agent`).
+/// XDG-style config directory for this agent (`$XDG_CONFIG_HOME/monrep/agent`).
 pub fn config_dir() -> anyhow::Result<PathBuf> {
-  let dirs = ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)
-    .ok_or_else(|| anyhow::anyhow!("could not resolve config directory"))?;
-  Ok(dirs.config_dir().to_path_buf())
+  let dirs =
+    BaseDirs::new().ok_or_else(|| anyhow::anyhow!("could not resolve config directory"))?;
+  Ok(dirs.config_dir().join("monrep").join("agent"))
 }
 
 /// Path to the device credential file (`cred.json`).

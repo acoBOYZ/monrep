@@ -69,4 +69,11 @@ export class BrowserReplyRouter {
       this.browserRequestIds.delete(envelope.id);
     }
   }
+
+  /** Active browser PTY ids; clears the set (caller should send pty.close for each). */
+  drainActivePtyIds(): Array<string> {
+    const ids = [...this.browserPtyIds];
+    this.browserPtyIds.clear();
+    return ids;
+  }
 }
