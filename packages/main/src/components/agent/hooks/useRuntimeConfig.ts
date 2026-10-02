@@ -53,12 +53,14 @@ export function useRuntimeConfig(serverId: string) {
     const nextInterval = partial.metricsIntervalSec ?? metricsIntervalSec;
     startTransition(async () => {
       const { error: err } = await tryCatch(
-        db.actions.upsertRuntimeConfig({
-          serverId,
-          backgroundEnabled: nextBackground,
-          autoUpdate: nextAutoUpdate,
-          metricsIntervalSec: nextInterval,
-        }).isPersisted.promise,
+        db.actions
+          .upsertRuntimeConfig({
+            serverId,
+            backgroundEnabled: nextBackground,
+            autoUpdate: nextAutoUpdate,
+            metricsIntervalSec: nextInterval,
+          })
+          .when("settled"),
       );
 
       if (err) {
@@ -99,7 +101,7 @@ export function useRuntimeConfig(serverId: string) {
       createdAt: row.serverCreatedAt,
     };
     startTransition(async () => {
-      const { error: err } = await tryCatch(db.actions.upsertServer(payload).isPersisted.promise);
+      const { error: err } = await tryCatch(db.actions.upsertServer(payload).when("settled"));
       if (err) {
         toast.error(err instanceof Error ? err.message : "Rename failed");
         return;

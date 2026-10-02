@@ -42,14 +42,16 @@ export const upsertPasskeyRow = async (row: {
 }): Promise<void> => {
   const db = await loadAuthDb();
   try {
-    await db.actions.upsertPasskey({
-      id: row.id ?? "",
-      userId: row.userId,
-      credentialId: row.credentialId,
-      publicKey: row.publicKey,
-      counter: row.counter,
-      transports: row.transports,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertPasskey({
+        id: row.id ?? "",
+        userId: row.userId,
+        credentialId: row.credentialId,
+        publicKey: row.publicKey,
+        counter: row.counter,
+        transports: row.transports,
+      })
+      .when("settled");
   } finally {
     db.close();
   }

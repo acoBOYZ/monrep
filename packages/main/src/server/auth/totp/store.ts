@@ -30,11 +30,13 @@ export const upsertTotpSecret = async (options: {
 
   const db = await loadAuthDb();
   try {
-    await db.actions.upsertTotp({
-      userId: options.userId,
-      secretEnc: options.secretEnc,
-      enabledAt: options.enabledAt,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertTotp({
+        userId: options.userId,
+        secretEnc: options.secretEnc,
+        enabledAt: options.enabledAt,
+      })
+      .when("settled");
   } finally {
     db.close();
   }

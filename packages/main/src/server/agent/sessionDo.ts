@@ -465,15 +465,17 @@ export class AgentSession extends DurableObject<Env> {
     try {
       const server = await findServerById(db, meta.serverId);
       if (!server?.id || server.status === "revoked") return;
-      await db.actions.upsertServer({
-        id: server.id,
-        name: server.name,
-        deviceId: server.deviceId ?? meta.deviceId,
-        status: server.status === "pending" ? "online" : server.status,
-        lastSeenAt: server.lastSeenAt,
-        agentVersion: version,
-        createdAt: server.createdAt,
-      }).isPersisted.promise;
+      await db.actions
+        .upsertServer({
+          id: server.id,
+          name: server.name,
+          deviceId: server.deviceId ?? meta.deviceId,
+          status: server.status === "pending" ? "online" : server.status,
+          lastSeenAt: server.lastSeenAt,
+          agentVersion: version,
+          createdAt: server.createdAt,
+        })
+        .when("settled");
     } finally {
       db.close();
     }
@@ -495,15 +497,17 @@ export class AgentSession extends DurableObject<Env> {
       if (!server?.id || server.status === "revoked") return;
       if (server.deviceId && server.deviceId !== meta.deviceId) return;
       const now = new Date().toISOString();
-      await db.actions.upsertServer({
-        id: server.id,
-        name: server.name,
-        deviceId: server.deviceId ?? meta.deviceId,
-        status,
-        lastSeenAt: now,
-        agentVersion: server.agentVersion,
-        createdAt: server.createdAt,
-      }).isPersisted.promise;
+      await db.actions
+        .upsertServer({
+          id: server.id,
+          name: server.name,
+          deviceId: server.deviceId ?? meta.deviceId,
+          status,
+          lastSeenAt: now,
+          agentVersion: server.agentVersion,
+          createdAt: server.createdAt,
+        })
+        .when("settled");
       if (status === "online") {
         await this.ctx.storage.put("lastPresenceAt", Date.now());
       } else {
