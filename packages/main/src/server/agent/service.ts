@@ -38,24 +38,30 @@ export const createServerWithEnrollToken = async (name: string): Promise<MintedE
     const enrollToken = randomToken(32);
     const tokenHash = await sha256Hex(enrollToken);
 
-    await db.actions.upsertServer({
-      id: serverId,
-      name,
-      status: "pending",
-    }).isPersisted.promise;
+    await db.actions
+      .upsertServer({
+        id: serverId,
+        name,
+        status: "pending",
+      })
+      .when("settled");
 
-    await db.actions.upsertRuntimeConfig({
-      serverId,
-      backgroundEnabled: true,
-      autoUpdate: true,
-      metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertRuntimeConfig({
+        serverId,
+        backgroundEnabled: true,
+        autoUpdate: true,
+        metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
+      })
+      .when("settled");
 
-    await db.actions.upsertEnrollToken({
-      serverId,
-      tokenHash,
-      expiresAt,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertEnrollToken({
+        serverId,
+        tokenHash,
+        expiresAt,
+      })
+      .when("settled");
 
     const server = await findServerById(db, serverId);
     if (!server?.id) throw new AgentTaggedError({ _tag: "ServerMissingAfterCreate" });
@@ -85,12 +91,12 @@ export const revokeServer = async (serverId: string): Promise<void> => {
     const enrollTokens = await listEnrollTokensByServerId(db, serverId);
     const enrollIds = enrollTokens.map((t) => t.id).filter((id): id is string => Boolean(id));
     if (enrollIds.length > 0) {
-      await db.actions.deleteEnrollToken(enrollIds).isPersisted.promise;
+      await db.actions.deleteEnrollToken(enrollIds).when("settled");
     }
 
-    await db.actions.deleteRuntimeConfig(serverId).isPersisted.promise;
-    await db.actions.deleteDeviceCred(serverId).isPersisted.promise;
-    await db.actions.deleteServer(server.id).isPersisted.promise;
+    await db.actions.deleteRuntimeConfig(serverId).when("settled");
+    await db.actions.deleteDeviceCred(serverId).when("settled");
+    await db.actions.deleteServer(server.id).when("settled");
   } finally {
     db.close();
   }
@@ -121,37 +127,45 @@ export const enrollWithToken = async (
     const secretHash = await sha256Hex(deviceSecret);
     const now = new Date().toISOString();
 
-    await db.actions.upsertDeviceCred({
-      serverId: server.id,
-      deviceId,
-      secretHash,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertDeviceCred({
+        serverId: server.id,
+        deviceId,
+        secretHash,
+      })
+      .when("settled");
 
-    await db.actions.upsertServer({
-      id: server.id,
-      name: server.name,
-      deviceId,
-      status: "offline",
-      lastSeenAt: server.lastSeenAt,
-      agentVersion: server.agentVersion,
-      createdAt: server.createdAt,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertServer({
+        id: server.id,
+        name: server.name,
+        deviceId,
+        status: "offline",
+        lastSeenAt: server.lastSeenAt,
+        agentVersion: server.agentVersion,
+        createdAt: server.createdAt,
+      })
+      .when("settled");
 
-    await db.actions.upsertEnrollToken({
-      id: row.id,
-      serverId: row.serverId,
-      tokenHash: row.tokenHash,
-      expiresAt: row.expiresAt,
-      usedAt: now,
-      createdAt: row.createdAt,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertEnrollToken({
+        id: row.id,
+        serverId: row.serverId,
+        tokenHash: row.tokenHash,
+        expiresAt: row.expiresAt,
+        usedAt: now,
+        createdAt: row.createdAt,
+      })
+      .when("settled");
 
-    await db.actions.upsertRuntimeConfig({
-      serverId: server.id,
-      backgroundEnabled: true,
-      autoUpdate: true,
-      metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
-    }).isPersisted.promise;
+    await db.actions
+      .upsertRuntimeConfig({
+        serverId: server.id,
+        backgroundEnabled: true,
+        autoUpdate: true,
+        metricsIntervalSec: DEFAULT_METRICS_INTERVAL_SEC,
+      })
+      .when("settled");
 
     return {
       deviceId,

@@ -47,16 +47,17 @@ export const ensureAdminUser = async (email: string, name = "Admin"): Promise<Au
     const profile = { email: normalized, name, role, capabilities };
 
     if (!existing) {
-      await db.actions.upsertUser(profile).isPersisted.promise;
+      await db.actions.upsertUser(profile).when("settled");
     } else if (!existing.id) {
       throw new AuthTaggedError({ _tag: "MissingId" });
     } else if (isLegacyUserId(existing.id)) {
-      await db.actions.deleteUser(existing.id).isPersisted.promise;
+      await db.actions.deleteUser(existing.id).when("settled");
       await db.actions.upsertUser({ ...profile, createdAt: existing.createdAt }).isPersisted
         .promise;
     } else {
-      await db.actions.upsertUser({ id: existing.id, ...profile, createdAt: existing.createdAt })
-        .isPersisted.promise;
+      await db.actions
+        .upsertUser({ id: existing.id, ...profile, createdAt: existing.createdAt })
+        .when("settled");
     }
 
     return requireUserId(await findUserByEmail(db, normalized));

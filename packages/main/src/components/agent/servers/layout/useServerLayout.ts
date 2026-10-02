@@ -35,7 +35,7 @@ export function useServerLayout(serverId: string) {
     setOptimistic(sections);
     void (async () => {
       const { error } = await tryCatch(
-        db.actions.upsertServerLayout({ serverId, sections }).isPersisted.promise,
+        db.actions.upsertServerLayout({ serverId, sections }).when("settled"),
       );
       if (error) {
         setOptimistic(null);
