@@ -20,10 +20,10 @@ run(["bun", "install"]);
 
 run(["bun", "run", "sync:brand"]);
 
-// TODO: Re-enable this when @tanstack/intent supports ts7
+// TODO: Re-enable this when claudflare skills fix the type issues in their md ts/tsx files
 if (existsSync(agentSkillsDir)) {
   // run(["bun", "run", "skills:check"]);
-  run(["printf", "%s\n", "\x1b[31mTODO: Re-enable skills:check when @tanstack/intent supports ts7\x1b[0m"]);
+  run(["printf", "%s\n", "\x1b[31mTODO: Re-enable skills:check when claudflare skills fix the type issues in their md ts/tsx files\x1b[0m"]);
 }
 
 // Vendored submodule pins → origin/HEAD (see scripts/upgrade/upstream.ts)

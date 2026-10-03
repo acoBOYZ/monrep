@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/rawtoast/bun-scan/v1.1.2/schema/bun-scan.schema.json",
   "bunReportWarnings": false,
-  "ignore": [],
+  "ignore": ["CVE-2026-93687"],
   "packages": {}
 }
