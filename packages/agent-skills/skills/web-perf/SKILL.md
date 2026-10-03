@@ -4,7 +4,7 @@ description: Audit, diagnose, or optimize website loading and interaction perfor
 metadata:
   type: core
   library: cloudflare
-  library_version: 'b052c32'
+  library_version: '41e0d19'
 sources:
   - 'cloudflare/skills:skills/web-perf/SKILL.md'
 ---
