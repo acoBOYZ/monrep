@@ -33,7 +33,7 @@
     "sync-versions": "bun ../../scripts/skills/sync-versions.ts"
   },
   "devDependencies": {
-    "@tanstack/intent": "^0.5.3",
+    "@tanstack/intent": "^0.5.4",
     "@types/bun": "^1.4.2"
   }
 }
