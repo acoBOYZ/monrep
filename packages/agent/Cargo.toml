@@ -1,6 +1,6 @@
 [package]
 name = "agent"
-version = "0.7.4"
+version = "0.7.5"
 edition = "2024"
 publish = false
 description = "monrep outbound tunnel agent — 1:1 control plane, supervised runtime"

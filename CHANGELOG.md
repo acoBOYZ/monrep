@@ -2,6 +2,26 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.5] - 2026-10-06
+
+### 🐛 Bug Fixes
+
+- Await stream actions with `.when("settled")` instead of `.isPersisted.promise`. react-db 0.5.1. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #57 from acoBOYZ/chore-rust-up by @acoBOYZ in #57
+
+- Wrap crate / JS dep bump plus a rustup + cargo-upgrade pass on `up`. by @acoBOYZ
+
+- Merge pull request #56 from acoBOYZ/chore-skills-cf-up by @acoBOYZ in #56
+
+- `skills:cf-up` refresh (cloudflare pin `41e0d19`) + a few dep bumps. by @acoBOYZ
+
+- Merge pull request #55 from acoBOYZ/fix-db-when-settled by @acoBOYZ in #55
+
+
 ## [0.7.4] - 2026-10-01
 
 ### 🐛 Bug Fixes
