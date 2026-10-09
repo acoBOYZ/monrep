@@ -21,7 +21,7 @@
     "fmtcheck": "oxfmt --check src"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "@floating-ui/react": "^0.27.20",
     "@hugeicons/core-free-icons": "^4.3.5",
     "@hugeicons/react": "^1.1.10",
