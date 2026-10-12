@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.6] - 2026-10-12
+
+### 🚀 Features
+
+- Bun check is in by @acoBOYZ
+
+- Per-server PTY start directory. settings → agent → shell, then new terminals open there. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #60 from acoBOYZ/feat-pty-cwd by @acoBOYZ in #60
+
+- Merge pull request #59 from acoBOYZ/chore-deps-bump by @acoBOYZ in #59
+
+- Routine dep bump. no app code. by @acoBOYZ
+
+
 ## [0.7.5] - 2026-10-06
 
 ### 🐛 Bug Fixes
