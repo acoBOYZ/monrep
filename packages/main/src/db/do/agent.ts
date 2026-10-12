@@ -68,6 +68,7 @@ export default createDoModule("agent")({
         backgroundEnabled: z.boolean(),
         autoUpdate: z.boolean().optional(),
         metricsIntervalSec: z.number().int().positive().optional(),
+        ptyCwd: z.string().optional(),
         updatedAt: z.string().optional(),
       },
       onInsert: ({ ctx }) => ({

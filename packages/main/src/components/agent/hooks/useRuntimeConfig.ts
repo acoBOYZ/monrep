@@ -10,6 +10,7 @@ type RuntimePatch = {
   backgroundEnabled?: boolean;
   autoUpdate?: boolean;
   metricsIntervalSec?: number;
+  ptyCwd?: string;
 };
 
 export function useRuntimeConfig(serverId: string) {
@@ -25,6 +26,7 @@ export function useRuntimeConfig(serverId: string) {
           backgroundEnabled: r.backgroundEnabled,
           autoUpdate: r.autoUpdate,
           metricsIntervalSec: r.metricsIntervalSec,
+          ptyCwd: r.ptyCwd,
           serverName: s.name,
           serverStatus: s.status,
           serverDeviceId: s.deviceId,
@@ -39,6 +41,7 @@ export function useRuntimeConfig(serverId: string) {
   const metricsEnabled = row?.backgroundEnabled ?? true;
   const autoUpdate = row?.autoUpdate ?? true;
   const metricsIntervalSec = row?.metricsIntervalSec ?? 30;
+  const ptyCwd = typeof row?.ptyCwd === "string" ? row.ptyCwd : "";
   const serverName = row?.serverName ?? "Unknown";
 
   const [pending, startTransition] = useTransition();
@@ -51,6 +54,7 @@ export function useRuntimeConfig(serverId: string) {
     const nextBackground = partial.backgroundEnabled ?? metricsEnabled;
     const nextAutoUpdate = partial.autoUpdate ?? autoUpdate;
     const nextInterval = partial.metricsIntervalSec ?? metricsIntervalSec;
+    const nextPtyCwd = partial.ptyCwd !== undefined ? partial.ptyCwd.trim() : ptyCwd.trim();
     startTransition(async () => {
       const { error: err } = await tryCatch(
         db.actions
@@ -59,6 +63,7 @@ export function useRuntimeConfig(serverId: string) {
             backgroundEnabled: nextBackground,
             autoUpdate: nextAutoUpdate,
             metricsIntervalSec: nextInterval,
+            ptyCwd: nextPtyCwd,
           })
           .when("settled"),
       );
@@ -73,6 +78,7 @@ export function useRuntimeConfig(serverId: string) {
           autoUpdate: nextAutoUpdate,
           metricsEnabled: nextBackground,
           metricsIntervalSec: nextInterval,
+          ...(nextPtyCwd ? { ptyCwd: nextPtyCwd } : {}),
         },
       });
       toast.success("Saved");
@@ -130,6 +136,7 @@ export function useRuntimeConfig(serverId: string) {
     metricsEnabled,
     metricsIntervalSec,
     autoUpdate,
+    ptyCwd,
     save,
     saveServerName,
     triggerUpdate,

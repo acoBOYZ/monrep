@@ -23,7 +23,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/bun": "^1.4.2",
+    "@types/bun": "^1.4.3",
     "rust-doctor": "^0.7.0"
   }
 }

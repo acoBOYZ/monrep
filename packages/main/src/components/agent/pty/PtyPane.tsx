@@ -7,6 +7,7 @@ import { useSelector } from "@tanstack/react-store";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal as XTerm } from "@xterm/xterm";
 import type { PaneApi } from "./ptyTypes";
+import { useRuntimeConfig } from "@/components/agent/hooks/useRuntimeConfig";
 import { useSessionWs } from "@/components/agent/session-ws/useSessionWs";
 
 function readThemeColor(varName: string, fallback: string): string {
@@ -29,7 +30,8 @@ type PtyPaneProps = {
 };
 
 export function PtyPane({ wsReady }: PtyPaneProps) {
-  const { send, setPane, subscribeRun } = useSessionWs();
+  const { serverId, send, setPane, subscribeRun } = useSessionWs();
+  const { ptyCwd } = useRuntimeConfig(serverId);
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<XTerm | null>(null);
   const fitRef = useRef<FitAddon | null>(null);
@@ -147,17 +149,22 @@ export function PtyPane({ wsReady }: PtyPaneProps) {
         unsub();
       }
     });
+    const cwd = ptyCwd.trim();
     const ok = send({
       v: 1,
       id: openId,
       op: "pty.open",
-      body: { cols: term.cols, rows: term.rows },
+      body: {
+        cols: term.cols,
+        rows: term.rows,
+        ...(cwd ? { cwd } : {}),
+      },
     });
     if (!ok) unsub();
     return () => {
       unsub();
     };
-  }, [wsReady, send, setPane, subscribeRun]);
+  }, [wsReady, send, setPane, subscribeRun, ptyCwd]);
 
   useEffect(() => {
     requestAnimationFrame(() => {

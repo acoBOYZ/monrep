@@ -15,7 +15,12 @@ export function useAgentSettingsSheet(serverId: string, onOpenChange: (open: boo
   };
 
   const resetToDefaults = () => {
-    runtime.save({ backgroundEnabled: true, metricsIntervalSec: 30, autoUpdate: true });
+    runtime.save({
+      backgroundEnabled: true,
+      metricsIntervalSec: 30,
+      autoUpdate: true,
+      ptyCwd: "",
+    });
   };
 
   return { ...runtime, handleOpenChange, handleSaveMetrics, resetToDefaults, dirty: false };
