@@ -14,7 +14,7 @@
     "./tailwind.config": "./tailwind.config.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "clean": "rimraf dist node_modules bun.lock .turbo",
     "fmt": "oxfmt src",
@@ -33,7 +33,7 @@
     "@tanstack/react-hotkeys": "^0.13.0",
     "@tanstack/react-pacer": "^0.24.1",
     "@tanstack/react-store": "^0.11.2",
-    "@tanstack/react-virtual": "^3.14.13",
+    "@tanstack/react-virtual": "^3.14.17",
     "class-variance-authority": "^0.7.1",
     "input-otp": "^1.5.0",
     "react-number-format": "^5.4.5",

@@ -13,6 +13,7 @@ import {
 import { AgentPreferenceSection } from "./AgentPreferenceSection";
 import { AgentUpdateSection } from "./AgentUpdateSection";
 import { MetricsSection } from "./MetricsSection";
+import { ShellSection } from "./ShellSection";
 import { useAgentSettingsSheet } from "./useAgentSettingsSheet";
 
 type AgentSettingsSheetProps = {
@@ -58,6 +59,12 @@ export function AgentSettingsSheet({
               pending={sheet.pending}
               onMetricsEnabledChange={(enabled) => sheet.save({ backgroundEnabled: enabled })}
               onIntervalChange={(sec) => sheet.save({ metricsIntervalSec: sec })}
+            />
+            <Separator />
+            <ShellSection
+              ptyCwd={sheet.ptyCwd}
+              pending={sheet.pending}
+              onPtyCwdChange={(cwd) => sheet.save({ ptyCwd: cwd })}
             />
           </div>
         </ScrollArea>

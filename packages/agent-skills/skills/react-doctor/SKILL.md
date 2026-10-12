@@ -54,7 +54,7 @@ bun run typecheck
 If you invoke `tsc` **directly** (not via turbo or a package `typecheck` script):
 
 ```bash
-tsc --noEmit --singleThreaded
+bun check
 ```
 
 ### 2. Lint (oxlint)

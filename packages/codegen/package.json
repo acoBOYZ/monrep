@@ -11,7 +11,7 @@
     "codegen": "bun src/cli.ts start",
     "watch": "bun --no-orphans src/cli.ts watch",
     "dev": "bun --no-orphans src/cli.ts watch",
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "clean": "rimraf dist node_modules bun.lock .turbo",
     "fmt": "oxfmt src",
@@ -22,8 +22,8 @@
     "@tanstack/pacer": "0.23.1"
   },
   "devDependencies": {
-    "@types/bun": "^1.4.2",
-    "@types/node": "^26.6.4",
+    "@types/bun": "^1.4.3",
+    "@types/node": "^26.6.5",
     "typescript": "^7.0.2"
   }
 }

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite dev --port {{dev_port}}",
     "generate-routes": "tsr generate",
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "fmt": "oxfmt src",
     "fmtcheck": "oxfmt --check src",

@@ -33,6 +33,7 @@ const PushAgentConfigInputSchema = z.object({
   autoUpdate: z.boolean().optional(),
   metricsEnabled: z.boolean().optional(),
   metricsIntervalSec: z.number().int().positive().optional(),
+  ptyCwd: z.string().optional(),
 });
 
 const MetricsLatestInputSchema = z.object({
@@ -139,6 +140,7 @@ export const pushAgentConfigFn = createServerFn({ method: "POST" })
           autoUpdate: data.autoUpdate,
           metricsEnabled: data.metricsEnabled,
           metricsIntervalSec: data.metricsIntervalSec,
+          ...(data.ptyCwd ? { ptyCwd: data.ptyCwd } : {}),
         },
       });
       return ok();

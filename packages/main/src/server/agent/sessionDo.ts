@@ -527,11 +527,20 @@ export class AgentSession extends DurableObject<Env> {
       const autoUpdate = config?.autoUpdate ?? true;
       const metricsEnabled = config?.backgroundEnabled ?? true;
       const metricsIntervalSec = config?.metricsIntervalSec ?? 30;
+      const ptyCwd =
+        typeof config?.ptyCwd === "string" && config.ptyCwd.trim()
+          ? config.ptyCwd.trim()
+          : undefined;
       await this.sendEnvelope({
         v: PROTO_V,
         id: nextUlid(null),
         op: "config",
-        body: { autoUpdate, metricsEnabled, metricsIntervalSec },
+        body: {
+          autoUpdate,
+          metricsEnabled,
+          metricsIntervalSec,
+          ...(ptyCwd ? { ptyCwd } : {}),
+        },
       });
     } finally {
       db.close();

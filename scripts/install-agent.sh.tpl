@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install {{productName}} agent binary from GitHub Releases.
-# Usage: curl -fsSL {{installUrl}} | bash
+# Usage: curl -fsSL {{installUrl}} | sudo bash
 # Source: scripts/install-agent.sh.tpl — filled by bun run sync:brand
 set -euo pipefail
 
@@ -47,7 +47,7 @@ chmod +x "$tmp"
 
 install_dir="${MONREP_INSTALL_DIR:-}"
 if [[ -z "$install_dir" ]]; then
-  if [[ -w "$INSTALL_DIR_DEFAULT" ]] || mkdir -p "$INSTALL_DIR_DEFAULT" 2>/dev/null; then
+  if [[ -d "$INSTALL_DIR_DEFAULT" && -w "$INSTALL_DIR_DEFAULT" ]]; then
     install_dir="$INSTALL_DIR_DEFAULT"
   elif command -v sudo >/dev/null 2>&1; then
     install_dir="$INSTALL_DIR_DEFAULT"

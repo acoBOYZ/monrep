@@ -80,6 +80,19 @@ pub async fn handle_open(
     .and_then(|v| v.as_str())
     .map(|s| s.to_string())
     .unwrap_or_else(default_shell);
+  let cwd = env
+    .body
+    .as_ref()
+    .and_then(|b| b.get("cwd"))
+    .and_then(|v| v.as_str())
+    .map(str::trim)
+    .filter(|s| !s.is_empty())
+    .map(|s| s.to_string());
+  if let Some(ref path) = cwd
+    && !path.starts_with('/')
+  {
+    anyhow::bail!("pty cwd must be an absolute path");
+  }
   let req_id = env.id.clone();
 
   let permit = match acquire_pty_slot(ptys.clone(), pty_slots.clone()).await {
@@ -104,7 +117,8 @@ pub async fn handle_open(
 
   let pty_id = req_id.clone();
   let open_result =
-    tokio::task::spawn_blocking(move || open_pty_blocking(cols, rows, &shell)).await;
+    tokio::task::spawn_blocking(move || open_pty_blocking(cols, rows, &shell, cwd.as_deref()))
+      .await;
 
   let (reader, master, writer, child) = match open_result {
     Ok(Ok(t)) => t,
@@ -449,7 +463,12 @@ type PtyWriter = Box<dyn Write + Send>;
 type PtyChild = Box<dyn Child + Send + Sync>;
 type OpenPtyParts = (PtyReader, PtyMaster, PtyWriter, PtyChild);
 
-fn open_pty_blocking(cols: u16, rows: u16, shell: &str) -> anyhow::Result<OpenPtyParts> {
+fn open_pty_blocking(
+  cols: u16,
+  rows: u16,
+  shell: &str,
+  cwd: Option<&str>,
+) -> anyhow::Result<OpenPtyParts> {
   let system = NativePtySystem::default();
   let pair = system.openpty(PtySize {
     rows,
@@ -459,6 +478,9 @@ fn open_pty_blocking(cols: u16, rows: u16, shell: &str) -> anyhow::Result<OpenPt
   })?;
   let mut cmd = CommandBuilder::new(shell);
   cmd.env("TERM", "xterm-256color");
+  if let Some(dir) = cwd {
+    cmd.cwd(dir);
+  }
   let child = pair.slave.spawn_command(cmd)?;
   let reader = pair.master.try_clone_reader()?;
   let writer = pair.master.take_writer()?;
