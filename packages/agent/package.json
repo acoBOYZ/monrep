@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "cargo watch -w src -w Cargo.toml -w Cargo.lock -x 'run --bin monrep'",
     "local": "bun run scripts/local.ts",
-    "typecheck": "tsc --noEmit --singleThreaded && bun run typecheck:rust",
+    "typecheck": "bun check && bun run typecheck:rust",
     "typecheck:rust": "cargo check --locked --all-targets && bun run rust:miri",
     "lint": "bun run lint:rust && oxlint --threads=1 scripts",
     "lint:rust": "cargo clippy --locked --all-targets -- -D warnings",

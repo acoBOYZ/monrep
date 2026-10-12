@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "REACT_COMPILER=true vite dev --port 5274",
     "generate-routes": "tsr generate",
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "fmt": "oxfmt src",
     "fmtcheck": "oxfmt --check src",

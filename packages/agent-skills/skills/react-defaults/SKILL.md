@@ -21,7 +21,7 @@ sources:
 ## Technical stack
 
 - React (latest stable patterns; React 19 where it improves UX/state flow)
-- TypeScript — no `any`, no unsafe `as` casts; fix all TS and react-doctor findings (errors and warnings) until **100%** score. Prefer `turbo typecheck` / `bun run typecheck`. If you invoke `tsc` directly, use `tsc --noEmit --singleThreaded`.
+- TypeScript — no `any`, no unsafe `as` casts; fix all TS and react-doctor findings (errors and warnings) until **100%** score. Prefer `turbo typecheck` / `bun run typecheck`. If you invoke `tsc` directly, use `bun check`.
 - Modular components, shared hooks and providers
 - Live data: `useLiveQueries` with joins when subscribing to multiple collections; avoid redundant subscriptions; structure queries to limit re-renders
 - **TanStack DB details** (orderBy indexes, non-null sort keys, `useLiveInfiniteQuery`): load `@monrep/agent-skills#tanstack-db` — do not duplicate those rules here
@@ -202,7 +202,7 @@ Root fan-out: `bun typecheck` → `turbo typecheck`.
 If you invoke `tsc` **directly** (not via turbo or a package `typecheck` script):
 
 ```bash
-tsc --noEmit --singleThreaded
+bun check
 ```
 
 ### 2. Format / polish (oxfmt)

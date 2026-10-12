@@ -14,7 +14,7 @@
     "./tailwind.config": "./tailwind.config.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "clean": "rimraf dist node_modules bun.lock .turbo",
     "fmt": "oxfmt src",

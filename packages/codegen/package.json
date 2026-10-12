@@ -11,7 +11,7 @@
     "codegen": "bun src/cli.ts start",
     "watch": "bun --no-orphans src/cli.ts watch",
     "dev": "bun --no-orphans src/cli.ts watch",
-    "typecheck": "tsc --noEmit --singleThreaded",
+    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
     "clean": "rimraf dist node_modules bun.lock .turbo",
     "fmt": "oxfmt src",
