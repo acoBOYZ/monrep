@@ -1,5 +1,11 @@
 import { eq, queryOnce } from "@tanstack/react-db";
-import type { TDeviceCredDo, TEnrollTokenDo, TRuntimeConfigDo, TServerDo } from "@/db/types";
+import type {
+  TDeviceCredDo,
+  TEnrollTokenDo,
+  TPresenceDo,
+  TRuntimeConfigDo,
+  TServerDo,
+} from "@/db/types";
 import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 import { bindDoApp } from "@/db/host";
 import { openServerStream } from "@/server/doStream";
@@ -7,10 +13,19 @@ import { openServerStream } from "@/server/doStream";
 bindDoApp();
 
 export type AgentDb = Awaited<ReturnType<typeof loadAgentDb>>;
+export type AgentPresenceDb = Awaited<ReturnType<typeof loadAgentPresenceDb>>;
 
 export const loadAgentDb = async () => {
   const stream = await openServerStream("agent");
   const db = DO_MODULE_DB_FACTORIES.agent({ stream });
+  await db.preload();
+  return db;
+};
+
+/** Epoched heartbeat stream — separate from immortal `agent` catalog. */
+export const loadAgentPresenceDb = async () => {
+  const stream = await openServerStream("agent_presence");
+  const db = DO_MODULE_DB_FACTORIES.agent_presence({ stream });
   await db.preload();
   return db;
 };
@@ -71,5 +86,17 @@ export const findRuntimeConfig = async (
       q
         .from({ r: db.collections.runtime_config })
         .where(({ r }) => eq(r.serverId, serverId))
+        .findOne(),
+  });
+
+export const findPresenceByServerId = async (
+  db: AgentPresenceDb,
+  serverId: string,
+): Promise<TPresenceDo | undefined> =>
+  queryOnce({
+    query: (q) =>
+      q
+        .from({ p: db.collections.presence })
+        .where(({ p }) => eq(p.serverId, serverId))
         .findOne(),
   });

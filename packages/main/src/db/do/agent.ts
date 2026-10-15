@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const ServerStatusSchema = z.enum(["pending", "online", "offline", "revoked"]);
 
+/** Immortal fleet catalog — no streamEpoch (enroll/creds/config must not rotate daily). */
 export default createDoModule("agent")({
   streamLive: "long-poll",
   streamPersist: false,

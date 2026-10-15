@@ -10,13 +10,15 @@ import { serverStatusVariant } from "@/components/agent/utils/serverStatus";
 
 type ServerRowProps = {
   server: TServerDo;
+  /** From epoched `agent_presence` when available. */
+  lastSeenAt?: string;
 };
 
-export function ServerRow({ server }: ServerRowProps) {
+export function ServerRow({ server, lastSeenAt }: ServerRowProps) {
   const id = server.id;
   const deviceId = server.deviceId;
   const deviceShort = deviceId && deviceId.length > 12 ? `${deviceId.slice(0, 12)}…` : deviceId;
-  const lastSeenIso = server.lastSeenAt;
+  const lastSeenIso = lastSeenAt ?? server.lastSeenAt;
   const lastSeenShort = lastSeenIso
     ? (toDateTimeAttr(lastSeenIso)?.slice(0, 19) ?? lastSeenIso.slice(0, 19))
     : "—";

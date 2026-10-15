@@ -12,6 +12,7 @@ import { SortableSectionList } from "./layout/SortableSectionList";
 import { useServerLayout } from "./layout/useServerLayout";
 import type { ReactNode } from "react";
 import type { ServerSectionId } from "./layout/sectionIds";
+import { useServerLastSeenAt } from "@/components/agent/hooks/useServerPresenceMap";
 import { useMetricRange } from "@/components/agent/metrics/useMetricRange";
 import { useServerMetrics } from "@/components/agent/metrics/useServerMetrics";
 import { AgentPty } from "@/components/agent/ops/AgentPty";
@@ -25,6 +26,7 @@ type ServerDetailPageProps = {
 export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
   const { range, setRange, from, to } = useMetricRange();
   const { db, isReady } = useStreamDb("agent");
+  const presenceLastSeen = useServerLastSeenAt(id);
   const metrics = useServerMetrics(id, from, to);
   const { order, setOrder } = useServerLayout(id);
   const { data: server } = useLiveQuery({
@@ -38,6 +40,7 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
   });
 
   const online = server?.status === "online";
+  const lastSeenAt = presenceLastSeen ?? server?.lastSeenAt;
 
   const sections = useMemo((): Record<ServerSectionId, ReactNode> => {
     if (!server?.id) {
@@ -49,7 +52,7 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
           serverId={id}
           agentVersion={server.agentVersion}
           serverDeviceId={server.deviceId}
-          serverLastSeenAt={server.lastSeenAt}
+          serverLastSeenAt={lastSeenAt}
           latest={metrics.latest}
         />
       ),
@@ -70,7 +73,7 @@ export function ServerDetailPage({ serverId: id }: ServerDetailPageProps) {
       ops: <ServerOpsGlance serverId={id} online={online} health={metrics.health} />,
       pty: <AgentPty serverId={id} online={online} />,
     };
-  }, [from, id, metrics, online, range, server, setRange, to]);
+  }, [from, id, lastSeenAt, metrics, online, range, server, setRange, to]);
 
   if (!isReady) return <ServerDetailSkeleton />;
   if (!server || !server.id) return <ServerDetailNotFound />;

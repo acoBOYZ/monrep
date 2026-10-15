@@ -8,12 +8,14 @@ import { serverStatusVariant } from "@/components/agent/utils/serverStatus";
 
 type FleetRowProps = {
   server: TServerDo & { id: string };
+  /** From epoched `agent_presence` when available. */
+  lastSeenAt?: string;
   latest?: MetricPoint;
   msgs: number;
 };
 
-export function FleetRow({ server, latest, msgs }: FleetRowProps) {
-  const lastSeen = server.lastSeenAt;
+export function FleetRow({ server, lastSeenAt, latest, msgs }: FleetRowProps) {
+  const lastSeen = lastSeenAt ?? server.lastSeenAt;
   const lastMs = lastSeen ? Date.parse(lastSeen) : Number.NaN;
   const lastRelative = Number.isFinite(lastMs) ? formatRelative(lastMs) : "—";
   const cpuPct = latest?.cpuPct;

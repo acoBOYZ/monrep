@@ -12,6 +12,7 @@ import { cn } from "@monrep/utils";
 import { Link } from "@tanstack/react-router";
 import { ServerRow } from "./ServerRow";
 import type { TServerDo } from "@/db/types";
+import { useServerPresenceMap } from "@/components/agent/hooks/useServerPresenceMap";
 import { TABLE_HEAD_CLASS } from "@/components/agent/utils/tableStyles";
 
 type ServersTableProps = {
@@ -20,6 +21,7 @@ type ServersTableProps = {
 };
 
 export function ServersTable({ rows, isReady }: ServersTableProps) {
+  const { lastSeenByServerId } = useServerPresenceMap();
   return (
     <div className="min-w-0 overflow-x-auto rounded-lg border border-border/60 bg-card/40">
       <Table className="min-w-xl table-fixed">
@@ -61,7 +63,13 @@ export function ServersTable({ rows, isReady }: ServersTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => <ServerRow key={row.id ?? row.name} server={row} />)
+            rows.map((row) => (
+              <ServerRow
+                key={row.id ?? row.name}
+                server={row}
+                lastSeenAt={row.id ? lastSeenByServerId.get(row.id) : undefined}
+              />
+            ))
           )}
         </TableBody>
       </Table>
