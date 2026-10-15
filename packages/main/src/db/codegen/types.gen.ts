@@ -15,6 +15,7 @@ import type {
 	DeviceCredDoSchema,
 	EnrollTokenDoSchema,
 	PasskeyDoSchema,
+	PresenceDoSchema,
 	RuntimeConfigDoSchema,
 	SecurityDoSchema,
 	ServerDoSchema,
@@ -27,6 +28,7 @@ export type { TDoModuleId };
 export type TDeviceCredDo = z.infer<typeof DeviceCredDoSchema>;
 export type TEnrollTokenDo = z.infer<typeof EnrollTokenDoSchema>;
 export type TPasskeyDo = z.infer<typeof PasskeyDoSchema>;
+export type TPresenceDo = z.infer<typeof PresenceDoSchema>;
 export type TRuntimeConfigDo = z.infer<typeof RuntimeConfigDoSchema>;
 export type TSecurityDo = z.infer<typeof SecurityDoSchema>;
 export type TServerDo = z.infer<typeof ServerDoSchema>;

@@ -23,6 +23,7 @@ import type {
 	TDeviceCredDo,
 	TEnrollTokenDo,
 	TPasskeyDo,
+	TPresenceDo,
 	TRuntimeConfigDo,
 	TSecurityDo,
 	TServerDo,
@@ -57,6 +58,15 @@ const createAgentStreamDB = (opts: CreateDoModuleDbOpts) => {
   return sdb;
 };
 
+const createAgentPresenceStreamDB = (opts: CreateDoModuleDbOpts) => {
+  const sdb = createDoStreamDB(DO_MODULE_STATE["agent_presence"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["agent_presence"] }, ({ db, state }) => ({
+      upsertPresence: createUpsertStreamAction({ db, helpers: state.presence, collection: db.collections.presence, primaryKey: "serverId", schema: DO_MODULES["agent_presence"].collections.presence.Schema, insertGens: DO_MODULES["agent_presence"].collections.presence.insertGens, updateGens: DO_MODULES["agent_presence"].collections.presence.updateGens }),
+      deletePresence: createDeleteStreamAction({ db, helpers: state.presence, collection: db.collections.presence }),
+  }));
+  sdb.collections.presence.createIndex((r) => r.serverId, { indexType: BasicIndex });
+  return sdb;
+};
+
 const createAuditStreamDB = (opts: CreateDoModuleDbOpts) => {
   const sdb = createDoStreamDB(DO_MODULE_STATE["audit"], { ...opts, live: opts.live ?? DO_MODULE_LIVE["audit"] }, ({ db, state }) => ({
       upsertSecurity: createUpsertStreamAction({ db, helpers: state.security, collection: db.collections.security, primaryKey: "id", schema: DO_MODULES["audit"].collections.security.Schema, insertGens: DO_MODULES["audit"].collections.security.insertGens, updateGens: DO_MODULES["audit"].collections.security.updateGens }),
@@ -84,6 +94,7 @@ const createAuthStreamDB = (opts: CreateDoModuleDbOpts) => {
 
 const DO_MODULE_DB_FACTORY_IMPL = {
   "agent": createAgentStreamDB,
+  "agent_presence": createAgentPresenceStreamDB,
   "audit": createAuditStreamDB,
   "auth": createAuthStreamDB,
 }
@@ -104,6 +115,10 @@ export type TDoModuleActionDefinitions = {
     deleteServer: ActionDefinition<string | Array<string>>;
     upsertServerLayout: ActionDefinition<TServerLayoutDo | Array<TServerLayoutDo>>;
     deleteServerLayout: ActionDefinition<string | Array<string>>;
+  };
+  "agent_presence": {
+    upsertPresence: ActionDefinition<TPresenceDo | Array<TPresenceDo>>;
+    deletePresence: ActionDefinition<string | Array<string>>;
   };
   "audit": {
     upsertSecurity: ActionDefinition<TSecurityDo | Array<TSecurityDo>>;

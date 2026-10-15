@@ -4,6 +4,8 @@ import { CapabilitySchema, RoleSchema } from "@/db/schemas";
 export const DEFAULT_AUTH_REDIRECT = "/dashboard" as const;
 
 export const AuthEnvSchema = z.object({
+  /** `production` → longer agent presence writes; unset/dev stays lean for local. */
+  ENVIRONMENT: z.enum(["development", "production"]).optional(),
   ADMIN_EMAIL: z.email(),
   ADMIN_PASSWORD: z.string().min(1),
   SESSION_SECRET: z.string().min(16),

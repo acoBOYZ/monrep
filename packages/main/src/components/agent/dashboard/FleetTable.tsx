@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FleetRow, FleetRowSkeleton } from "./FleetRow";
 import type { ErrorRun, MetricPoint } from "@/components/agent/metrics/types";
 import type { TServerDo } from "@/db/types";
+import { useServerPresenceMap } from "@/components/agent/hooks/useServerPresenceMap";
 import { TABLE_HEAD_CLASS } from "@/components/agent/utils/tableStyles";
 
 type FleetTableProps = {
@@ -13,6 +14,7 @@ type FleetTableProps = {
 };
 
 export function FleetTable({ servers, isReady, latest, errors }: FleetTableProps) {
+  const { lastSeenByServerId } = useServerPresenceMap();
   const msgsByServer = useMemo(() => {
     const map = new Map<string, number>();
     for (const e of errors) {
@@ -53,6 +55,7 @@ export function FleetTable({ servers, isReady, latest, errors }: FleetTableProps
               <FleetRow
                 key={s.id}
                 server={s}
+                lastSeenAt={lastSeenByServerId.get(s.id)}
                 latest={latest.get(s.id)}
                 msgs={msgsByServer.get(s.id) ?? 0}
               />

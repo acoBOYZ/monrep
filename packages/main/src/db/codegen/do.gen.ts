@@ -11,17 +11,22 @@
 
 import type { z } from "zod";
 import type { TStreamEpoch, TStreamLive } from "@monrep/db/module";
+import __agent_presence_do from "../do/agent_presence";
 import __agent_do from "../do/agent";
 import __audit_do from "../do/audit";
 import __auth_do from "../do/auth";
 
-export type TDoModuleId = "agent" | "audit" | "auth";
+export type TDoModuleId = "agent_presence" | "agent" | "audit" | "auth";
 
 export type DoCollectionRow<
   TModule extends TDoModuleId,
   TName extends string,
 > =
-  TModule extends "agent"
+  TModule extends "agent_presence"
+    ? TName extends keyof (typeof __agent_presence_do)["collections"]
+      ? z.output<(typeof __agent_presence_do)["collections"][TName]["Schema"]> & object
+      : never
+  : TModule extends "agent"
     ? TName extends keyof (typeof __agent_do)["collections"]
       ? z.output<(typeof __agent_do)["collections"][TName]["Schema"]> & object
       : never
@@ -39,7 +44,11 @@ export type DoCollectionSchema<
   TModule extends TDoModuleId,
   TName extends string,
 > =
-  TModule extends "agent"
+  TModule extends "agent_presence"
+    ? TName extends keyof (typeof __agent_presence_do)["collections"]
+      ? (typeof __agent_presence_do)["collections"][TName]["Schema"]
+      : never
+  : TModule extends "agent"
     ? TName extends keyof (typeof __agent_do)["collections"]
       ? (typeof __agent_do)["collections"][TName]["Schema"]
       : never
@@ -52,6 +61,18 @@ export type DoCollectionSchema<
       ? (typeof __auth_do)["collections"][TName]["Schema"]
       : never
   : never;
+
+export const PresenceDoSchema = __agent_presence_do.collections.presence.Schema;
+export const PresenceDoMeta = {
+  name: __agent_presence_do.collections.presence.name,
+  streamModule: __agent_presence_do.moduleId,
+  streamEpoch: __agent_presence_do.streamEpoch,
+  streamLive: __agent_presence_do.streamLive,
+  streamPersist: __agent_presence_do.streamPersist,
+  type: __agent_presence_do.collections.presence.name,
+  primaryKey: __agent_presence_do.collections.presence.primaryKey,
+  indexes: __agent_presence_do.collections.presence.indexes,
+} as const;
 
 export const ServerDoSchema = __agent_do.collections.server.Schema;
 export const ServerDoMeta = {
@@ -162,30 +183,41 @@ export const PasskeyDoMeta = {
 } as const;
 
 export const DO_MODULE_EPOCH = {
+  "agent_presence": "utc-day",
   "agent": undefined,
   "audit": undefined,
   "auth": undefined,
 } as const satisfies Partial<Record<TDoModuleId, TStreamEpoch>>;
 
 export const DO_MODULE_LIVE = {
+  "agent_presence": "long-poll",
   "agent": "long-poll",
   "audit": "long-poll",
   "auth": "long-poll",
 } as const satisfies Record<TDoModuleId, TStreamLive>;
 
 export const DO_MODULE_PERSIST: Record<TDoModuleId, boolean> = {
+  "agent_presence": false,
   "agent": false,
   "audit": false,
   "auth": false,
 };
 
 export const DO_MODULES = {
+  "agent_presence": __agent_presence_do,
   "agent": __agent_do,
   "audit": __audit_do,
   "auth": __auth_do,
 } as const;
 
 export const DO_MODULE_STATE = {
+  "agent_presence": {
+    presence: { 
+      schema: __agent_presence_do.collections.presence.Schema, 
+      type: __agent_presence_do.collections.presence.name, 
+      primaryKey: __agent_presence_do.collections.presence.primaryKey 
+    },
+  },
   "agent": {
     server: { 
       schema: __agent_do.collections.server.Schema, 

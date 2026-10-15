@@ -13,6 +13,7 @@ import {
   listEnrollTokensByServerId,
   listServers,
   loadAgentDb,
+  loadAgentPresenceDb,
 } from "./db";
 import { AgentTaggedError, DeviceAccessPayloadSchema } from "./schemas";
 import type { EnrollResponse } from "./schemas";
@@ -99,6 +100,13 @@ export const revokeServer = async (serverId: string): Promise<void> => {
     await db.actions.deleteServer(server.id).when("settled");
   } finally {
     db.close();
+  }
+
+  const presenceDb = await loadAgentPresenceDb();
+  try {
+    await presenceDb.actions.deletePresence(serverId).when("settled");
+  } finally {
+    presenceDb.close();
   }
 };
 

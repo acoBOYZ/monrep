@@ -4,7 +4,13 @@ import { nextUlid } from "@monrep/utils/ulid";
 import { DurableObject } from "cloudflare:workers";
 import { z } from "zod";
 import { BrowserReplyRouter } from "./browserReplyRouter";
-import { findDeviceCredByDeviceId, findRuntimeConfig, findServerById, loadAgentDb } from "./db";
+import {
+  findDeviceCredByDeviceId,
+  findRuntimeConfig,
+  findServerById,
+  loadAgentDb,
+  loadAgentPresenceDb,
+} from "./db";
 import { AgentTaggedError, agentErrorMessage, agentErrorStatus } from "./schemas";
 import { verifyDeviceAccessToken } from "./service";
 import { AuthEnvSchema } from "@/server/auth/schemas";
@@ -43,8 +49,9 @@ export type Envelope = z.infer<typeof EnvelopeSchema>;
 type SocketRole = "agent" | "browser";
 type SocketAttachment = { role: SocketRole };
 
-/** Heartbeat must not hammer Hyperdrive — presence at most every 5 minutes. */
-const PRESENCE_MIN_INTERVAL_MS = 5 * 60 * 1000;
+/** Local / unset ENVIRONMENT: 5 min. Production: 1 hour (see AuthEnvSchema.ENVIRONMENT). */
+const PRESENCE_MIN_INTERVAL_DEV_MS = 5 * 60 * 1000;
+const PRESENCE_MIN_INTERVAL_PROD_MS = 60 * 60 * 1000;
 
 type PendingInteractiveRun = {
   kind: "interactive";
@@ -239,7 +246,13 @@ export class AgentSession extends DurableObject<Env> {
 
   async alarm(): Promise<void> {
     const meta = await this.sessionMeta();
-    if (!meta || this.socketsWithRole("agent").length === 0) {
+    if (!meta) {
+      await this.ctx.storage.deleteAlarm();
+      return;
+    }
+    // Unclean agent death / DO limit: no socket but meta remains → clear stale online.
+    if (this.socketsWithRole("agent").length === 0) {
+      await this.setPresence("offline");
       await this.ctx.storage.deleteAlarm();
       return;
     }
@@ -481,33 +494,58 @@ export class AgentSession extends DurableObject<Env> {
     }
   }
 
+  private presenceMinIntervalMs(): number {
+    const parsed = AuthEnvSchema.pick({ ENVIRONMENT: true }).safeParse(this.env);
+    return parsed.success && parsed.data.ENVIRONMENT === "production"
+      ? PRESENCE_MIN_INTERVAL_PROD_MS
+      : PRESENCE_MIN_INTERVAL_DEV_MS;
+  }
+
+  /** Heartbeat tick → epoched `agent_presence` only (no full `server` upsert). */
   private async touchPresenceIfDue(): Promise<void> {
     const last = await this.ctx.storage.get<number>("lastPresenceAt");
     const now = Date.now();
-    if (typeof last === "number" && now - last < PRESENCE_MIN_INTERVAL_MS) return;
-    await this.setPresence("online");
+    if (typeof last === "number" && now - last < this.presenceMinIntervalMs()) return;
+    const meta = await this.sessionMeta();
+    if (!meta) return;
+    const iso = new Date().toISOString();
+    const presenceDb = await loadAgentPresenceDb();
+    try {
+      await presenceDb.actions
+        .upsertPresence({ serverId: meta.serverId, lastSeenAt: iso })
+        .when("settled");
+      await this.ctx.storage.put("lastPresenceAt", Date.now());
+    } finally {
+      presenceDb.close();
+    }
   }
 
+  /** Rare status edge (connect / hello / disconnect) → immortal `agent.server`. */
   private async setPresence(status: "online" | "offline"): Promise<void> {
     const meta = await this.sessionMeta();
     if (!meta) return;
-    const db = await loadAgentDb();
+    const [db, presenceDb] = await Promise.all([loadAgentDb(), loadAgentPresenceDb()]);
     try {
       const server = await findServerById(db, meta.serverId);
       if (!server?.id || server.status === "revoked") return;
       if (server.deviceId && server.deviceId !== meta.deviceId) return;
       const now = new Date().toISOString();
-      await db.actions
-        .upsertServer({
-          id: server.id,
-          name: server.name,
-          deviceId: server.deviceId ?? meta.deviceId,
-          status,
-          lastSeenAt: now,
-          agentVersion: server.agentVersion,
-          createdAt: server.createdAt,
-        })
-        .when("settled");
+      await Promise.all([
+        db.actions
+          .upsertServer({
+            id: server.id,
+            name: server.name,
+            deviceId: server.deviceId ?? meta.deviceId,
+            status,
+            lastSeenAt: now,
+            agentVersion: server.agentVersion,
+            createdAt: server.createdAt,
+          })
+          .when("settled"),
+        presenceDb.actions
+          .upsertPresence({ serverId: meta.serverId, lastSeenAt: now })
+          .when("settled"),
+      ]);
       if (status === "online") {
         await this.ctx.storage.put("lastPresenceAt", Date.now());
       } else {
@@ -515,6 +553,7 @@ export class AgentSession extends DurableObject<Env> {
       }
     } finally {
       db.close();
+      presenceDb.close();
     }
   }
 

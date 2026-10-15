@@ -79,14 +79,18 @@ export function KbdGroup({ hotkey, variant, size, className }: KbdGroupProps) {
         className,
       )}
     >
-      {hotkeys.map((v, i) => (
-        <span key={v} className="inline-flex items-center gap-1 leading-none">
-          {i > 0 ? (
-            <HugeiconsIcon icon={SlashIcon} className="size-2.5 opacity-60" aria-hidden />
-          ) : null}
-          <span>{formatForDisplay(v)}</span>
-        </span>
-      ))}
+      {hotkeys.map((v, i) => {
+        const key = formatForDisplay(v);
+
+        return (
+          <span key={key} className="inline-flex items-center gap-1 leading-none">
+            {i > 0 ? (
+              <HugeiconsIcon icon={SlashIcon} className="size-2.5 opacity-60" aria-hidden />
+            ) : null}
+            <span>{key}</span>
+          </span>
+        );
+      })}
     </kbd>
   );
 }
