@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.7] - 2026-10-15
+
+### 🐛 Bug Fixes
+
+- Heartbeat stops rewriting the immortal agent catalog. reconnect layer backs off and stops blocking on journal pipes. by @acoBOYZ
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #62 from acoBOYZ/fix-presence-reconnect by @acoBOYZ in #62
+
+
 ## [0.7.6] - 2026-10-12
 
 ### 🚀 Features
