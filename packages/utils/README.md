@@ -4,11 +4,11 @@ Pure helpers. No UI. Fine on Worker or client when the export allows it.
 
 ## What’s inside
 
-| Import | Role |
-| --- | --- |
-| `@monrep/utils` | `cn`, time formatters, hash, base64, OS detect, search text, `tryCatch`, refs, … |
-| `@monrep/utils/graceful` | Graceful shutdown / queue helpers |
-| `@monrep/utils/ulid` | ULID helpers |
+| Import                   | Role                                                                             |
+| ------------------------ | -------------------------------------------------------------------------------- |
+| `@monrep/utils`          | `cn`, time formatters, hash, base64, OS detect, search text, `tryCatch`, refs, … |
+| `@monrep/utils/graceful` | Graceful shutdown / queue helpers                                                |
+| `@monrep/utils/ulid`     | ULID helpers                                                                     |
 
 ## How to use
 

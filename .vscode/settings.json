@@ -2,7 +2,7 @@
   "editor.semanticHighlighting.enabled": false,
   "tailwindCSS.experimental.configFile": {
     "packages/ui/src/globals.css": "packages/ui/src/**/*",
-    "packages/main/src/tailwind.css": "packages/main/src/**/*",
+    "packages/main/src/tailwind.css": "packages/main/src/**/*"
   },
   // ------------------------------
   // i18n Ally — monorepo support
@@ -13,25 +13,18 @@
     "i18next",
     "react-i18next",
     "i18n-tag",
-    "custom",
+    "custom"
   ],
-  "i18n-ally.enabledParsers": [
-    "json",
-    "yaml",
-    "json5",
-  ],
-  "i18n-ally.localesPaths": [
-    "packages/*/src/i18n",
-    "packages/*/src/locales",
-  ],
+  "i18n-ally.enabledParsers": ["json", "yaml", "json5"],
+  "i18n-ally.localesPaths": ["packages/*/src/i18n", "packages/*/src/locales"],
   "i18n-ally.defaultNamespace": "default",
   "i18n-ally.namespace": true,
   /**
-  * Relative to localesPaths
-  * Example:
-  *   en/common.json
-  *   tr/auth.json
-  */
+   * Relative to localesPaths
+   * Example:
+   *   en/common.json
+   *   tr/auth.json
+   */
   "i18n-ally.pathMatcher": "{locale}/{namespace}.json",
   // Key style
   "i18n-ally.keystyle": "nested",
@@ -62,11 +55,7 @@
     "SCHEMA"
   ],
   "todo-tree.general.tagGroups": {
-    "MIGRATION": [
-      "BREAKING",
-      "DEPRECATED",
-      "REMOVE"
-    ]
+    "MIGRATION": ["BREAKING", "DEPRECATED", "REMOVE"]
   },
   // ------------------------------
   // Version Lens
@@ -79,5 +68,5 @@
   "npm.autoDetect": "off",
   "npm.packageManager": "bun",
   "rust-analyzer.linkedProjects": ["packages/agent/Cargo.toml"],
-  "rust-analyzer.check.command": "clippy",
+  "rust-analyzer.check.command": "clippy"
 }

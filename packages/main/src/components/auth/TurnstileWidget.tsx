@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { box } from "@monrep/utils";
 
 declare global {
   interface Window {
@@ -53,9 +54,9 @@ export function TurnstileWidget({ siteKey, onToken }: TurnstileWidgetProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const cancelled = box(false);
     void loadTurnstileScript().then(() => {
-      if (cancelled || !hostRef.current || !window.turnstile) return;
+      if (cancelled.current || !hostRef.current || !window.turnstile) return;
       if (widgetIdRef.current) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
@@ -69,7 +70,7 @@ export function TurnstileWidget({ siteKey, onToken }: TurnstileWidgetProps) {
       setReady(true);
     });
     return () => {
-      cancelled = true;
+      cancelled.current = true;
       if (widgetIdRef.current && window.turnstile) {
         window.turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;

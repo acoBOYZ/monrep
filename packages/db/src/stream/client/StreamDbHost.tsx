@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { box } from "@monrep/utils";
 import {
   acquireStreamModule,
   getStreamModuleIdList,
@@ -32,7 +33,7 @@ export function StreamDbHost() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    const cancelled = box(false);
     const moduleIds = getStreamModuleIdList();
     const held: Array<{ moduleId: string; epoch: string }> = [];
 
@@ -41,7 +42,7 @@ export function StreamDbHost() {
       held.push({ moduleId, epoch });
       void acquireStreamModule(moduleId, epoch)
         .then((session) => {
-          if (cancelled) {
+          if (cancelled.current) {
             releaseStreamModule(moduleId, epoch);
             return;
           }
@@ -56,7 +57,7 @@ export function StreamDbHost() {
     }
 
     return () => {
-      cancelled = true;
+      cancelled.current = true;
       streamDbStore.setState((prev) => {
         const dbs = { ...prev.dbs };
         for (const item of held) dbs[item.moduleId] = undefined;

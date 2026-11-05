@@ -6,7 +6,7 @@ import { foldTurkishAscii } from "./foldTurkishAscii";
  * Live query (`useLiveQuery` / `ilike`):
  *   `parseSearchTerms(raw)` then `searchIlikePatterns(term)` per term.
  *   AND across terms, OR across fields. Do not use `buildSearchTerms` here.
- *   Web list filters: `liveSearchWhere` in `apps/web/src/lib/live-search.ts`.
+ *   Web list filters: `liveSearchWhere` in `packages/main/src/lib/live-search.ts`.
  *
  * In-memory (`Array.filter`):
  *   `buildSearchTerms(raw)` then `includesAnySearchTerm` or `includesFlexibleSearchTerm`.

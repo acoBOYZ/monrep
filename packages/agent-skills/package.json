@@ -3,37 +3,37 @@
   "version": "0.5.2",
   "private": true,
   "description": "Workspace-only Agent Skills for the monrep monorepo. React standards, quality gates, and conventions consumed via TanStack Intent (not published to npm)",
-  "type": "module",
-  "author": "ACO .",
-  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "claude",
+    "cursor",
+    "react",
+    "tanstack-intent"
+  ],
   "homepage": "https://github.com/acoBOYZ/monrep",
+  "license": "MIT",
+  "author": "ACO .",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/acoBOYZ/monrep.git",
     "directory": "packages/agent-skills"
   },
-  "keywords": [
-    "agent-skills",
-    "cursor",
-    "claude",
-    "react",
-    "tanstack-intent"
-  ],
-  "exports": {
-    "./package.json": "./package.json",
-    "./skills/*": "./skills/*"
-  },
   "files": [
     "skills",
     "!skills/_artifacts"
   ],
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json",
+    "./skills/*": "./skills/*"
+  },
   "scripts": {
     "validate": "intent validate skills",
     "stale": "intent stale",
     "sync-versions": "bun ../../scripts/skills/sync-versions.ts"
   },
   "devDependencies": {
-    "@tanstack/intent": "^0.5.5",
-    "@types/bun": "^1.4.3"
+    "@tanstack/intent": "^0.5.6",
+    "@types/bun": "^1.4.4"
   }
 }

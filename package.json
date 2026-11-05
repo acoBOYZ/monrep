@@ -1,30 +1,24 @@
 {
   "name": "monrep-mono",
   "version": "0.7.7",
-  "type": "module",
-  "author": "Ahmet Cevdet ÖZTÜRK",
   "description": "A monorepo template built with Bun, Hono, Vite, and React",
-  "homepage": "https://github.com/acoBOYZ/monrep",
   "keywords": [
     "bun",
-    "hono",
-    "react",
-    "vite",
-    "tanstack",
     "electricsql",
+    "hono",
     "monorepo",
-    "turbo"
+    "react",
+    "tanstack",
+    "turbo",
+    "vite"
   ],
-  "intent": {
-    "skills": [
-      "workspace:@monrep/agent-skills"
-    ]
-  },
+  "homepage": "https://github.com/acoBOYZ/monrep",
   "license": "MIT",
-  "packageManager": "bun@1.4.3",
+  "author": "Ahmet Cevdet ÖZTÜRK",
   "workspaces": [
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "create:app": "bun scripts/pkg/create-app.ts",
     "codegen": "bun run --cwd packages/codegen codegen",
@@ -40,11 +34,11 @@
     "clean": "bunx turbo run clean --concurrency=50%",
     "nuke": "bun run --bun clean && bunx rimraf .turbo node_modules bun.lock",
     "ok": "bun typecheck && bun fmtcheck && bun lint && bun doctor:rust && bun doctor -y",
-    "typecheck": "turbo typecheck",
+    "typecheck": "bun check && bun run --workspaces --sequential --if-present typecheck",
     "lint": "turbo lint",
     "lint:fix": "turbo lint -- --fix",
-    "fmt": "turbo fmt",
-    "fmtcheck": "turbo fmtcheck",
+    "fmt": "bun fmt",
+    "fmtcheck": "bun fmt --check",
     "test": "turbo run test",
     "doctor": "env -u CODEX_CI bunx react-doctor --verbose",
     "doctor:rust": "turbo doctor:rust",
@@ -72,25 +66,31 @@
   },
   "devDependencies": {
     "@monrep/agent-skills": "workspace:*",
-    "@shadcn/lint": "^0.2.1",
+    "@shadcn/lint": "^0.2.5",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@tanstack/eslint-plugin-router": "^1.162.0",
-    "@tanstack/intent": "^0.5.5",
-    "@types/bun": "^1.4.3",
-    "@types/node": "^26.6.5",
+    "@tanstack/intent": "^0.5.6",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^26.6.6",
     "bun-scan": "^1.1.2",
     "git-cliff": "^2.14.2",
-    "knip": "^6.41.0",
+    "knip": "^6.44.1",
     "npm-check-updates": "^23.1.1",
-    "oxfmt": "^0.73.0",
-    "oxlint": "^1.88.0",
-    "oxlint-tsgolint": "^7.0.2004",
-    "react-doctor": "^0.9.18",
-    "rimraf": "^6.1.3",
-    "turbo": "^2.11.8",
+    "oxfmt": "^0.76.0",
+    "oxlint": "^1.91.0",
+    "oxlint-tsgolint": "^7.0.2005",
+    "react-doctor": "^0.9.22",
+    "rimraf": "^6.1.4",
+    "turbo": "^2.11.10",
     "typescript": "^7.0.2"
   },
   "overrides": {},
+  "packageManager": "bun@1.4.4",
+  "intent": {
+    "skills": [
+      "workspace:@monrep/agent-skills"
+    ]
+  },
   "patchedDependencies": {
     "@durable-streams/server-cloudflare@0.1.1": "patches/@durable-streams%2Fserver-cloudflare@0.1.1.patch"
   }

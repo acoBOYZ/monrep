@@ -9,11 +9,11 @@ description: >
 metadata:
   type: core
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'monrep/monrep-mono:packages/agent-skills/skills/react-defaults/SKILL.md'
-  - 'monrep/monrep-mono:doctor.config.ts'
-  - 'monrep/monrep-mono:apps/web/doctor.config.ts'
+  - "monrep/monrep-mono:packages/agent-skills/skills/react-defaults/SKILL.md"
+  - "monrep/monrep-mono:doctor.config.ts"
+  - "monrep/monrep-mono:packages/main/doctor.config.ts"
 ---
 
 # React defaults (this repo)
@@ -115,7 +115,7 @@ Use `LazyItem` from `@react/ui/func` for scrollable row lists:
 - **Never** add helper/utility modules under `@core/shared` (no `src/utils/`, no phone parsers, no spreadsheet helpers, no formatters).
 - Put utilities in the **package that owns the behavior**:
   - API-only logic → `services/api/src/utils/`
-  - Web-only logic → `apps/web/src/lib/` (or feature-local `utils/` when single-use)
+  - Web-only logic → `packages/main/src/lib/` (or feature-local `utils/` when single-use)
   - Cross-package React helpers → `@react/utils`
 - If two packages need the same small pure function, **duplicate** it (≤ ~40 LOC) or extract to the correct domain package — do **not** centralize in `@core/shared`.
 - Importing `@core/shared` for `zod` schemas / table types is correct; importing it for `normalizeWaPhone`-style helpers is **wrong**.
@@ -217,8 +217,8 @@ bun run fmt        # apply polish (includes import statement/group sort)
 Single package:
 
 ```bash
-bun run --cwd apps/web fmtcheck
-bun run --cwd apps/web fmt
+bun run --cwd packages/main fmtcheck
+bun run --cwd packages/main fmt
 ```
 
 Polish only — not a substitute for typecheck/lint/doctor. Do not skip; do not rewrite root `fmt` / `fmtcheck`. Full skill: `@monrep/agent-skills#oxfmt`.
@@ -257,7 +257,7 @@ From **repo root**:
 bun run doctor
 ```
 
-Config: root `doctor.config.ts` (`scope: "changed"` by default); per-workspace overrides in e.g. `apps/web/doctor.config.ts`. **Target: 100% score, zero diagnostics** — not "good enough." No per-package `doctor` scripts.
+Config: root `doctor.config.ts` (`scope: "changed"` by default); per-workspace overrides in e.g. `packages/main/doctor.config.ts`. **Target: 100% score, zero diagnostics** — not "good enough." No per-package `doctor` scripts.
 
 - Fix **all** errors and warnings, including Performance, Dead Code, and any finding **without** a `category` (do not skip uncategorized items).
 - Common categories (examples tied to rules above): `React Compiler`, `State & Effects`, `Architecture`, `Correctness` — but never stop after only those; the report is the source of truth.

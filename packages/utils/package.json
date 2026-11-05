@@ -10,11 +10,8 @@
     "./ulid": "./src/ulid.ts"
   },
   "scripts": {
-    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
-    "clean": "rimraf dist node_modules bun.lock .turbo",
-    "fmt": "oxfmt src",
-    "fmtcheck": "oxfmt --check src"
+    "clean": "rimraf dist node_modules bun.lock .turbo"
   },
   "dependencies": {
     "clsx": "^2.1.1",

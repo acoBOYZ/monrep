@@ -8,23 +8,21 @@ One control plane. Many servers. No jumping between terminals every time somethi
 
 ## The idea
 
-
 | Piece                   | What it does                                                                                                                      |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | **Web app**             | Dashboard. Live view. Trigger updates, restarts, open a shell, watch logs.                                                        |
 | **CLI agent**           | Runs on the server as a single binary. Talks to the web app over a realtime channel. Executes what you ask.                       |
-| **CI (GitHub for now)** | Builds images / binaries. When source changes you can push updates the same way CF / Vercel / Netlify feel, but for *your* fleet. |
-
+| **CI (GitHub for now)** | Builds images / binaries. When source changes you can push updates the same way CF / Vercel / Netlify feel, but for _your_ fleet. |
 
 You are not SSH’d into five machines at once. You open the page, pick a server, do the job.
 
 ## What you can do (goals)
 
-- Create / start / stop / restart Docker containers  
-- Run shell commands and see output **live**  
-- Watch service logs in realtime; keep error history when you need it  
-- Resource monitors (CPU, mem, etc.)  
-- Disable one service or everything from the outside world when you need a kill switch  
+- Create / start / stop / restart Docker containers
+- Run shell commands and see output **live**
+- Watch service logs in realtime; keep error history when you need it
+- Resource monitors (CPU, mem, etc.)
+- Disable one service or everything from the outside world when you need a kill switch
 - Later: OpenTelemetry inputs, richer metrics, alerts
 
 Exact UI and CLI packaging are still moving. See [ROADMAP.md](./ROADMAP.md).
@@ -33,8 +31,8 @@ Exact UI and CLI packaging are still moving. See [ROADMAP.md](./ROADMAP.md).
 
 Because the control plane is not a random Node script. We want:
 
-- **TanStack Start** on Cloudflare (app + API + realtime in one deploy)  
-- **Durable Streams** + TanStack DB for live state (containers, jobs, log tails)  
+- **TanStack Start** on Cloudflare (app + API + realtime in one deploy)
+- **Durable Streams** + TanStack DB for live state (containers, jobs, log tails)
 - A **publishable CLI** you `install` on the server, always connected back to that app
 
 The packages under `packages/` are the building blocks for that path (web shell, db/stream codegen, UI, etc.). Product surface grows as the roadmap items land.

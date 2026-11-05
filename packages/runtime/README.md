@@ -4,13 +4,13 @@ Client runtime env **hosts** and stores. Theme, network, timer, viewport. They r
 
 ## What’s inside
 
-| Import | Role |
-| --- | --- |
-| `@monrep/runtime` | Re-exports all subpaths |
-| `@monrep/runtime/theme` | `ThemeEnv`, `storeTheme`, `setTheme`, bootstrap |
-| `@monrep/runtime/network` | `NetworkEnv` + network store |
-| `@monrep/runtime/timer` | `TimerEnv` + `storeTimer` (second tick, etc.) |
-| `@monrep/runtime/view` | `ViewportEnv` + viewport store |
+| Import                    | Role                                            |
+| ------------------------- | ----------------------------------------------- |
+| `@monrep/runtime`         | Re-exports all subpaths                         |
+| `@monrep/runtime/theme`   | `ThemeEnv`, `storeTheme`, `setTheme`, bootstrap |
+| `@monrep/runtime/network` | `NetworkEnv` + network store                    |
+| `@monrep/runtime/timer`   | `TimerEnv` + `storeTimer` (second tick, etc.)   |
+| `@monrep/runtime/view`    | `ViewportEnv` + viewport store                  |
 
 Depends on `@monrep/hooks` and `@tanstack/react-store`.
 
@@ -27,7 +27,7 @@ import { NetworkEnv, ThemeEnv, TimerEnv, ViewportEnv } from "@monrep/runtime";
   <TimerEnv />
   <ViewportEnv />
   {children}
-</>
+</>;
 ```
 
 Read stores with `@tanstack/react-store` `useSelector` where needed (example: `storeTimer` for relative times).

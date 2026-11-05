@@ -8,11 +8,9 @@ All notable changes to this project are documented in this file.
 
 - Heartbeat stops rewriting the immortal agent catalog. reconnect layer backs off and stops blocking on journal pipes. by @acoBOYZ
 
-
 ### ⚙️ Miscellaneous Tasks
 
 - Merge pull request #62 from acoBOYZ/fix-presence-reconnect by @acoBOYZ in #62
-
 
 ## [0.7.6] - 2026-10-12
 
@@ -22,7 +20,6 @@ All notable changes to this project are documented in this file.
 
 - Per-server PTY start directory. settings → agent → shell, then new terminals open there. by @acoBOYZ
 
-
 ### ⚙️ Miscellaneous Tasks
 
 - Merge pull request #60 from acoBOYZ/feat-pty-cwd by @acoBOYZ in #60
@@ -31,13 +28,11 @@ All notable changes to this project are documented in this file.
 
 - Routine dep bump. no app code. by @acoBOYZ
 
-
 ## [0.7.5] - 2026-10-06
 
 ### 🐛 Bug Fixes
 
 - Await stream actions with `.when("settled")` instead of `.isPersisted.promise`. react-db 0.5.1. by @acoBOYZ
-
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -51,7 +46,6 @@ All notable changes to this project are documented in this file.
 
 - Merge pull request #55 from acoBOYZ/fix-db-when-settled by @acoBOYZ in #55
 
-
 ## [0.7.4] - 2026-10-01
 
 ### 🐛 Bug Fixes
@@ -60,18 +54,15 @@ All notable changes to this project are documented in this file.
 
 - Fmt by @acoBOYZ
 
-
 ### 📚 Documentation
 
 - Refactored readme by @acoBOYZ
 
 - Package README factory. fill the gaps, trim the noise, point people at `create:app`. by @acoBOYZ
 
-
 ### 🚜 Refactor
 
 - Server detail sections are drag-sortable and saved on the agent DO. range picker grows up to 30d. by @acoBOYZ
-
 
 ### 🎨 Styling
 
@@ -80,7 +71,6 @@ All notable changes to this project are documented in this file.
 - KPI / glance icon pass + empty spark placeholder. fleet and server detail share the same look. by @acoBOYZ
 
 - Ops tables + search polish on docker/services. by @acoBOYZ
-
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -100,7 +90,6 @@ All notable changes to this project are documented in this file.
 
 - Merge pull request #47 from acoBOYZ/doc-md-factory by @acoBOYZ in #47
 
-
 ## [0.7.3] - 2026-09-29
 
 ### 🐛 Bug Fixes
@@ -111,13 +100,11 @@ All notable changes to this project are documented in this file.
 
 - Speed up agent CI: shared rust cache, path-filter jobs, `--locked` everywhere. release bumps Cargo.lock too. by @acoBOYZ
 
-
 ### ⚙️ Miscellaneous Tasks
 
 - Merge pull request #45 from acoBOYZ/fix-tcp-layer by @acoBOYZ in #45
 
 - Merge pull request #44 from acoBOYZ/fix-faster-actions by @acoBOYZ in #44
-
 
 ## [0.7.2] - 2026-09-28
 
@@ -125,16 +112,13 @@ All notable changes to this project are documented in this file.
 
 - One command to link + systemd: `sudo monrep init`. CLI verbs renamed to match. by @acoBOYZ
 
-
 ### 🐛 Bug Fixes
 
 - Fleet/server charts + KPI chrome tightened. series legend instead of a lone “latest” number. by @acoBOYZ
 
-
 ### 🎨 Styling
 
 - Ui patch by @acoBOYZ
-
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -145,7 +129,6 @@ All notable changes to this project are documented in this file.
 - Merge pull request #40 from acoBOYZ/chore-up by @acoBOYZ in #40
 
 - Up by @acoBOYZ
-
 
 ## [0.7.1] - 2026-09-28
 
@@ -160,7 +143,6 @@ All notable changes to this project are documented in this file.
 - Per-deploy brand config. install URL / assets / CSP come from local `brand.json`, not hardcoded workers.dev. by @acoBOYZ
 
 - Per-deploy brand config. install URL / assets / CSP come from local `brand.json`, not hardcoded workers.dev. by @acoBOYZ
-
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -184,7 +166,6 @@ All notable changes to this project are documented in this file.
 
 - Forgatten fmt by @acoBOYZ
 
-
 ## [0.7.0] - 2026-09-27
 
 ### 🚀 Features
@@ -193,13 +174,11 @@ All notable changes to this project are documented in this file.
 
 - Big one: Linux `monrep` agent + control-plane fleet UI. streams split client/server. effect-solutions out. by @acoBOYZ
 
-- *(template)* `bun run create:app <name>` scaffolds a second Worker from `packages/.templates/app`. by @acoBOYZ
-
+- _(template)_ `bun run create:app <name>` scaffolds a second Worker from `packages/.templates/app`. by @acoBOYZ
 
 ### 🎨 Styling
 
 - Public landing page + auth UI tidy. copy button grows a `block` variant. by @acoBOYZ
-
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -217,24 +196,21 @@ All notable changes to this project are documented in this file.
 
 - Merge pull request #27 from acoBOYZ/feat-new-app-template by @acoBOYZ in #27
 
-
 ## [0.6.0] - 2026-09-25
 
 ### 🚀 Features
 
-- *(monrep)* New-codegen-layer by @acoBOYZ
-
+- _(monrep)_ New-codegen-layer by @acoBOYZ
 
 ### 🐛 Bug Fixes
 
-- *(cli)* Richer git-cliff changelogs: `@user`, `#PR`, New Contributors. include non-conventional commits. by @acoBOYZ
+- _(cli)_ Richer git-cliff changelogs: `@user`, `#PR`, New Contributors. include non-conventional commits. by @acoBOYZ
 
-- *(codegen)* Stop side-effect `import "@/db/registry"`. explicit host bind: client `DOHost`, server `bindDoApp()`. by @acoBOYZ
+- _(codegen)_ Stop side-effect `import "@/db/registry"`. explicit host bind: client `DOHost`, server `bindDoApp()`. by @acoBOYZ
 
 - Forgotten fmt by @acoBOYZ
 
-- *(monrep)* Tiny polish + stream typing cleanup. bump durable-streams long-poll wait. by @acoBOYZ
-
+- _(monrep)_ Tiny polish + stream typing cleanup. bump durable-streams long-poll wait. by @acoBOYZ
 
 ### ⚙️ Miscellaneous Tasks
 
@@ -246,16 +222,15 @@ All notable changes to this project are documented in this file.
 
 - Merge pull request #22 from acoBOYZ/fix-small by @acoBOYZ in #22
 
-
 ## [0.5.0] - 2026-09-25
 
 ### 🚀 Features
 
-- *(main)* Add monrep favicon and app icons
+- _(main)_ Add monrep favicon and app icons
 
 ### 🐛 Bug Fixes
 
 - Partial stream upserts were wiping `createdAt` (StreamDB replaces the row). preserve audits on update.
-- *(db)* Preserve createdAt on stream upsert updates
+- _(db)_ Preserve createdAt on stream upsert updates
 
 ## [0.4.8] - 2026-09-24

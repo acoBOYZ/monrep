@@ -11,9 +11,9 @@ description: >
 metadata:
   type: core
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'monrep/monrep-mono:packages/agent-skills/skills/codegen-electric/SKILL.md'
+  - "monrep/monrep-mono:packages/agent-skills/skills/codegen-electric/SKILL.md"
 ---
 
 # Codegen + Electric (hub)
@@ -34,12 +34,12 @@ Legal **reads** for rows/RPC/collections/route mounts: generated types from `@co
 
 ## Leaves (thin — load after hub when needed)
 
-| Leaf | When |
-| --- | --- |
-| sql-electric-bind (future) | Table SQL + Electric publication/bind rules |
-| shared-schema (future) | Zod folder placement (`tables` / `rpc` / `streams`) |
-| collections (future) | Safe `@react/db` barrel exports |
-| `#tanstack-db` (existing) | `useLiveQuery` / `useLiveInfiniteQuery`, `createIndex`, `setWindow` |
+| Leaf                       | When                                                                |
+| -------------------------- | ------------------------------------------------------------------- |
+| sql-electric-bind (future) | Table SQL + Electric publication/bind rules                         |
+| shared-schema (future)     | Zod folder placement (`tables` / `rpc` / `streams`)                 |
+| collections (future)       | Safe `@react/db` barrel exports                                     |
+| `#tanstack-db` (existing)  | `useLiveQuery` / `useLiveInfiniteQuery`, `createIndex`, `setWindow` |
 
 ## Failure modes
 
@@ -60,7 +60,7 @@ Legal **reads** for rows/RPC/collections/route mounts: generated types from `@co
 10. Commit with stale gens (sql/schema ≠ output) — run codegen and diff
 11. Load `#tanstack-db` but skip this hub when adding a table/RPC
 12. Export collections outside the safe `@react/db` barrel
-15. Cast/launder (`as T…`, `as any`, hand-built objects into collection mutate types) bypassing codegen/Zod
+13. Cast/launder (`as T…`, `as any`, hand-built objects into collection mutate types) bypassing codegen/Zod
 
 ### MEDIUM
 

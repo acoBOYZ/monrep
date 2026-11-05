@@ -11,8 +11,8 @@
   },
   "env": {
     "builtin": true,
-    "browser": true,
     "es2026": true,
+    "browser": true,
     "node": true
   },
   "ignorePatterns": [
@@ -35,7 +35,6 @@
     "**/snap/**",
     "**/vite.config.*.timestamp-*.*"
   ],
-
   // --- Base correctness (unprefixed core + unicorn) ---
   "rules": {
     // core eslint

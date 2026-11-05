@@ -107,30 +107,35 @@ bun run --cwd packages/agent test
 
 ## Control-plane HTTP (main)
 
-| Route | Body | Result |
-| --- | --- | --- |
-| `POST /api/agent/enroll` | `{ "token" }` | `{ deviceId, deviceSecret, controlUrl }` |
-| `POST /api/agent/token` | `{ deviceId, deviceSecret }` | `{ accessToken, expiresAt }` |
-| `GET /api/agent/ws` | Bearer access token | outbound WSS tunnel |
+| Route                    | Body                         | Result                                   |
+| ------------------------ | ---------------------------- | ---------------------------------------- |
+| `POST /api/agent/enroll` | `{ "token" }`                | `{ deviceId, deviceSecret, controlUrl }` |
+| `POST /api/agent/token`  | `{ deviceId, deviceSecret }` | `{ accessToken, expiresAt }`             |
+| `GET /api/agent/ws`      | Bearer access token          | outbound WSS tunnel                      |
 
 ## Wire API
 
 Envelope:
 
 ```json
-{ "v": 1, "id": "…", "op": "hello|heartbeat|run|cancel|update|config|agent.health|metrics.*|result|error|event", "body": { } }
+{
+  "v": 1,
+  "id": "…",
+  "op": "hello|heartbeat|run|cancel|update|config|agent.health|metrics.*|result|error|event",
+  "body": {}
+}
 ```
 
-| Op | Direction | Role |
-| --- | --- | --- |
-| `hello` | agent → main | session hello (+ version) |
-| `config` | main → agent | push `autoUpdate` + metrics prefs |
-| `update` | main → agent | trigger self-update |
-| `heartbeat` | both | liveness |
-| `run` / `cancel` | main → agent | spawn / stop argv |
-| `metrics.query` / `metrics.latest` / `events.query` | main → agent | local SQLite timeseries |
-| `agent.health` | agent → main | health events |
-| `result` / `error` / `event` | agent → main | outcomes + streams |
+| Op                                                  | Direction    | Role                              |
+| --------------------------------------------------- | ------------ | --------------------------------- |
+| `hello`                                             | agent → main | session hello (+ version)         |
+| `config`                                            | main → agent | push `autoUpdate` + metrics prefs |
+| `update`                                            | main → agent | trigger self-update               |
+| `heartbeat`                                         | both         | liveness                          |
+| `run` / `cancel`                                    | main → agent | spawn / stop argv                 |
+| `metrics.query` / `metrics.latest` / `events.query` | main → agent | local SQLite timeseries           |
+| `agent.health`                                      | agent → main | health events                     |
+| `result` / `error` / `event`                        | agent → main | outcomes + streams                |
 
 ## CI
 

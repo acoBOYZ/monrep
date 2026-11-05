@@ -2,8 +2,8 @@
   "name": "@monrep/agent",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "description": "monrep fleet CLI agent (Rust binary monrep)",
+  "type": "module",
   "scripts": {
     "dev": "cargo watch -w src -w Cargo.toml -w Cargo.lock -x 'run --bin monrep'",
     "local": "bun run scripts/local.ts",
@@ -23,7 +23,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@types/bun": "^1.4.3",
-    "rust-doctor": "^0.7.0"
+    "@types/bun": "^1.4.4",
+    "rust-doctor": "^0.9.0"
   }
 }

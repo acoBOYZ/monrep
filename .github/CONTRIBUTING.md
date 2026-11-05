@@ -41,14 +41,14 @@ Bump rules (see [`cliff.toml`](../cliff.toml)): conventional SemVer â€” `fix` â†
 
 Prefer conventional commit / PR titles:
 
-| Prefix             | Section                                                        |
-| ------------------ | -------------------------------------------------------------- |
-| `feat:` / `feat!:` | Features (use `!` or a `BREAKING CHANGE:` footer for breaking) |
-| `fix:`             | Bug Fixes                                                      |
-| `perf:`            | Performance                                                    |
-| `docs:`            | Documentation                                                  |
-| `chore:` / `ci:`   | Miscellaneous Tasks                                            |
-| *(no / other prefix)* | Miscellaneous Tasks (still included; prefer a real prefix)  |
+| Prefix                | Section                                                        |
+| --------------------- | -------------------------------------------------------------- |
+| `feat:` / `feat!:`    | Features (use `!` or a `BREAKING CHANGE:` footer for breaking) |
+| `fix:`                | Bug Fixes                                                      |
+| `perf:`               | Performance                                                    |
+| `docs:`               | Documentation                                                  |
+| `chore:` / `ci:`      | Miscellaneous Tasks                                            |
+| _(no / other prefix)_ | Miscellaneous Tasks (still included; prefer a real prefix)     |
 
 CI release jobs set `GITHUB_TOKEN` so git-cliff can attach `by @user` and `in #PR` (and New Contributors). Locally, `bun run release:changelog` / `release:notes` reuse `GITHUB_TOKEN`, `GH_TOKEN`, or `gh auth token` when available.
 

@@ -28,14 +28,14 @@ export default defineConfig({
 
 Fixed outputs under `outDir`:
 
-| File | Role |
-| --- | --- |
-| `do.gen.ts` | `DO_MODULES`, epoch/live/persist/state |
-| `types.gen.ts` | `T*Do` row types |
-| `collections.gen.ts` | `DO_MODULE_DB_FACTORIES` |
-| `bind.gen.ts` | `DO_BINDINGS` + `bindDoApp` |
-| `host.gen.tsx` | `DOHost` + module-load `bindDoApp()` |
-| `useStreamDb.gen.ts` | typed `useStreamDb` |
+| File                 | Role                                   |
+| -------------------- | -------------------------------------- |
+| `do.gen.ts`          | `DO_MODULES`, epoch/live/persist/state |
+| `types.gen.ts`       | `T*Do` row types                       |
+| `collections.gen.ts` | `DO_MODULE_DB_FACTORIES`               |
+| `bind.gen.ts`        | `DO_BINDINGS` + `bindDoApp`            |
+| `host.gen.tsx`       | `DOHost` + module-load `bindDoApp()`   |
+| `useStreamDb.gen.ts` | typed `useStreamDb`                    |
 
 Public barrels next to `outDir` (created if missing, never overwritten): `host.ts`, `useStreamDb.ts`, `collections.ts`, `types.ts`.
 

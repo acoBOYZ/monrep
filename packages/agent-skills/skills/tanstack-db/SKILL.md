@@ -9,16 +9,16 @@ description: >
 metadata:
   type: core
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'kangrux/kangrux-mono:packages/agent-skills/skills/tanstack-db/SKILL.md'
-  - 'kangrux/kangrux-mono:apps/web/src/bootstrap.ts'
+  - "kangrux/kangrux-mono:packages/agent-skills/skills/tanstack-db/SKILL.md"
+  - "kangrux/kangrux-mono:packages/main/src/bootstrap.ts"
 ---
 
 # TanStack DB (this repo)
 
 Live data uses `@tanstack/react-db` collections from `@react/db` (Electric). Indexes
-are registered in `apps/web/src/bootstrap.ts` via `initCollections()`.
+are registered in `packages/main/src/bootstrap.ts` via `initCollections()`.
 
 ## Critical: `orderBy` + indexes (infinite / windowed queries)
 
@@ -35,7 +35,7 @@ button after a small second page.
 
 ### Rules
 
-1. **Index the first `orderBy` field** in `apps/web/src/bootstrap.ts`:
+1. **Index the first `orderBy` field** in `packages/main/src/bootstrap.ts`:
    ```ts
    c.waContactsCollection.createIndex((r) => r.name);
    ```
@@ -223,17 +223,17 @@ useLiveInfiniteQuery({
 - [ ] First order field is non-null and indexed in `bootstrap.ts`
 - [ ] `pageSize` is a real page size (never `0` — DB normalizes it to `20`)
 - [ ] Disable: `return null` if [db#1729](https://github.com/TanStack/db/issues/1729)
-  is closed **and** installed types allow it; otherwise idle localOnly, or
-  impossible-filter + `as never` if the select type does not match (see above)
+      is closed **and** installed types allow it; otherwise idle localOnly, or
+      impossible-filter + `as never` if the select type does not match (see above)
 - [ ] UI: keep Load more visible while fetching (`hasNextPage || isFetchingNextPage`)
-  so a stale `hasNextPage` during `setWindow` does not hide the button
+      so a stale `hasNextPage` during `setWindow` does not hide the button
 - [ ] Prefer hook `data` (flat window) over reinventing page math when possible
 
 ## Collections & indexes
 
 - Define schemas in `@core/shared` (types only—no utils)
 - Collections are generated / created under `@react/db`
-- Register query-critical indexes in `apps/web/src/bootstrap.ts` inside
+- Register query-critical indexes in `packages/main/src/bootstrap.ts` inside
   `initCollections()` (idempotent guard already present)
 - Index filter columns used in hot `where` clauses (`org_id`, `team_id`,
   foreign keys) in addition to order keys

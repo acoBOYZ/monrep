@@ -1,4 +1,5 @@
 import { startTransition, useEffect, useState } from "react";
+import { boxes } from "@monrep/utils";
 
 /**
  * Returns `true` after the browser has painted `delayFrames` times.
@@ -30,26 +31,28 @@ export function useAfterPaint(delayFrames = 1) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    let framesLeft = delayFrames;
-    let frameId = 0;
+    const frameId = { current: 0 };
+    const { cancelled, framesLeft } = boxes({
+      cancelled: false,
+      framesLeft: delayFrames,
+    });
 
     const tick = () => {
-      if (cancelled) return;
-      framesLeft -= 1;
-      if (framesLeft <= 0) {
+      if (cancelled.current) return;
+      framesLeft.current -= 1;
+      if (framesLeft.current <= 0) {
         startTransition(() => {
-          if (!cancelled) setReady(true);
+          if (!cancelled.current) setReady(true);
         });
         return;
       }
-      frameId = requestAnimationFrame(tick);
+      frameId.current = requestAnimationFrame(tick);
     };
 
-    frameId = requestAnimationFrame(tick);
+    frameId.current = requestAnimationFrame(tick);
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(frameId);
+      cancelled.current = true;
+      cancelAnimationFrame(frameId.current);
     };
   }, [delayFrames]);
 

@@ -9,10 +9,5 @@
     "**/*.gen.*",
     "**/*.sys.*"
   ],
-  "ignore": [
-    "**/upstream/**",
-    "**/*.gen.*",
-    "**/bindings/**",
-    "**/scripts/**"
-  ]
+  "ignore": ["**/upstream/**", "**/*.gen.*", "**/bindings/**", "**/scripts/**"]
 }
