@@ -105,9 +105,8 @@ async fn supervised_session(
   runtime: &mut Runtime,
   last_health_line: &mut Option<(String, Instant)>,
 ) -> anyhow::Result<SessionOutcome> {
-  let cred = match load_cred_resilient(health) {
-    Some(c) => c,
-    None => anyhow::bail!("credential store unavailable"),
+  let Some(cred) = load_cred_resilient(health) else {
+    anyhow::bail!("credential store unavailable");
   };
 
   health.emit(
@@ -243,10 +242,13 @@ fn ensure_stdout_nonblock() {
     {
       use std::os::fd::AsRawFd;
       let fd = io::stdout().as_raw_fd();
-      // SAFETY: fcntl F_GETFL / F_SETFL on our stdout fd only.
-      let flags = unsafe { libc::fcntl(fd, libc::F_GETFL) };
-      if flags >= 0 {
-        unsafe {
+      // SAFETY: `fd` is this process's stdout (`AsRawFd`). `F_GETFL`/`F_SETFL`
+      // only read and update status flags on that fd; they do not close or reuse
+      // it. `F_SETFL` runs only after `F_GETFL` succeeds (`flags >= 0`) and only
+      // adds `O_NONBLOCK` so a full journal pipe cannot stall the supervisor.
+      unsafe {
+        let flags = libc::fcntl(fd, libc::F_GETFL);
+        if flags >= 0 {
           libc::fcntl(fd, libc::F_SETFL, flags | libc::O_NONBLOCK);
         }
       }

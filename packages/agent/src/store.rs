@@ -1,4 +1,4 @@
-//! 0600 device credential store — one pinned control_url per agent.
+//! 0600 device credential store — one pinned `control_url` per agent.
 
 use crate::config;
 use crate::error::{AgentError, Result};
@@ -73,8 +73,8 @@ pub fn clear() -> Result<bool> {
 
 /// Refuse connecting to a different origin than the pin.
 pub fn assert_pinned_url(cred: &DeviceCred, attempted: &str) -> Result<()> {
-  let pinned = normalize_url(&cred.control_url);
-  let attempt = normalize_url(attempted);
+  let pinned = crate::ws_url::normalize_control_url(&cred.control_url).to_string();
+  let attempt = crate::ws_url::normalize_control_url(attempted).to_string();
   if pinned != attempt {
     return Err(AgentError::BindingMismatch {
       pinned,
@@ -82,10 +82,6 @@ pub fn assert_pinned_url(cred: &DeviceCred, attempted: &str) -> Result<()> {
     });
   }
   Ok(())
-}
-
-fn normalize_url(url: &str) -> String {
-  url.trim().trim_end_matches('/').to_string()
 }
 
 fn set_owner_rw(path: &Path) -> Result<()> {

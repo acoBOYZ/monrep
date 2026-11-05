@@ -39,7 +39,7 @@ impl HealthBus {
         HealthLevel::Error => "error",
       };
       metrics::record_event(
-        db,
+        Arc::clone(db),
         "health",
         serde_json::json!({
           "level": level_str,
@@ -56,7 +56,7 @@ impl HealthBus {
     }
   }
 
-  pub fn last(&self) -> Option<&HealthBody> {
+  pub const fn last(&self) -> Option<&HealthBody> {
     self.last.as_ref()
   }
 
@@ -73,7 +73,6 @@ impl HealthBus {
 fn now_rfc3339ish() -> String {
   let secs = SystemTime::now()
     .duration_since(UNIX_EPOCH)
-    .map(|d| d.as_secs())
-    .unwrap_or(0);
+    .map_or(0, |d| d.as_secs());
   format!("{secs}")
 }

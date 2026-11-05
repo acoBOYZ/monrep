@@ -9,6 +9,7 @@ use crate::proto::{Envelope, HelloBody, Op, PROTO_V};
 use crate::runtime::Runtime;
 use crate::store::{self, DeviceCred};
 use crate::tls;
+use crate::ws_url::to_ws_url;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use std::time::Duration;
@@ -38,21 +39,6 @@ struct Tunnel {
   update_tick: Interval,
 }
 
-/// Map HTTPS control URL → WSS endpoint path.
-pub fn to_ws_url(control_url: &str) -> anyhow::Result<String> {
-  let base = control_url.trim().trim_end_matches('/');
-  let ws = if let Some(rest) = base.strip_prefix("https://") {
-    format!("wss://{rest}/api/agent/ws")
-  } else if let Some(rest) = base.strip_prefix("http://") {
-    format!("ws://{rest}/api/agent/ws")
-  } else if base.starts_with("wss://") || base.starts_with("ws://") {
-    format!("{base}/api/agent/ws")
-  } else {
-    anyhow::bail!("control_url must be http(s) or ws(s): {control_url}");
-  };
-  Ok(ws)
-}
-
 /// Dial control plane and run until disconnect / error. Does not own PTYs.
 pub async fn run_session(
   cred: &DeviceCred,
@@ -66,10 +52,10 @@ pub async fn run_session(
 async fn open_tunnel(
   cred: &DeviceCred,
   health: &mut HealthBus,
-  runtime: &mut Runtime,
+  runtime: &Runtime,
 ) -> Result<Tunnel> {
   store::assert_pinned_url(cred, &cred.control_url)?;
-  let ws_url = to_ws_url(&cred.control_url).map_err(AgentError::Other)?;
+  let ws_url = to_ws_url(&cred.control_url).map_err(|e| AgentError::Other(e.into()))?;
 
   health.emit(
     crate::proto::HealthLevel::Info,
@@ -296,30 +282,5 @@ async fn try_auto_update(
       );
       Ok(())
     }
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn ws_url_https() {
-    assert_eq!(
-      to_ws_url("https://monrep.dev").unwrap(),
-      "wss://monrep.dev/api/agent/ws"
-    );
-    assert_eq!(
-      to_ws_url("https://monrep.dev/").unwrap(),
-      "wss://monrep.dev/api/agent/ws"
-    );
-  }
-
-  #[test]
-  fn ws_url_http() {
-    assert_eq!(
-      to_ws_url("http://127.0.0.1:5274").unwrap(),
-      "ws://127.0.0.1:5274/api/agent/ws"
-    );
   }
 }

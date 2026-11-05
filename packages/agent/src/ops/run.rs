@@ -3,7 +3,7 @@
 use crate::ops::registry::RunRegistry;
 use crate::proto::{Envelope, Op, PROTO_V, RunBody};
 use std::sync::Arc;
-use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 use tokio::process::Command;
 use tokio::sync::{Semaphore, mpsc};
 
@@ -68,77 +68,28 @@ pub async fn handle(
     map.insert(env.id.clone(), child);
   }
 
-  let run_id = env.id.clone();
-  let out_stdout = out.clone();
-  let stdout_task = tokio::spawn(async move {
-    if let Some(pipe) = stdout {
-      let mut lines = BufReader::new(pipe).lines();
-      while let Ok(Some(mut line)) = lines.next_line().await {
-        if line.len() > MAX_LINE {
-          line.truncate(MAX_LINE);
-        }
-        if out_stdout
-          .send(Envelope {
-            v: PROTO_V,
-            id: run_id.clone(),
-            op: Op::Event,
-            body: Some(serde_json::json!({ "stream": "stdout", "line": line })),
-          })
-          .await
-          .is_err()
-        {
-          break;
-        }
-      }
-    }
-  });
-
-  let run_id_err = env.id.clone();
-  let out_stderr = out.clone();
-  let stderr_task = tokio::spawn(async move {
-    if let Some(pipe) = stderr {
-      let mut lines = BufReader::new(pipe).lines();
-      while let Ok(Some(mut line)) = lines.next_line().await {
-        if line.len() > MAX_LINE {
-          line.truncate(MAX_LINE);
-        }
-        if out_stderr
-          .send(Envelope {
-            v: PROTO_V,
-            id: run_id_err.clone(),
-            op: Op::Event,
-            body: Some(serde_json::json!({ "stream": "stderr", "line": line })),
-          })
-          .await
-          .is_err()
-        {
-          break;
-        }
-      }
-    }
-  });
-
+  let stdout_task = spawn_stream_reader(stdout, env.id.clone(), out.clone(), "stdout");
+  let stderr_task = spawn_stream_reader(stderr, env.id.clone(), out.clone(), "stderr");
   let _ = stdout_task.await;
   let _ = stderr_task.await;
 
-  let status = {
+  let child = {
     let mut map = runs.lock().await;
-    match map.remove(&env.id) {
-      Some(mut child) => child.wait().await?,
-      None => {
-        let _ = out
-          .send(Envelope {
-            v: PROTO_V,
-            id: env.id.clone(),
-            op: Op::Result,
-            body: Some(serde_json::json!({ "ok": false, "cancelled": true })),
-          })
-          .await;
-        drop(permit);
-        return Ok(());
-      }
-    }
+    map.remove(&env.id)
   };
+  let Some(mut child) = child else {
+    let _ = out
+      .send(Envelope {
+        v: PROTO_V,
+        id: env.id.clone(),
+        op: Op::Result,
+        body: Some(serde_json::json!({ "ok": false, "cancelled": true })),
+      })
+      .await;
+    drop(permit);
+    return Ok(());
+  };
+  let status = child.wait().await?;
 
   let code = status.code().unwrap_or(-1);
   let _ = out
@@ -154,4 +105,35 @@ pub async fn handle(
     .await;
   drop(permit);
   Ok(())
+}
+
+fn spawn_stream_reader(
+  pipe: Option<impl AsyncRead + Unpin + Send + 'static>,
+  run_id: String,
+  out: mpsc::Sender<Envelope>,
+  stream: &'static str,
+) -> tokio::task::JoinHandle<()> {
+  tokio::spawn(async move {
+    let Some(pipe) = pipe else {
+      return;
+    };
+    let mut lines = BufReader::new(pipe).lines();
+    while let Ok(Some(mut line)) = lines.next_line().await {
+      if line.len() > MAX_LINE {
+        line.truncate(MAX_LINE);
+      }
+      if out
+        .send(Envelope {
+          v: PROTO_V,
+          id: run_id.clone(),
+          op: Op::Event,
+          body: Some(serde_json::json!({ "stream": stream, "line": line })),
+        })
+        .await
+        .is_err()
+      {
+        break;
+      }
+    }
+  })
 }

@@ -5,7 +5,6 @@ use crate::cli::{cmd_link, cmd_status, cmd_unlink, out};
 use crate::store;
 use std::io::{self, BufRead, IsTerminal, Write};
 use std::path::Path;
-use std::process::Command;
 
 const UNIT_PATH: &str = "/etc/systemd/system/monrep.service";
 const FALLBACK_BIN: &str = "/usr/local/bin/monrep";
@@ -19,7 +18,7 @@ pub async fn cmd_init(
   ensure_linux()?;
   ensure_can_install_unit()?;
 
-  let bin = resolve_bin()?;
+  let bin = resolve_bin();
   let (url, token) = resolve_link_args(url, token)?;
 
   prepare_link(&url, token.as_deref(), force).await?;
@@ -29,12 +28,12 @@ pub async fn cmd_init(
   out(&format!("init: wrote {UNIT_PATH}"))?;
   out(&format!("init: ExecStart={bin} run"))?;
 
-  systemctl(&["daemon-reload"])?;
-  systemctl(&["enable", "monrep.service"])?;
+  systemctl(&["daemon-reload"]).await?;
+  systemctl(&["enable", "monrep.service"]).await?;
   if no_start {
     out("init: enabled (not started; --no-start)")?;
   } else {
-    systemctl(&["start", "monrep.service"])?;
+    systemctl(&["start", "monrep.service"]).await?;
     out("init: enabled and started")?;
   }
 
@@ -75,14 +74,14 @@ fn ensure_can_install_unit() -> anyhow::Result<()> {
   }
 }
 
-fn resolve_bin() -> anyhow::Result<String> {
+fn resolve_bin() -> String {
   if let Ok(exe) = std::env::current_exe() {
     let s = exe.display().to_string();
     if Path::new(&s).is_file() {
-      return Ok(s);
+      return s;
     }
   }
-  Ok(FALLBACK_BIN.to_string())
+  FALLBACK_BIN.to_string()
 }
 
 fn resolve_link_args(
@@ -168,8 +167,11 @@ WantedBy=multi-user.target
   )
 }
 
-fn systemctl(args: &[&str]) -> anyhow::Result<()> {
-  let status = Command::new("systemctl").args(args).status()?;
+async fn systemctl(args: &[&str]) -> anyhow::Result<()> {
+  let status = tokio::process::Command::new("systemctl")
+    .args(args)
+    .status()
+    .await?;
   if !status.success() {
     anyhow::bail!("systemctl {} failed ({status})", args.join(" "));
   }

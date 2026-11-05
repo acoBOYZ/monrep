@@ -1,6 +1,9 @@
 //! Dumb PTY byte pipe — open / data / resize / close. No product logic.
 
 use crate::proto::{Envelope, Op, PROTO_V};
+use crate::pty_spec::{
+  DEFAULT_COLS, DEFAULT_ROWS, normalize_pty_cwd, pty_dimension, required_pty_dimension,
+};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use portable_pty::{Child, CommandBuilder, MasterPty, NativePtySystem, PtySize, PtySystem};
@@ -55,64 +58,50 @@ pub fn new_pty_map() -> PtyMap {
   Arc::new(Mutex::new(PtyRegistry::new()))
 }
 
+fn parse_open_spec(env: &Envelope) -> anyhow::Result<(u16, u16, String, Option<String>)> {
+  let body = env.body.as_ref();
+  let cols = pty_dimension(
+    body.and_then(|b| b.get("cols")).and_then(|v| v.as_u64()),
+    DEFAULT_COLS,
+  );
+  let rows = pty_dimension(
+    body.and_then(|b| b.get("rows")).and_then(|v| v.as_u64()),
+    DEFAULT_ROWS,
+  );
+  let shell = body
+    .and_then(|b| b.get("shell"))
+    .and_then(|v| v.as_str())
+    .map(str::to_string)
+    .unwrap_or_else(default_shell);
+  let cwd = normalize_pty_cwd(body.and_then(|b| b.get("cwd")).and_then(|v| v.as_str()))
+    .map_err(anyhow::Error::msg)?;
+  Ok((cols, rows, shell, cwd))
+}
+
 pub async fn handle_open(
   env: &Envelope,
   out: mpsc::Sender<Envelope>,
   ptys: PtyMap,
   pty_slots: Arc<Semaphore>,
 ) -> anyhow::Result<()> {
-  let cols = env
-    .body
-    .as_ref()
-    .and_then(|b| b.get("cols"))
-    .and_then(|v| v.as_u64())
-    .unwrap_or(80) as u16;
-  let rows = env
-    .body
-    .as_ref()
-    .and_then(|b| b.get("rows"))
-    .and_then(|v| v.as_u64())
-    .unwrap_or(24) as u16;
-  let shell = env
-    .body
-    .as_ref()
-    .and_then(|b| b.get("shell"))
-    .and_then(|v| v.as_str())
-    .map(|s| s.to_string())
-    .unwrap_or_else(default_shell);
-  let cwd = env
-    .body
-    .as_ref()
-    .and_then(|b| b.get("cwd"))
-    .and_then(|v| v.as_str())
-    .map(str::trim)
-    .filter(|s| !s.is_empty())
-    .map(|s| s.to_string());
-  if let Some(ref path) = cwd
-    && !path.starts_with('/')
-  {
-    anyhow::bail!("pty cwd must be an absolute path");
-  }
+  let (cols, rows, shell, cwd) = parse_open_spec(env)?;
   let req_id = env.id.clone();
 
-  let permit = match acquire_pty_slot(ptys.clone(), pty_slots.clone()).await {
-    Some(p) => p,
-    None => {
-      let _ = out
-        .send(Envelope {
-          v: PROTO_V,
-          id: req_id.clone(),
-          op: Op::Result,
-          body: Some(serde_json::json!({
-            "ok": false,
-            "busy": true,
-            "message": "pty busy",
-            "pty_id": req_id,
-          })),
-        })
-        .await;
-      return Ok(());
-    }
+  let Some(permit) = acquire_pty_slot(ptys.clone(), pty_slots.clone()).await else {
+    let _ = out
+      .send(Envelope {
+        v: PROTO_V,
+        id: req_id.clone(),
+        op: Op::Result,
+        body: Some(serde_json::json!({
+          "ok": false,
+          "busy": true,
+          "message": "pty busy",
+          "pty_id": req_id,
+        })),
+      })
+      .await;
+    return Ok(());
   };
 
   let pty_id = req_id.clone();
@@ -187,7 +176,7 @@ async fn finish_open_closed_early(
   reader: PtyReader,
 ) -> anyhow::Result<()> {
   drop(reader);
-  tokio::task::spawn_blocking(move || terminate_pty_session(inner))
+  tokio::task::spawn_blocking(move || terminate_pty_session(&inner))
     .await
     .ok();
   drop(permit);
@@ -220,13 +209,12 @@ fn spawn_pty_reader(
     let mut buf = vec![0_u8; READ_CHUNK];
     loop {
       match reader.read(&mut buf) {
-        Ok(0) => break,
+        Ok(0) | Err(_) => break,
         Ok(n) => {
           if reader_tx.blocking_send(buf[..n].to_vec()).is_err() {
             break;
           }
         }
-        Err(_) => break,
       }
     }
   });
@@ -274,7 +262,7 @@ fn spawn_pty_reader(
         };
         if let Some(session) = session {
           let inner = session.inner;
-          let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
+          let _ = tokio::task::spawn_blocking(move || terminate_pty_session(&inner)).await;
           let _ = out
             .send(Envelope {
               v: PROTO_V,
@@ -355,14 +343,10 @@ pub async fn handle_resize(env: &Envelope, ptys: PtyMap) -> anyhow::Result<()> {
     .get("pty_id")
     .and_then(|v| v.as_str())
     .ok_or_else(|| anyhow::anyhow!("pty_id required"))?;
-  let cols = body
-    .get("cols")
-    .and_then(|v| v.as_u64())
-    .ok_or_else(|| anyhow::anyhow!("cols required"))? as u16;
-  let rows = body
-    .get("rows")
-    .and_then(|v| v.as_u64())
-    .ok_or_else(|| anyhow::anyhow!("rows required"))? as u16;
+  let cols = required_pty_dimension(body.get("cols").and_then(|v| v.as_u64()), "cols")
+    .map_err(anyhow::Error::msg)?;
+  let rows = required_pty_dimension(body.get("rows").and_then(|v| v.as_u64()), "rows")
+    .map_err(anyhow::Error::msg)?;
 
   let inner = {
     let reg = ptys.lock().await;
@@ -430,10 +414,10 @@ pub async fn close_all(ptys: PtyMap) {
 async fn shutdown_session(session: PtySession) {
   let _ = session.close.send(());
   let inner = session.inner;
-  let _ = tokio::task::spawn_blocking(move || terminate_pty_session(inner)).await;
+  let _ = tokio::task::spawn_blocking(move || terminate_pty_session(&inner)).await;
 }
 
-fn terminate_pty_session(inner: Arc<std::sync::Mutex<PtySessionInner>>) {
+fn terminate_pty_session(inner: &std::sync::Mutex<PtySessionInner>) {
   let Ok(mut guard) = inner.lock() else {
     return;
   };
@@ -547,9 +531,7 @@ mod tests {
     let mut saw_hi = false;
     while !saw_hi {
       let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
-      if remaining.is_zero() {
-        panic!("no PtyData containing hi within 5s");
-      }
+      assert!(!remaining.is_zero(), "no PtyData containing hi within 5s");
       let msg = timeout(remaining, rx.recv())
         .await
         .expect("recv timed out")

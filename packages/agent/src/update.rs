@@ -1,9 +1,11 @@
-//! Self-update from GitHub Releases (linux x86_64 / aarch64).
+//! Self-update from GitHub Releases (linux `x86_64` / `aarch64`).
 
 use crate::brand;
 use crate::error::{AgentError, Result};
+use crate::version::{
+  PREV_PREFIX, UPDATE_TMP_PREFIX, UPDATE_TMP_SUFFIX, is_newer, is_update_artifact, strip_v,
+};
 use fs_err as fs;
-use futures_util::StreamExt;
 use serde::Deserialize;
 use std::env::consts::{ARCH, OS};
 use std::io::Write;
@@ -17,10 +19,6 @@ use std::os::unix::process::CommandExt;
 
 pub use brand::RELEASE_REPO;
 pub const AUTO_UPDATE_INTERVAL_SECS: u64 = 6 * 60 * 60;
-
-const UPDATE_TMP_PREFIX: &str = ".monrep-update-";
-const UPDATE_TMP_SUFFIX: &str = ".tmp";
-const PREV_PREFIX: &str = ".monrep-prev-";
 
 #[derive(Debug, Clone)]
 pub struct ReleaseInfo {
@@ -54,31 +52,6 @@ fn asset_name() -> Result<&'static str> {
       "unsupported arch for self-update: {other}"
     ))),
   }
-}
-
-fn strip_v(tag: &str) -> &str {
-  tag.strip_prefix('v').unwrap_or(tag)
-}
-
-/// Compare semver-ish strings (digits and dots). Returns true if `remote` is newer than `local`.
-pub fn is_newer(remote: &str, local: &str) -> bool {
-  let parse = |s: &str| -> Vec<u64> {
-    strip_v(s)
-      .split('.')
-      .filter_map(|p| p.parse::<u64>().ok())
-      .collect()
-  };
-  let a = parse(remote);
-  let b = parse(local);
-  let n = a.len().max(b.len());
-  for i in 0..n {
-    let x = a.get(i).copied().unwrap_or(0);
-    let y = b.get(i).copied().unwrap_or(0);
-    if x != y {
-      return x > y;
-    }
-  }
-  false
 }
 
 pub async fn fetch_latest_release() -> Result<ReleaseInfo> {
@@ -127,11 +100,6 @@ pub async fn check_for_update() -> Result<Option<ReleaseInfo>> {
   }
 }
 
-fn is_update_artifact(name: &str) -> bool {
-  (name.starts_with(UPDATE_TMP_PREFIX) && name.ends_with(UPDATE_TMP_SUFFIX))
-    || name.starts_with(PREV_PREFIX)
-}
-
 /// Remove leftover `.monrep-update-*.tmp` / `.monrep-prev-*` beside the binary.
 fn purge_update_artifacts(dir: &Path, keep: Option<&Path>) {
   let Ok(entries) = fs::read_dir(dir) else {
@@ -163,21 +131,24 @@ async fn download_to(path: &Path, url: &str) -> Result<()> {
     .map_err(|e| AgentError::Other(anyhow::anyhow!("download: {e}")))?
     .error_for_status()
     .map_err(|e| AgentError::Other(anyhow::anyhow!("download: {e}")))?;
-  {
-    let mut f = fs::File::create(path)?;
-    let mut stream = response.bytes_stream();
-    while let Some(chunk) = stream.next().await {
-      let chunk = chunk.map_err(|e| AgentError::Other(anyhow::anyhow!("download body: {e}")))?;
-      f.write_all(&chunk)?;
-    }
+  let bytes = response
+    .bytes()
+    .await
+    .map_err(|e| AgentError::Other(anyhow::anyhow!("download body: {e}")))?;
+  let path = path.to_path_buf();
+  tokio::task::spawn_blocking(move || {
+    let mut f = fs::File::create(&path)?;
+    f.write_all(&bytes)?;
     f.sync_all()?;
-  }
-  #[cfg(unix)]
-  {
-    let perms = std::fs::Permissions::from_mode(0o755);
-    fs::set_permissions(path, perms)?;
-  }
-  Ok(())
+    #[cfg(unix)]
+    {
+      let perms = std::fs::Permissions::from_mode(0o755);
+      fs::set_permissions(&path, perms)?;
+    }
+    Ok(())
+  })
+  .await
+  .map_err(|e| AgentError::Other(anyhow::anyhow!("download write: {e}")))?
 }
 
 fn current_exe_path() -> Result<PathBuf> {
@@ -240,26 +211,5 @@ fn reexec(exe: &Path) -> Result<()> {
     Err(AgentError::Other(anyhow::anyhow!(
       "reexec after update is Unix-only; restart monrep manually"
     )))
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn newer_compares() {
-    assert!(is_newer("0.2.0", "0.1.0"));
-    assert!(is_newer("v1.0.1", "1.0.0"));
-    assert!(!is_newer("0.1.0", "0.1.0"));
-    assert!(!is_newer("0.1.0", "0.2.0"));
-  }
-
-  #[test]
-  fn update_artifact_names() {
-    assert!(is_update_artifact(".monrep-update-123.tmp"));
-    assert!(is_update_artifact(".monrep-prev-456"));
-    assert!(!is_update_artifact("monrep"));
-    assert!(!is_update_artifact(".monrep-update-123"));
   }
 }
