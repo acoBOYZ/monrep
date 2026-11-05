@@ -6,12 +6,12 @@ Library package (copy-pasteable). App catalogs live in Worker packages (e.g. `pa
 
 ## Imports
 
-| Path | Role |
-| --- | --- |
-| `@monrep/db/module` | `createDoModule` / `doTable` DSL |
-| `@monrep/db/registry` | `bindDoRegistry` / `getDoRegistry` (used by app gens) |
+| Path                     | Role                                                                 |
+| ------------------------ | -------------------------------------------------------------------- |
+| `@monrep/db/module`      | `createDoModule` / `doTable` DSL                                     |
+| `@monrep/db/registry`    | `bindDoRegistry` / `getDoRegistry` (used by app gens)                |
 | `@monrep/db/collections` | `createDoStreamDB`, write-field gens, append + upsert/delete actions |
-| `@monrep/db/stream` | `StreamDbHost`, acquire, paths (needs bind) |
+| `@monrep/db/stream`      | `StreamDbHost`, acquire, paths (needs bind)                          |
 
 ## App pipeline
 

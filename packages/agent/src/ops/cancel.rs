@@ -14,14 +14,15 @@ pub async fn handle(
     None => anyhow::bail!("cancel requires body"),
   };
 
-  let killed = {
+  let child = {
     let mut map = runs.lock().await;
-    if let Some(mut child) = map.remove(&body.run_id) {
-      let _ = child.kill().await;
-      true
-    } else {
-      false
-    }
+    map.remove(&body.run_id)
+  };
+  let killed = if let Some(mut child) = child {
+    let _ = child.kill().await;
+    true
+  } else {
+    false
   };
 
   let _ = out

@@ -41,7 +41,7 @@ Never import `@/db/codegen/*` or `*.gen.ts` in app code.
 ```tsx
 import { DOHost } from "@/db/host";
 
-<DOHost />
+<DOHost />;
 ```
 
 **Worker / serverFn:** call `bindDoApp()` once (avoids pulling the React host into the isolate):
@@ -57,12 +57,12 @@ bindDoApp();
 #### Typed live query
 
 ```tsx
-import { useStreamDb } from "@/db/useStreamDb";
 import { useLiveQuery } from "@tanstack/react-db";
+import { useStreamDb } from "@/db/useStreamDb";
 
 function Servers() {
   const { db, isReady } = useStreamDb("agent");
-  const { data =  [] } = useLiveQuery({
+  const { data = [] } = useLiveQuery({
     query: (q) => {
       if (!db) return null;
       return q.from({ s: db.collections.server }).orderBy(({ s }) => s.name, "asc");
@@ -76,9 +76,9 @@ function Servers() {
 #### Server write via factory
 
 ```ts
-import { bindDoApp } from "@/db/host";
-import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
 import type { TUserDo } from "@/db/types";
+import { DO_MODULE_DB_FACTORIES } from "@/db/collections";
+import { bindDoApp } from "@/db/host";
 
 bindDoApp();
 

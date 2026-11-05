@@ -1,5 +1,5 @@
-auto_review: true          # run on PR open/update
-summarize: true            # include PR summary
+auto_review: true # run on PR open/update
+summarize: true # include PR summary
 path_filters:
   include:
     - packages/**

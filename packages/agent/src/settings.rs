@@ -1,4 +1,4 @@
-//! Local agent settings (`config.json`) — auto_update defaults to true.
+//! Local agent settings (`config.json`) — `auto_update` defaults to true.
 
 use crate::config;
 use crate::error::{AgentError, Result};
@@ -23,11 +23,11 @@ pub struct AgentSettings {
   pub metrics_interval_sec: u64,
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
   true
 }
 
-fn default_interval() -> u64 {
+const fn default_interval() -> u64 {
   30
 }
 
@@ -65,10 +65,9 @@ pub fn save_settings_to(path: &Path, settings: &AgentSettings) -> Result<()> {
   }
   #[cfg(unix)]
   {
-    let perms = std::fs::Permissions::from_mode(0o600);
-    fs::set_permissions(&tmp, perms.clone())?;
+    fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600))?;
     fs::rename(&tmp, path)?;
-    fs::set_permissions(path, perms)?;
+    fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
   }
   #[cfg(not(unix))]
   {
@@ -95,7 +94,7 @@ pub fn set_auto_update(enabled: bool) -> Result<AgentSettings> {
 }
 
 pub fn auto_update_enabled() -> bool {
-  load_settings().map(|s| s.auto_update).unwrap_or(true)
+  load_settings().map_or(true, |s| s.auto_update)
 }
 
 pub fn apply_metrics_config(
@@ -114,17 +113,15 @@ pub fn apply_metrics_config(
 }
 
 pub fn metrics_enabled() -> bool {
-  load_settings().map(|s| s.metrics_enabled).unwrap_or(true)
+  load_settings().map_or(true, |s| s.metrics_enabled)
 }
 
 pub fn metrics_interval_sec() -> u64 {
-  load_settings()
-    .map(|s| s.metrics_interval_sec.max(5))
-    .unwrap_or(30)
+  load_settings().map_or(30, |s| s.metrics_interval_sec.max(5))
 }
 
 pub fn settings_file_exists() -> bool {
-  config::settings_path().map(|p| p.exists()).unwrap_or(false)
+  config::settings_path().is_ok_and(|p| p.exists())
 }
 
 #[cfg(test)]

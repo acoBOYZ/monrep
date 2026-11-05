@@ -11,10 +11,10 @@ pub async fn handle(
   db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
   match env.op {
-    Op::MetricsQuery => handle_query(env, out, &db).await,
-    Op::MetricsLatest => handle_latest(env, out, &db).await,
-    Op::MetricsNames => handle_names(env, out, &db).await,
-    Op::EventsQuery => handle_events(env, out, &db).await,
+    Op::MetricsQuery => handle_query(env, out, db).await,
+    Op::MetricsLatest => handle_latest(env, out, db).await,
+    Op::MetricsNames => handle_names(env, out, db).await,
+    Op::EventsQuery => handle_events(env, out, db).await,
     _ => Ok(()),
   }
 }
@@ -22,7 +22,7 @@ pub async fn handle(
 async fn handle_query(
   env: &Envelope,
   out: mpsc::Sender<Envelope>,
-  db: &MetricsDb,
+  db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
   let body = env.body.as_ref();
   let from = body
@@ -53,14 +53,18 @@ async fn handle_query(
   let step_ms = body.and_then(|b| b.get("stepMs")).and_then(|v| v.as_i64());
   let agg = QueryAgg::parse(body.and_then(|b| b.get("agg")).and_then(|v| v.as_str()));
 
-  let series = db.query(&QueryParams {
-    from,
-    to,
-    names,
-    dims,
-    step_ms,
-    agg,
-  })?;
+  let series = tokio::task::spawn_blocking(move || {
+    db.query(&QueryParams {
+      from,
+      to,
+      names,
+      dims,
+      step_ms,
+      agg,
+    })
+  })
+  .await
+  .map_err(|e| anyhow::anyhow!("metrics query: {e}"))??;
 
   let series_json: Vec<serde_json::Value> = series
     .into_iter()
@@ -87,27 +91,31 @@ async fn handle_query(
 async fn handle_latest(
   env: &Envelope,
   out: mpsc::Sender<Envelope>,
-  db: &MetricsDb,
+  db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
   let names = env
     .body
     .as_ref()
     .and_then(|b| b.get("names"))
     .and_then(|v| v.as_array())
-    .map(|arr| {
-      arr
-        .iter()
-        .filter_map(|x| x.as_str().map(str::to_string))
-        .collect::<Vec<_>>()
-    })
-    .unwrap_or_else(|| {
-      vec![
-        "cpu.load.1m".into(),
-        "mem.used_pct".into(),
-        "disk.used_pct".into(),
-      ]
-    });
-  let points = db.latest(&names)?;
+    .map_or_else(
+      || {
+        vec![
+          "cpu.load.1m".into(),
+          "mem.used_pct".into(),
+          "disk.used_pct".into(),
+        ]
+      },
+      |arr| {
+        arr
+          .iter()
+          .filter_map(|x| x.as_str().map(str::to_string))
+          .collect::<Vec<_>>()
+      },
+    );
+  let points = tokio::task::spawn_blocking(move || db.latest(&names))
+    .await
+    .map_err(|e| anyhow::anyhow!("metrics latest: {e}"))??;
   let _ = out
     .send(Envelope {
       v: PROTO_V,
@@ -122,9 +130,11 @@ async fn handle_latest(
 async fn handle_names(
   env: &Envelope,
   out: mpsc::Sender<Envelope>,
-  db: &MetricsDb,
+  db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
-  let names = db.names()?;
+  let names = tokio::task::spawn_blocking(move || db.names())
+    .await
+    .map_err(|e| anyhow::anyhow!("metrics names: {e}"))??;
   let _ = out
     .send(Envelope {
       v: PROTO_V,
@@ -139,7 +149,7 @@ async fn handle_names(
 async fn handle_events(
   env: &Envelope,
   out: mpsc::Sender<Envelope>,
-  db: &MetricsDb,
+  db: Arc<MetricsDb>,
 ) -> anyhow::Result<()> {
   let body = env.body.as_ref();
   let from = body
@@ -162,8 +172,12 @@ async fn handle_events(
   let limit = body
     .and_then(|b| b.get("limit"))
     .and_then(|v| v.as_u64())
-    .unwrap_or(50) as usize;
-  let events = db.query_events(from, to, kinds.as_deref(), limit)?;
+    .and_then(|n| usize::try_from(n).ok())
+    .unwrap_or(50);
+  let events =
+    tokio::task::spawn_blocking(move || db.query_events(from, to, kinds.as_deref(), limit))
+      .await
+      .map_err(|e| anyhow::anyhow!("events query: {e}"))??;
   let _ = out
     .send(Envelope {
       v: PROTO_V,

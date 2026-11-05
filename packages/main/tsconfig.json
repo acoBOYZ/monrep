@@ -17,7 +17,7 @@
       "@monrep/db/*": ["../db/src/*"]
     },
 
-    "allowImportingTsExtensions": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["**/*.ts", "**/*.tsx", "doctor.config.ts"],
   "exclude": ["node_modules", "dist"]

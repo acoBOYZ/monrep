@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { box } from "@monrep/utils";
 import { useLiveQuery } from "@tanstack/react-db";
 import { LATEST_METRIC_NAMES, latestPointsToMetric } from "./seriesMap";
 import type { MetricsLatestPoint } from "./seriesMap";
@@ -116,12 +117,12 @@ export function useFleetMetrics(_from: number, _to: number) {
     const ids = onlineIds ? onlineIds.split(",") : [];
     if (ids.length === 0) return;
     const key = onlineIds;
-    let cancelled = false;
+    const cancelled = box(false);
     void fetchLatestMap(ids).then((map) => {
-      if (!cancelled) setFetched({ key, map });
+      if (!cancelled.current) setFetched({ key, map });
     });
     return () => {
-      cancelled = true;
+      cancelled.current = true;
     };
   }, [onlineIds]);
 

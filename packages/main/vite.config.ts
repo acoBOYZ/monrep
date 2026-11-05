@@ -1,14 +1,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { cloudflare } from "@cloudflare/vite-plugin";
-import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { analyzer } from "vite-bundle-analyzer";
-import type { ServerOptions as HttpsServerOptions } from "node:https";
 import { CANONICAL_ORIGIN } from "./src/brand.gen.ts";
+import type { ServerOptions as HttpsServerOptions } from "node:https";
 
 const DOMAIN = CANONICAL_ORIGIN;
 
@@ -30,10 +29,7 @@ function resolveDevHttps(): HttpsServerOptions | undefined {
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production";
   const isDebug = mode === "debug" || mode === "development";
-  const isCompiler = process.env.REACT_COMPILER === "true";
-  const useOxc = !isProduction && isCompiler;
-  // TODO: Remove it when oxc native react compiler is stable.
-  const useBabel = isProduction && isCompiler;
+  const useOxc = process.env.REACT_COMPILER === "true";
   const https = !isProduction ? resolveDevHttps() : undefined;
 
   return {
@@ -68,7 +64,6 @@ export default defineConfig(({ mode }) => {
         ],
       }),
       react({ compiler: useOxc }),
-      useBabel && babel({ presets: [reactCompilerPreset()] }),
       isDebug && analyzer({ analyzerMode: "static", openAnalyzer: true }),
     ],
     resolve: {
@@ -82,7 +77,7 @@ export default defineConfig(({ mode }) => {
         "@monrep/runtime": resolve(import.meta.dirname, "../runtime/src"),
         "@monrep/runtime/*": resolve(import.meta.dirname, "../runtime/src/*"),
         "@monrep/ui": resolve(import.meta.dirname, "../ui/src"),
-        "@monrep/utils": resolve(import.meta.dirname, "../utils/src")
+        "@monrep/utils": resolve(import.meta.dirname, "../utils/src"),
       },
     },
   };

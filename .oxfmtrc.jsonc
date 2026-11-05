@@ -11,33 +11,33 @@
       {
         "groupName": "react",
         "elementNamePattern": ["react", "react-**"],
-        "modifiers": ["value"]
+        "modifiers": ["value"],
       },
       {
         "groupName": "workspace-react",
         "elementNamePattern": ["@react/**"],
-        "modifiers": ["value"]
+        "modifiers": ["value"],
       },
       {
         "groupName": "workspace-core",
         "elementNamePattern": ["@core/**"],
-        "modifiers": ["value"]
+        "modifiers": ["value"],
       },
       {
         "groupName": "type-react",
         "elementNamePattern": ["react", "react-**"],
-        "modifiers": ["type"]
+        "modifiers": ["type"],
       },
       {
         "groupName": "type-workspace-react",
         "elementNamePattern": ["@react/**"],
-        "modifiers": ["type"]
+        "modifiers": ["type"],
       },
       {
         "groupName": "type-workspace-core",
         "elementNamePattern": ["@core/**"],
-        "modifiers": ["type"]
-      }
+        "modifiers": ["type"],
+      },
     ],
     "groups": [
       // value: node → react → npm → our @react/@core → relatives
@@ -56,18 +56,19 @@
       "type-internal",
       // value @/ last
       "internal",
-      "unknown"
-    ]
+      "unknown",
+    ],
   },
   "sortTailwindcss": {
     "stylesheet": "./packages/main/src/tailwind.css",
-    "functions": ["cn", "clsx", "cva"]
+    "functions": ["cn", "clsx", "cva"],
   },
   "sortPackageJson": true,
   "embeddedLanguageFormatting": "auto",
   "ignorePatterns": [
     "**/node_modules/**",
     "**/.turbo/**",
+    "**/*.md",
 
     // build outputs
     "**/dist/**",
@@ -86,5 +87,20 @@
     "**/*.d.ts",
     "**/*.js",
     "@core/spacetime/src/bindings/**",
+
+    // templates
+    "**/*.tpl.yml",
+    "**/*.tpl.yaml",
+
+    // upstream
+    "**/*upstream/**",
+
+    // rust
+    "**/*.{rs,rs.tpl}",
+    "**/target/**",
+    "**/.cargo/**",
+    "**/Cargo.{toml,lock}",
+    "rust-toolchain.toml",
+    "build.rs",
   ],
 }

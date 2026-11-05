@@ -36,25 +36,30 @@ pub async fn handle(
       metrics::handle(&env, out, metrics_db).await
     }
     Op::Config => {
-      if let Some(body) = &env.body {
-        if let Some(v) = body.get("autoUpdate").and_then(|x| x.as_bool()) {
-          settings::set_auto_update(v)?;
+      let body = env.body.clone();
+      let s = tokio::task::spawn_blocking(move || -> anyhow::Result<settings::AgentSettings> {
+        if let Some(body) = &body {
+          if let Some(v) = body.get("autoUpdate").and_then(|x| x.as_bool()) {
+            settings::set_auto_update(v)?;
+          }
+          let metrics_enabled = body.get("metricsEnabled").and_then(|x| x.as_bool());
+          let metrics_interval = body
+            .get("metricsIntervalSec")
+            .and_then(|x| x.as_u64())
+            .or_else(|| {
+              body
+                .get("metricsIntervalSec")
+                .and_then(|x| x.as_i64())
+                .and_then(|i| u64::try_from(i).ok())
+            });
+          if metrics_enabled.is_some() || metrics_interval.is_some() {
+            settings::apply_metrics_config(metrics_enabled, metrics_interval)?;
+          }
         }
-        let metrics_enabled = body.get("metricsEnabled").and_then(|x| x.as_bool());
-        let metrics_interval = body
-          .get("metricsIntervalSec")
-          .and_then(|x| x.as_u64())
-          .or_else(|| {
-            body
-              .get("metricsIntervalSec")
-              .and_then(|x| x.as_i64())
-              .map(|i| i as u64)
-          });
-        if metrics_enabled.is_some() || metrics_interval.is_some() {
-          settings::apply_metrics_config(metrics_enabled, metrics_interval)?;
-        }
-      }
-      let s = settings::load_settings().unwrap_or_default();
+        Ok(settings::load_settings().unwrap_or_default())
+      })
+      .await
+      .map_err(|e| anyhow::anyhow!("config task: {e}"))??;
       let _ = out
         .send(Envelope {
           v: PROTO_V,

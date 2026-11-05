@@ -36,6 +36,9 @@ fn scrape_load(at: i64, out: &mut Vec<MetricPoint>) {
   #[cfg(unix)]
   {
     let mut loads = [0f64; 3];
+    // SAFETY: `loads` is a stack `[f64; 3]` and `nelem` is 3, so the pointer is
+    // valid for three writable `f64`s. `getloadavg` writes at most `nelem`
+    // samples and does not retain the pointer.
     let n = unsafe { libc::getloadavg(loads.as_mut_ptr(), 3) };
     if n == 3 {
       push(out, at, "cpu.load.1m", loads[0], "{}");
@@ -67,9 +70,8 @@ fn scrape_cpu_used(at: i64, out: &mut Vec<MetricPoint>) {
   let Some((idle, total)) = read_cpu_ticks() else {
     return;
   };
-  let mut guard = match PREV_CPU_TICKS.lock() {
-    Ok(g) => g,
-    Err(_) => return,
+  let Ok(mut guard) = PREV_CPU_TICKS.lock() else {
+    return;
   };
   if let Some((prev_idle, prev_total)) = *guard {
     let di = idle.saturating_sub(prev_idle);
@@ -124,34 +126,41 @@ fn read_cpu_ticks_proc() -> Option<(u64, u64)> {
 }
 
 #[cfg(target_os = "macos")]
+fn host_port() -> libc::mach_port_t {
+  static HOST: std::sync::OnceLock<libc::mach_port_t> = std::sync::OnceLock::new();
+  *HOST.get_or_init(|| {
+    // SAFETY: `mach_host_self` returns a send right to this task's host port.
+    // Caching it for process lifetime avoids leaking a new send right on every
+    // scrape (`mach_port_deallocate` is not exported by libc).
+    unsafe { mach_host_self() }
+  })
+}
+
+#[cfg(target_os = "macos")]
 fn read_cpu_ticks_macos() -> Option<(u64, u64)> {
-  // HOST_CPU_LOAD_INFO = 3; CPU_STATE_{USER,SYSTEM,IDLE,NICE}
-  const HOST_CPU_LOAD_INFO: libc::c_int = 3;
-  const CPU_STATE_MAX: usize = 4;
-  #[repr(C)]
-  struct HostCpuLoadInfo {
-    cpu_ticks: [u32; CPU_STATE_MAX],
-  }
-  let mut info = HostCpuLoadInfo {
-    cpu_ticks: [0; CPU_STATE_MAX],
+  let mut info = libc::host_cpu_load_info {
+    cpu_ticks: [0; libc::CPU_STATE_MAX as usize],
   };
-  let mut count = (std::mem::size_of::<HostCpuLoadInfo>() / std::mem::size_of::<libc::integer_t>())
-    as libc::mach_msg_type_number_t;
+  let mut count = libc::HOST_CPU_LOAD_INFO_COUNT;
+  // SAFETY: `info` is a stack `host_cpu_load_info` whose size matches
+  // `HOST_CPU_LOAD_INFO_COUNT`. `host_port()` is a cached `mach_host_self`
+  // send right. The kernel writes at most `count` `integer_t`s into `info`
+  // and does not retain either pointer.
   let kr = unsafe {
-    host_statistics(
-      mach_host_self(),
-      HOST_CPU_LOAD_INFO,
-      &mut info as *mut _ as *mut libc::integer_t,
-      &mut count,
+    libc::host_statistics(
+      host_port(),
+      libc::HOST_CPU_LOAD_INFO,
+      std::ptr::from_mut(&mut info).cast(),
+      std::ptr::from_mut(&mut count),
     )
   };
   if kr != 0 {
     return None;
   }
-  let user = info.cpu_ticks[0] as u64;
-  let system = info.cpu_ticks[1] as u64;
-  let idle = info.cpu_ticks[2] as u64;
-  let nice = info.cpu_ticks[3] as u64;
+  let user = u64::from(info.cpu_ticks[libc::CPU_STATE_USER as usize]);
+  let system = u64::from(info.cpu_ticks[libc::CPU_STATE_SYSTEM as usize]);
+  let idle = u64::from(info.cpu_ticks[libc::CPU_STATE_IDLE as usize]);
+  let nice = u64::from(info.cpu_ticks[libc::CPU_STATE_NICE as usize]);
   let total = user
     .saturating_add(system)
     .saturating_add(idle)
@@ -207,10 +216,9 @@ fn scrape_mem_macos(at: i64, out: &mut Vec<MetricPoint>) {
   if total == 0 {
     return;
   }
-  let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) } as u64;
-  if page_size == 0 {
+  let Some(page_size) = sysctl_u64("hw.pagesize").filter(|&s| s > 0) else {
     return;
-  }
+  };
   let Some(vm) = host_vm_stats64() else {
     return;
   };
@@ -233,11 +241,14 @@ fn sysctl_u64(name: &str) -> Option<u64> {
   let cname = std::ffi::CString::new(name).ok()?;
   let mut val: u64 = 0;
   let mut len = std::mem::size_of_val(&val);
+  // SAFETY: `cname` is a NUL-terminated `CString`. `val` and `len` are valid
+  // stack values for the duration of this call. `newp`/`newlen` are null/0, so
+  // this is a read-only query; the kernel writes at most `len` bytes into `val`.
   let rc = unsafe {
     libc::sysctlbyname(
       cname.as_ptr(),
-      &mut val as *mut _ as *mut libc::c_void,
-      &mut len,
+      std::ptr::from_mut(&mut val).cast(),
+      std::ptr::from_mut(&mut len),
       std::ptr::null_mut(),
       0,
     )
@@ -245,73 +256,37 @@ fn sysctl_u64(name: &str) -> Option<u64> {
   if rc == 0 { Some(val) } else { None }
 }
 
-/// Darwin `vm_statistics64` layout (must match SDK).
-#[cfg(target_os = "macos")]
-#[repr(C)]
-#[derive(Clone, Copy, Default)]
-struct HostVmStats64 {
-  free_count: u32,
-  active_count: u32,
-  inactive_count: u32,
-  wire_count: u32,
-  zero_fill_count: u64,
-  reactivations: u64,
-  pageins: u64,
-  pageouts: u64,
-  faults: u64,
-  cow_faults: u64,
-  lookups: u64,
-  hits: u64,
-  purges: u64,
-  purgeable_count: u32,
-  speculative_count: u32,
-  decompressions: u64,
-  compressions: u64,
-  swapins: u64,
-  swapouts: u64,
-  compressor_page_count: u32,
-  throttled_count: u32,
-  external_page_count: u32,
-  internal_page_count: u32,
-  total_uncompressed_pages_in_compressor: u64,
-}
-
+// libc exports `host_statistics` / `host_statistics64` and the Mach info
+// types. `mach_host_self` is deprecated there (favoring the `mach2` crate);
+// keep a tiny local symbol so we do not take a new dependency.
 #[cfg(target_os = "macos")]
 #[link(name = "System")]
 unsafe extern "C" {
   fn mach_host_self() -> libc::mach_port_t;
-  fn host_statistics(
-    host_priv: libc::mach_port_t,
-    flavor: libc::c_int,
-    host_info_out: *mut libc::integer_t,
-    host_info_outCnt: *mut libc::mach_msg_type_number_t,
-  ) -> libc::kern_return_t;
-  fn host_statistics64(
-    host_priv: libc::mach_port_t,
-    flavor: libc::c_int,
-    host_info_out: *mut libc::integer_t,
-    host_info_outCnt: *mut libc::mach_msg_type_number_t,
-  ) -> libc::kern_return_t;
 }
 
 #[cfg(target_os = "macos")]
-fn host_vm_stats64() -> Option<HostVmStats64> {
-  const HOST_VM_INFO64: libc::c_int = 4;
-  let mut stats = HostVmStats64::default();
-  let mut count = (std::mem::size_of::<HostVmStats64>() / std::mem::size_of::<libc::integer_t>())
-    as libc::mach_msg_type_number_t;
+fn host_vm_stats64() -> Option<libc::vm_statistics64> {
+  let mut stats = std::mem::MaybeUninit::<libc::vm_statistics64>::zeroed();
+  let mut count = libc::HOST_VM_INFO64_COUNT;
+  // SAFETY: `stats` is a zeroed `vm_statistics64` whose size is at least
+  // `HOST_VM_INFO64_COUNT` `integer_t`s. `host_port()` is a cached
+  // `mach_host_self` send right. The kernel writes at most `count` units
+  // into `stats` and does not retain the pointers.
   let kr = unsafe {
-    host_statistics64(
-      mach_host_self(),
-      HOST_VM_INFO64,
-      &mut stats as *mut _ as *mut libc::integer_t,
-      &mut count,
+    libc::host_statistics64(
+      host_port(),
+      libc::HOST_VM_INFO64,
+      stats.as_mut_ptr().cast(),
+      std::ptr::from_mut(&mut count),
     )
   };
   if kr != 0 {
     return None;
   }
-  Some(stats)
+  // SAFETY: `host_statistics64` returned success, so the flavor prefix is
+  // initialized; any tail beyond what the kernel wrote stayed zeroed.
+  Some(unsafe { stats.assume_init() })
 }
 
 fn scrape_disk(at: i64, out: &mut Vec<MetricPoint>) {
@@ -333,11 +308,15 @@ fn scrape_disk_unix(at: i64, out: &mut Vec<MetricPoint>) {
     let Ok(cpath) = CString::new(mount) else {
       continue;
     };
-    let mut s: libc::statvfs = unsafe { std::mem::zeroed() };
-    let rc = unsafe { libc::statvfs(cpath.as_ptr(), &mut s) };
+    let mut s = std::mem::MaybeUninit::<libc::statvfs>::uninit();
+    // SAFETY: `cpath` is a valid NUL-terminated `CString`. `statvfs` writes a
+    // complete `statvfs` into `s` when it returns 0.
+    let rc = unsafe { libc::statvfs(cpath.as_ptr(), s.as_mut_ptr()) };
     if rc != 0 {
       continue;
     }
+    // SAFETY: `statvfs` returned 0, so `s` is fully initialized.
+    let s = unsafe { s.assume_init() };
     let bsize = s.f_frsize as f64;
     let total = s.f_blocks as f64 * bsize;
     let avail = s.f_bavail as f64 * bsize;

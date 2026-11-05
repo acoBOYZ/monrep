@@ -7,7 +7,6 @@ use crate::ops::registry::{self, RunRegistry};
 use crate::ops::run::MAX_RUNS;
 use crate::proto::{Envelope, HelloBody, Op, PROTO_V};
 use crate::store::DeviceCred;
-use crate::tunnel;
 use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use std::time::Duration;
@@ -45,76 +44,93 @@ async fn handle_conn(mut stream: tokio::net::TcpStream) -> anyhow::Result<()> {
   let n = stream.peek(&mut peek).await?;
   let head = String::from_utf8_lossy(&peek[..n]);
   if head.starts_with("POST /api/agent/token") {
-    let mut buf = vec![0u8; 4096];
-    let _ = stream.read(&mut buf).await?;
-    let body = serde_json::json!({
-      "accessToken": "mock-access-token",
-      "expiresAt": 9_999_999_999_i64,
-    });
-    let payload = body.to_string();
-    let resp = format!(
-      "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-      payload.len(),
-      payload
-    );
-    stream.write_all(resp.as_bytes()).await?;
-    return Ok(());
+    return handle_token_http(&mut stream).await;
   }
-
   if head.contains("Upgrade: websocket") || head.contains("upgrade: websocket") {
-    let mut ws = accept_async(stream).await?;
-    let mut saw_hello = false;
-    while let Some(msg) = ws.next().await {
-      let msg = msg?;
-      let Message::Text(text) = msg else {
-        continue;
-      };
-      let env: Envelope = serde_json::from_str(&text)?;
-      if env.op == Op::Hello {
-        saw_hello = true;
-        break;
-      }
-    }
-    anyhow::ensure!(saw_hello, "expected hello from agent");
-
-    let run = Envelope {
-      v: PROTO_V,
-      id: "run-1".into(),
-      op: Op::Run,
-      body: Some(serde_json::json!({
-        "argv": ["true"],
-      })),
-    };
-    ws.send(Message::Text(serde_json::to_string(&run)?.into()))
-      .await?;
-
-    let mut saw_result = false;
-    let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
-    while tokio::time::Instant::now() < deadline {
-      match timeout(Duration::from_secs(2), ws.next()).await {
-        Ok(Some(Ok(Message::Text(text)))) => {
-          let env: Envelope = serde_json::from_str(&text)?;
-          if env.op == Op::Result && env.id == "run-1" {
-            saw_result = true;
-            break;
-          }
-        }
-        Ok(Some(Ok(_))) => {}
-        Ok(Some(Err(e))) => return Err(e.into()),
-        Ok(None) => break,
-        Err(_) => break,
-      }
-    }
-    anyhow::ensure!(saw_result, "expected run result");
-    let _ = ws.close(None).await;
-    return Ok(());
+    return handle_ws_session(stream).await;
   }
-
   anyhow::bail!("unexpected request:\n{head}");
 }
 
+async fn handle_token_http(stream: &mut tokio::net::TcpStream) -> anyhow::Result<()> {
+  let mut buf = vec![0u8; 4096];
+  let _ = stream.read(&mut buf).await?;
+  let body = serde_json::json!({
+    "accessToken": "mock-access-token",
+    "expiresAt": 9_999_999_999_i64,
+  });
+  let payload = body.to_string();
+  let resp = format!(
+    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+    payload.len(),
+    payload
+  );
+  stream.write_all(resp.as_bytes()).await?;
+  Ok(())
+}
+
+async fn handle_ws_session(stream: tokio::net::TcpStream) -> anyhow::Result<()> {
+  let mut ws = accept_async(stream).await?;
+  wait_for_hello(&mut ws).await?;
+
+  let run = Envelope {
+    v: PROTO_V,
+    id: "run-1".into(),
+    op: Op::Run,
+    body: Some(serde_json::json!({
+      "argv": ["true"],
+    })),
+  };
+  ws.send(Message::Text(serde_json::to_string(&run)?.into()))
+    .await?;
+
+  wait_for_run_result(&mut ws).await?;
+  let _ = ws.close(None).await;
+  Ok(())
+}
+
+async fn wait_for_hello<S>(ws: &mut tokio_tungstenite::WebSocketStream<S>) -> anyhow::Result<()>
+where
+  S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin,
+{
+  while let Some(msg) = ws.next().await {
+    let msg = msg?;
+    let Message::Text(text) = msg else {
+      continue;
+    };
+    let env: Envelope = serde_json::from_str(&text)?;
+    if env.op == Op::Hello {
+      return Ok(());
+    }
+  }
+  anyhow::bail!("expected hello from agent");
+}
+
+async fn wait_for_run_result<S>(
+  ws: &mut tokio_tungstenite::WebSocketStream<S>,
+) -> anyhow::Result<()>
+where
+  S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin,
+{
+  let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+  while tokio::time::Instant::now() < deadline {
+    match timeout(Duration::from_secs(2), ws.next()).await {
+      Ok(Some(Ok(Message::Text(text)))) => {
+        let env: Envelope = serde_json::from_str(&text)?;
+        if env.op == Op::Result && env.id == "run-1" {
+          return Ok(());
+        }
+      }
+      Ok(Some(Ok(_))) => {}
+      Ok(Some(Err(e))) => return Err(e.into()),
+      Ok(None) | Err(_) => break,
+    }
+  }
+  anyhow::bail!("expected run result");
+}
+
 async fn slim_session(cred: &DeviceCred, health: &mut HealthBus) -> anyhow::Result<()> {
-  let ws_url = tunnel::to_ws_url(&cred.control_url)?;
+  let ws_url = crate::ws_url::to_ws_url(&cred.control_url)?;
   let access = http::refresh_access(cred).await?;
   let mut request = ws_url.into_client_request()?;
   request.headers_mut().insert(
@@ -152,7 +168,6 @@ async fn slim_session(cred: &DeviceCred, health: &mut HealthBus) -> anyhow::Resu
       }
       maybe = read.next() => {
         match maybe {
-          None => break,
           Some(Ok(Message::Text(text))) => {
             match serde_json::from_str::<Envelope>(&text) {
               Ok(env) => {
@@ -194,7 +209,7 @@ async fn slim_session(cred: &DeviceCred, health: &mut HealthBus) -> anyhow::Resu
               }
             }
           }
-          Some(Ok(Message::Close(_))) => break,
+          None | Some(Ok(Message::Close(_))) => break,
           Some(Ok(_)) => {}
           Some(Err(e)) => return Err(e.into()),
         }
@@ -221,7 +236,7 @@ async fn mock_token_and_session_hello_run() {
   let access = http::refresh_access(&cred).await.expect("token");
   assert_eq!(access, "mock-access-token");
 
-  let ws_url = tunnel::to_ws_url(&control_url).unwrap();
+  let ws_url = crate::ws_url::to_ws_url(&control_url).unwrap();
   assert!(ws_url.starts_with("ws://"));
 
   let mut health = HealthBus::new();
@@ -231,16 +246,4 @@ async fn mock_token_and_session_hello_run() {
   let _ = server.await;
 
   outcome.expect("session timed out").expect("session failed");
-}
-
-#[test]
-fn to_ws_url_maps_http() {
-  assert_eq!(
-    tunnel::to_ws_url("http://127.0.0.1:9").unwrap(),
-    "ws://127.0.0.1:9/api/agent/ws"
-  );
-  assert_eq!(
-    tunnel::to_ws_url("https://app.example/").unwrap(),
-    "wss://app.example/api/agent/ws"
-  );
 }

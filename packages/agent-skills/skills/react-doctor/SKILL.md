@@ -6,11 +6,11 @@ description: >
 metadata:
   type: lifecycle
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'monrep/monrep-mono:packages/agent-skills/skills/react-doctor/SKILL.md'
-  - 'monrep/monrep-mono:doctor.config.ts'
-  - 'monrep/monrep-mono:apps/web/doctor.config.ts'
+  - "monrep/monrep-mono:packages/agent-skills/skills/react-doctor/SKILL.md"
+  - "monrep/monrep-mono:doctor.config.ts"
+  - "monrep/monrep-mono:packages/main/doctor.config.ts"
 ---
 
 # React Doctor
@@ -20,7 +20,7 @@ Scans your React codebase for security, performance, correctness, and architectu
 ## Configuration
 
 - Root `doctor.config.ts` exports `sharedDoctorConfig` + `defineConfig(...)` — universal rule baseline (`scope: "changed"` by default)
-- Per-workspace `apps/web/doctor.config.ts` — `import { sharedDoctorConfig } from "../../doctor.config.ts"` + `defineConfig(...)`; override only when a package differs
+- Per-workspace `packages/main/doctor.config.ts` — `import { sharedDoctorConfig } from "../../doctor.config.ts"` + `defineConfig(...)`; override only when a package differs
 - Docs: https://www.react.doctor/docs/configuration/config-files
 
 ## Usage

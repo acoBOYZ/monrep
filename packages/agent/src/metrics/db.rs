@@ -1,5 +1,6 @@
 //! rusqlite store for metrics + events.
 
+use super::query_agg::QueryAgg;
 use crate::error::{AgentError, Result};
 use rusqlite::{Connection, OptionalExtension, params};
 use serde_json::json;
@@ -19,31 +20,6 @@ pub struct SeriesPoints {
   pub name: String,
   pub dims: String,
   pub points: Vec<(i64, f64)>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum QueryAgg {
-  Avg,
-  Min,
-  Max,
-}
-
-impl QueryAgg {
-  pub fn parse(s: Option<&str>) -> Self {
-    match s.map(|x| x.to_ascii_lowercase()).as_deref() {
-      Some("min") => Self::Min,
-      Some("max") => Self::Max,
-      _ => Self::Avg,
-    }
-  }
-
-  fn sql(self) -> &'static str {
-    match self {
-      Self::Avg => "avg(value)",
-      Self::Min => "min(value)",
-      Self::Max => "max(value)",
-    }
-  }
 }
 
 #[derive(Debug, Clone)]
@@ -85,14 +61,20 @@ fn is_persisted_name(name: &str) -> bool {
 }
 
 impl MetricsDb {
+  fn lock(&self) -> Result<std::sync::MutexGuard<'_, Connection>> {
+    self
+      .conn
+      .lock()
+      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))
+  }
+
   pub fn open(path: &Path) -> Result<Self> {
     if let Some(parent) = path.parent() {
       fs_err::create_dir_all(parent)?;
     }
-    let conn = Connection::open(path).map_err(|e| AgentError::Other(e.into()))?;
-    conn
-      .execute_batch(
-        "
+    let conn = Connection::open(path)?;
+    conn.execute_batch(
+      "
         PRAGMA journal_mode=WAL;
         CREATE TABLE IF NOT EXISTS metrics (
           at INTEGER NOT NULL,
@@ -109,8 +91,7 @@ impl MetricsDb {
         );
         CREATE INDEX IF NOT EXISTS events_kind_at ON events(kind, at);
         ",
-      )
-      .map_err(|e| AgentError::Other(e.into()))?;
+    )?;
     Ok(Self {
       conn: Mutex::new(conn),
     })
@@ -124,52 +105,32 @@ impl MetricsDb {
     if points.is_empty() {
       return Ok(());
     }
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    let tx = conn
-      .unchecked_transaction()
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    let tx = conn.unchecked_transaction()?;
     {
-      let mut stmt = tx
-        .prepare("INSERT INTO metrics (at, name, value, dims) VALUES (?1, ?2, ?3, ?4)")
-        .map_err(|e| AgentError::Other(e.into()))?;
+      let mut stmt =
+        tx.prepare("INSERT INTO metrics (at, name, value, dims) VALUES (?1, ?2, ?3, ?4)")?;
       for p in points {
-        stmt
-          .execute(params![p.at, p.name, p.value, p.dims])
-          .map_err(|e| AgentError::Other(e.into()))?;
+        stmt.execute(params![p.at, p.name, p.value, p.dims])?;
       }
     }
-    tx.commit().map_err(|e| AgentError::Other(e.into()))?;
+    tx.commit()?;
     Ok(())
   }
 
   pub fn insert_event(&self, at: i64, kind: &str, payload: &str) -> Result<()> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    conn
-      .execute(
-        "INSERT INTO events (at, kind, payload) VALUES (?1, ?2, ?3)",
-        params![at, kind, payload],
-      )
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    conn.execute(
+      "INSERT INTO events (at, kind, payload) VALUES (?1, ?2, ?3)",
+      params![at, kind, payload],
+    )?;
     Ok(())
   }
 
   pub fn prune_before(&self, cutoff_ms: i64) -> Result<usize> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    let m = conn
-      .execute("DELETE FROM metrics WHERE at < ?1", params![cutoff_ms])
-      .map_err(|e| AgentError::Other(e.into()))?;
-    let e = conn
-      .execute("DELETE FROM events WHERE at < ?1", params![cutoff_ms])
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    let m = conn.execute("DELETE FROM metrics WHERE at < ?1", params![cutoff_ms])?;
+    let e = conn.execute("DELETE FROM events WHERE at < ?1", params![cutoff_ms])?;
     Ok(m + e)
   }
 
@@ -188,24 +149,17 @@ impl MetricsDb {
   }
 
   fn delete_non_allowlisted(&self) -> Result<usize> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let conn = self.lock()?;
     let placeholders = PERSIST_METRIC_NAMES
       .iter()
       .map(|_| "?")
       .collect::<Vec<_>>()
       .join(",");
     let sql = format!("DELETE FROM metrics WHERE name NOT IN ({placeholders})");
-    let mut stmt = conn
-      .prepare(&sql)
-      .map_err(|e| AgentError::Other(e.into()))?;
-    let n = stmt
-      .execute(rusqlite::params_from_iter(
-        PERSIST_METRIC_NAMES.iter().copied(),
-      ))
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let mut stmt = conn.prepare(&sql)?;
+    let n = stmt.execute(rusqlite::params_from_iter(
+      PERSIST_METRIC_NAMES.iter().copied(),
+    ))?;
     Ok(n)
   }
 
@@ -214,20 +168,13 @@ impl MetricsDb {
     if to <= from || step_ms <= 0 {
       return Ok(0);
     }
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    let tx = conn
-      .unchecked_transaction()
-      .map_err(|e| AgentError::Other(e.into()))?;
-    let before: i64 = tx
-      .query_row(
-        "SELECT COUNT(*) FROM metrics WHERE at >= ?1 AND at < ?2",
-        params![from, to],
-        |row| row.get(0),
-      )
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    let tx = conn.unchecked_transaction()?;
+    let before: i64 = tx.query_row(
+      "SELECT COUNT(*) FROM metrics WHERE at >= ?1 AND at < ?2",
+      params![from, to],
+      |row| row.get(0),
+    )?;
     if before == 0 {
       return Ok(0);
     }
@@ -241,8 +188,7 @@ impl MetricsDb {
       );
       DELETE FROM _metrics_agg;
       ",
-    )
-    .map_err(|e| AgentError::Other(e.into()))?;
+    )?;
     tx.execute(
       "INSERT INTO _metrics_agg (at, name, value, dims)
        SELECT (at / ?1) * ?1, name, avg(value), dims
@@ -250,53 +196,41 @@ impl MetricsDb {
        WHERE at >= ?2 AND at < ?3
        GROUP BY (at / ?1) * ?1, name, dims",
       params![step_ms, from, to],
-    )
-    .map_err(|e| AgentError::Other(e.into()))?;
-    let deleted = tx
-      .execute(
-        "DELETE FROM metrics WHERE at >= ?1 AND at < ?2",
-        params![from, to],
-      )
-      .map_err(|e| AgentError::Other(e.into()))?;
+    )?;
+    let deleted = tx.execute(
+      "DELETE FROM metrics WHERE at >= ?1 AND at < ?2",
+      params![from, to],
+    )?;
     tx.execute(
       "INSERT INTO metrics (at, name, value, dims) SELECT at, name, value, dims FROM _metrics_agg",
       [],
-    )
-    .map_err(|e| AgentError::Other(e.into()))?;
+    )?;
     let _ = tx.execute_batch("DROP TABLE IF EXISTS _metrics_agg;");
-    tx.commit().map_err(|e| AgentError::Other(e.into()))?;
+    tx.commit()?;
     Ok(deleted)
   }
 
   fn vacuum(&self) -> Result<()> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    conn
-      .execute_batch("VACUUM;")
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    conn.execute_batch("VACUUM;")?;
     Ok(())
   }
 
   pub fn query(&self, q: &QueryParams) -> Result<Vec<SeriesPoints>> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let conn = self.lock()?;
     let mut out = Vec::new();
     for name in &q.names {
       let series = if let Some(step) = q.step_ms.filter(|s| *s > 0) {
-        self.query_stepped(&conn, name, q, step)?
+        Self::query_stepped(&conn, name, q, step)?
       } else {
-        self.query_raw(&conn, name, q)?
+        Self::query_raw(&conn, name, q)?
       };
       out.extend(series);
     }
     Ok(out)
   }
 
-  fn query_raw(&self, conn: &Connection, name: &str, q: &QueryParams) -> Result<Vec<SeriesPoints>> {
+  fn query_raw(conn: &Connection, name: &str, q: &QueryParams) -> Result<Vec<SeriesPoints>> {
     let mut map: std::collections::BTreeMap<String, SeriesPoints> =
       std::collections::BTreeMap::new();
     let mut rows: Vec<(i64, f64, String)> = Vec::new();
@@ -305,36 +239,32 @@ impl MetricsDb {
         .prepare(
           "SELECT at, value, dims FROM metrics WHERE name = ?1 AND at >= ?2 AND at <= ?3 AND dims = ?4 ORDER BY at ASC",
         )
-        .map_err(|e| AgentError::Other(e.into()))?;
-      let mapped = stmt
-        .query_map(params![name, q.from, q.to, dims], |row| {
-          Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, f64>(1)?,
-            row.get::<_, String>(2)?,
-          ))
-        })
-        .map_err(|e| AgentError::Other(e.into()))?;
+        ?;
+      let mapped = stmt.query_map(params![name, q.from, q.to, dims], |row| {
+        Ok((
+          row.get::<_, i64>(0)?,
+          row.get::<_, f64>(1)?,
+          row.get::<_, String>(2)?,
+        ))
+      })?;
       for row in mapped {
-        rows.push(row.map_err(|e| AgentError::Other(e.into()))?);
+        rows.push(row?);
       }
     } else {
       let mut stmt = conn
         .prepare(
           "SELECT at, value, dims FROM metrics WHERE name = ?1 AND at >= ?2 AND at <= ?3 ORDER BY at ASC",
         )
-        .map_err(|e| AgentError::Other(e.into()))?;
-      let mapped = stmt
-        .query_map(params![name, q.from, q.to], |row| {
-          Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, f64>(1)?,
-            row.get::<_, String>(2)?,
-          ))
-        })
-        .map_err(|e| AgentError::Other(e.into()))?;
+        ?;
+      let mapped = stmt.query_map(params![name, q.from, q.to], |row| {
+        Ok((
+          row.get::<_, i64>(0)?,
+          row.get::<_, f64>(1)?,
+          row.get::<_, String>(2)?,
+        ))
+      })?;
       for row in mapped {
-        rows.push(row.map_err(|e| AgentError::Other(e.into()))?);
+        rows.push(row?);
       }
     }
     for (at, value, dims) in rows {
@@ -349,7 +279,6 @@ impl MetricsDb {
   }
 
   fn query_stepped(
-    &self,
     conn: &Connection,
     name: &str,
     q: &QueryParams,
@@ -365,20 +294,16 @@ impl MetricsDb {
          WHERE name = ?2 AND at >= ?3 AND at <= ?4 AND dims = ?5
          GROUP BY bucket, dims ORDER BY bucket ASC"
       );
-      let mut stmt = conn
-        .prepare(&sql)
-        .map_err(|e| AgentError::Other(e.into()))?;
-      let mapped = stmt
-        .query_map(params![step, name, q.from, q.to, dims], |row| {
-          Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, f64>(1)?,
-            row.get::<_, String>(2)?,
-          ))
-        })
-        .map_err(|e| AgentError::Other(e.into()))?;
+      let mut stmt = conn.prepare(&sql)?;
+      let mapped = stmt.query_map(params![step, name, q.from, q.to, dims], |row| {
+        Ok((
+          row.get::<_, i64>(0)?,
+          row.get::<_, f64>(1)?,
+          row.get::<_, String>(2)?,
+        ))
+      })?;
       for row in mapped {
-        rows.push(row.map_err(|e| AgentError::Other(e.into()))?);
+        rows.push(row?);
       }
     } else {
       let sql = format!(
@@ -386,20 +311,16 @@ impl MetricsDb {
          WHERE name = ?2 AND at >= ?3 AND at <= ?4
          GROUP BY bucket, dims ORDER BY bucket ASC"
       );
-      let mut stmt = conn
-        .prepare(&sql)
-        .map_err(|e| AgentError::Other(e.into()))?;
-      let mapped = stmt
-        .query_map(params![step, name, q.from, q.to], |row| {
-          Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, f64>(1)?,
-            row.get::<_, String>(2)?,
-          ))
-        })
-        .map_err(|e| AgentError::Other(e.into()))?;
+      let mut stmt = conn.prepare(&sql)?;
+      let mapped = stmt.query_map(params![step, name, q.from, q.to], |row| {
+        Ok((
+          row.get::<_, i64>(0)?,
+          row.get::<_, f64>(1)?,
+          row.get::<_, String>(2)?,
+        ))
+      })?;
       for row in mapped {
-        rows.push(row.map_err(|e| AgentError::Other(e.into()))?);
+        rows.push(row?);
       }
     }
     for (at, value, dims) in rows {
@@ -414,15 +335,11 @@ impl MetricsDb {
   }
 
   pub fn latest(&self, names: &[String]) -> Result<Vec<serde_json::Value>> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let conn = self.lock()?;
     let mut out = Vec::new();
     for name in names {
       let mut stmt = conn
-        .prepare("SELECT at, value, dims FROM metrics WHERE name = ?1 ORDER BY at DESC LIMIT 1")
-        .map_err(|e| AgentError::Other(e.into()))?;
+        .prepare("SELECT at, value, dims FROM metrics WHERE name = ?1 ORDER BY at DESC LIMIT 1")?;
       let row = stmt
         .query_row(params![name], |row| {
           Ok((
@@ -431,8 +348,7 @@ impl MetricsDb {
             row.get::<_, String>(2)?,
           ))
         })
-        .optional()
-        .map_err(|e| AgentError::Other(e.into()))?;
+        .optional()?;
       if let Some((at, value, dims)) = row {
         out.push(json!({ "name": name, "at": at, "value": value, "dims": dims }));
       }
@@ -441,19 +357,12 @@ impl MetricsDb {
   }
 
   pub fn names(&self) -> Result<Vec<String>> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
-    let mut stmt = conn
-      .prepare("SELECT DISTINCT name FROM metrics ORDER BY name ASC")
-      .map_err(|e| AgentError::Other(e.into()))?;
-    let rows = stmt
-      .query_map([], |row| row.get::<_, String>(0))
-      .map_err(|e| AgentError::Other(e.into()))?;
+    let conn = self.lock()?;
+    let mut stmt = conn.prepare("SELECT DISTINCT name FROM metrics ORDER BY name ASC")?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
     let mut out = Vec::new();
     for row in rows {
-      out.push(row.map_err(|e| AgentError::Other(e.into()))?);
+      out.push(row?);
     }
     Ok(out)
   }
@@ -465,10 +374,7 @@ impl MetricsDb {
     kinds: Option<&[String]>,
     limit: usize,
   ) -> Result<Vec<serde_json::Value>> {
-    let conn = self
-      .conn
-      .lock()
-      .map_err(|e| AgentError::Other(anyhow::anyhow!("{e}")))?;
+    let conn = self.lock()?;
     let limit = limit.clamp(1, 500) as i64;
     let mut out = Vec::new();
     if let Some(kinds) = kinds {
@@ -480,23 +386,22 @@ impl MetricsDb {
           .prepare(
             "SELECT at, kind, payload FROM events WHERE kind = ?1 AND at >= ?2 AND at <= ?3 ORDER BY at DESC LIMIT ?4",
           )
-          .map_err(|e| AgentError::Other(e.into()))?;
-        let rows = stmt
-          .query_map(params![kind, from, to, limit], |row| {
-            Ok((
-              row.get::<_, i64>(0)?,
-              row.get::<_, String>(1)?,
-              row.get::<_, String>(2)?,
-            ))
-          })
-          .map_err(|e| AgentError::Other(e.into()))?;
+          ?;
+        let rows = stmt.query_map(params![kind, from, to, limit], |row| {
+          Ok((
+            row.get::<_, i64>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+          ))
+        })?;
         for row in rows {
-          let (at, kind, payload) = row.map_err(|e| AgentError::Other(e.into()))?;
+          let (at, kind, payload) = row?;
           let parsed: serde_json::Value =
             serde_json::from_str(&payload).unwrap_or(json!({ "raw": payload }));
           out.push(json!({ "at": at, "kind": kind, "payload": parsed }));
         }
       }
+      drop(conn);
       out.sort_by(|a, b| b["at"].as_i64().cmp(&a["at"].as_i64()));
       out.truncate(limit as usize);
     } else {
@@ -504,18 +409,16 @@ impl MetricsDb {
         .prepare(
           "SELECT at, kind, payload FROM events WHERE at >= ?1 AND at <= ?2 ORDER BY at DESC LIMIT ?3",
         )
-        .map_err(|e| AgentError::Other(e.into()))?;
-      let rows = stmt
-        .query_map(params![from, to, limit], |row| {
-          Ok((
-            row.get::<_, i64>(0)?,
-            row.get::<_, String>(1)?,
-            row.get::<_, String>(2)?,
-          ))
-        })
-        .map_err(|e| AgentError::Other(e.into()))?;
+        ?;
+      let rows = stmt.query_map(params![from, to, limit], |row| {
+        Ok((
+          row.get::<_, i64>(0)?,
+          row.get::<_, String>(1)?,
+          row.get::<_, String>(2)?,
+        ))
+      })?;
       for row in rows {
-        let (at, kind, payload) = row.map_err(|e| AgentError::Other(e.into()))?;
+        let (at, kind, payload) = row?;
         let parsed: serde_json::Value =
           serde_json::from_str(&payload).unwrap_or(json!({ "raw": payload }));
         out.push(json!({ "at": at, "kind": kind, "payload": parsed }));
@@ -531,12 +434,15 @@ mod tests {
   use std::time::{SystemTime, UNIX_EPOCH};
 
   fn tmp_db() -> MetricsDb {
+    static COUNTER: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let n = COUNTER.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let nanos = SystemTime::now()
+      .duration_since(UNIX_EPOCH)
+      .map_or(0, |d| d.as_nanos());
     let dir = std::env::temp_dir().join(format!(
-      "monrep-metrics-{}",
-      SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_nanos()
+      "monrep-metrics-{}-{}-{nanos}",
+      std::process::id(),
+      n
     ));
     fs_err::create_dir_all(&dir).unwrap();
     MetricsDb::open(&dir.join("m.sqlite")).unwrap()

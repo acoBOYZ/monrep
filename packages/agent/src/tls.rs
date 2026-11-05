@@ -1,4 +1,4 @@
-//! Shared rustls roots for HTTPS + WSS (public CAs + optional Vite / MONREP_DEV_CA).
+//! Shared rustls roots for HTTPS + WSS (public CAs + optional Vite / `MONREP_DEV_CA`).
 
 use anyhow::Context;
 use fs_err as fs;
@@ -81,17 +81,22 @@ fn rustls_client_config() -> anyhow::Result<Arc<ClientConfig>> {
   if let Some(c) = CONFIG.get() {
     return Ok(c.clone());
   }
+  // `OnceLock::get_or_try_init` is still unstable (`once_cell_try`) on
+  // stable 1.99, so do the fallible work first and publish with `get_or_init`.
   let roots = root_store()?;
   let config = ClientConfig::builder()
     .with_root_certificates(roots)
     .with_no_client_auth();
   let arc = Arc::new(config);
-  let _ = CONFIG.set(arc.clone());
-  Ok(arc)
+  Ok(CONFIG.get_or_init(|| arc.clone()).clone())
 }
 
 /// HTTPS client with public CAs + optional local Vite root (`MONREP_DEV_CA` / auto-discover).
 pub fn http_client() -> anyhow::Result<Client> {
+  static CLIENT: OnceLock<Client> = OnceLock::new();
+  if let Some(c) = CLIENT.get() {
+    return Ok(c.clone());
+  }
   let mut builder = Client::builder()
     .use_rustls_tls()
     .timeout(Duration::from_secs(30));
@@ -103,7 +108,8 @@ pub fn http_client() -> anyhow::Result<Client> {
     builder = builder.add_root_certificate(cert);
   }
 
-  Ok(builder.build()?)
+  let client = builder.build()?;
+  Ok(CLIENT.get_or_init(|| client.clone()).clone())
 }
 
 /// Dial `ws://` or `wss://` using the same root store as [`http_client`].
@@ -111,7 +117,7 @@ pub async fn connect_ws(
   request: impl IntoClientRequest + Unpin,
 ) -> anyhow::Result<WebSocketStream<MaybeTlsStream<TcpStream>>> {
   let req = request.into_client_request()?;
-  let is_tls = matches!(req.uri().scheme_str(), Some("wss") | Some("https"));
+  let is_tls = matches!(req.uri().scheme_str(), Some("wss" | "https"));
   if is_tls {
     let connector = Connector::Rustls(rustls_client_config()?);
     let (ws, _) = connect_async_tls_with_config(req, None, false, Some(connector)).await?;

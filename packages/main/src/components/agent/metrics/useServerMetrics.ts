@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { box } from "@monrep/utils";
 import { mergeLatest, sumErrorLines, windowStats } from "./aggregate";
 import {
   CHART_METRIC_NAMES,
@@ -72,7 +73,7 @@ export function useServerMetrics(serverId: string, from: number, to: number) {
 
   useEffect(() => {
     if (!serverId) return;
-    let cancelled = false;
+    const cancelled = box(false);
     const run = async () => {
       try {
         const stepMs = stepMsForRange(from, to);
@@ -98,7 +99,7 @@ export function useServerMetrics(serverId: string, from: number, to: number) {
             limit: 12,
           }),
         ]);
-        if (cancelled) return;
+        if (cancelled.current) return;
         const points =
           metricsEnv.op === "result"
             ? seriesToMetricPoints(serverId, parseSeries(metricsEnv.body))
@@ -109,7 +110,7 @@ export function useServerMetrics(serverId: string, from: number, to: number) {
           eventsEnv.op === "result" ? eventsToHealth(serverId, parseEvents(eventsEnv.body)) : [];
         setState({ points, prevPoints, health, ready: true });
       } catch {
-        if (!cancelled) {
+        if (!cancelled.current) {
           setState({
             points: EMPTY_POINTS,
             prevPoints: EMPTY_POINTS,
@@ -121,7 +122,7 @@ export function useServerMetrics(serverId: string, from: number, to: number) {
     };
     void run();
     return () => {
-      cancelled = true;
+      cancelled.current = true;
     };
   }, [serverId, from, to, prevFrom]);
 

@@ -1,5 +1,5 @@
 [install]
 auto = "auto"
 
-[install.security]
-scanner = "bun-scan"
+# [install.security]
+# scanner = "bun-scan"

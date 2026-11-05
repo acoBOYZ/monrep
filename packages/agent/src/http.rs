@@ -2,12 +2,7 @@
 
 use crate::error::{AgentError, Result as AgentResult};
 use crate::store::DeviceCred;
-use reqwest::Client;
 use serde::Deserialize;
-
-pub fn client() -> anyhow::Result<Client> {
-  crate::tls::http_client()
-}
 
 #[derive(Debug, Deserialize)]
 struct EnrollResponse {
@@ -42,7 +37,7 @@ pub async fn enroll_with_control_plane(
   control_url: &str,
   token: &str,
 ) -> anyhow::Result<DeviceCred> {
-  let client = client()?;
+  let client = crate::tls::http_client()?;
   let base = control_url.trim().trim_end_matches('/');
   let url = format!("{base}/api/agent/enroll");
   let res = client
@@ -71,7 +66,7 @@ pub async fn enroll_with_control_plane(
 
 /// POST `/api/agent/token` — returns a short-lived access token for WSS.
 pub async fn refresh_access(cred: &DeviceCred) -> AgentResult<String> {
-  let client = client().map_err(AgentError::Other)?;
+  let client = crate::tls::http_client().map_err(AgentError::Other)?;
   let url = format!("{}/api/agent/token", cred.control_url.trim_end_matches('/'));
   let res = client
     .post(url)

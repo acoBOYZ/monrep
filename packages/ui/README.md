@@ -4,13 +4,13 @@ Shared UI. React + Tailwind. Consumed as **source** by apps (no build step in th
 
 ## What’s inside
 
-| Import | Role |
-| --- | --- |
-| `@monrep/ui/base` | Primitives: Button, Input, Table, Badge, Dialog, … |
-| `@monrep/ui/components` | Higher-level composed pieces |
-| `@monrep/ui/func` | Functional UI: `ImpactFlash`, virtualizers, … |
-| `@monrep/ui/terminal` | Terminal surface |
-| `@monrep/ui/globals.css` | Design tokens + base styles |
+| Import                   | Role                                               |
+| ------------------------ | -------------------------------------------------- |
+| `@monrep/ui/base`        | Primitives: Button, Input, Table, Badge, Dialog, … |
+| `@monrep/ui/components`  | Higher-level composed pieces                       |
+| `@monrep/ui/func`        | Functional UI: `ImpactFlash`, virtualizers, …      |
+| `@monrep/ui/terminal`    | Terminal surface                                   |
+| `@monrep/ui/globals.css` | Design tokens + base styles                        |
 
 ## How to use
 
@@ -27,7 +27,7 @@ Apps use `@tailwindcss/vite`. That scans workspace source, including this packag
 import { Button } from "@monrep/ui/base";
 import { ImpactFlash } from "@monrep/ui/func";
 
-<Button variant="outline">Refresh</Button>
+<Button variant="outline">Refresh</Button>;
 ```
 
 ```bash

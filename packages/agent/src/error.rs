@@ -23,6 +23,9 @@ pub enum AgentError {
   Json(#[from] serde_json::Error),
 
   #[error(transparent)]
+  Sqlite(#[from] rusqlite::Error),
+
+  #[error(transparent)]
   Other(#[from] anyhow::Error),
 }
 

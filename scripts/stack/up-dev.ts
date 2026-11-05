@@ -23,7 +23,11 @@ run(["bun", "run", "sync:brand"]);
 // TODO: Re-enable this when claudflare skills fix the type issues in their md ts/tsx files
 if (existsSync(agentSkillsDir)) {
   // run(["bun", "run", "skills:check"]);
-  run(["printf", "%s\n", "\x1b[31mTODO: Re-enable skills:check when claudflare skills fix the type issues in their md ts/tsx files\x1b[0m"]);
+  run([
+    "printf",
+    "%s\n",
+    "\x1b[31mTODO: Re-enable skills:check when claudflare skills fix the type issues in their md ts/tsx files\x1b[0m",
+  ]);
 }
 
 // rustup stable + wrap Cargo.toml / Cargo.lock (never cargo-update inside upstream/)

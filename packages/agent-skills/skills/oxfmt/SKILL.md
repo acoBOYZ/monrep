@@ -8,12 +8,12 @@ description: >
 metadata:
   type: lifecycle
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'monrep/monrep-mono:packages/agent-skills/skills/oxfmt/SKILL.md'
-  - 'monrep/monrep-mono:.oxfmtrc.jsonc'
-  - 'monrep/monrep-mono:.oxlintrc.json'
-  - 'monrep/monrep-mono:turbo.json'
+  - "monrep/monrep-mono:packages/agent-skills/skills/oxfmt/SKILL.md"
+  - "monrep/monrep-mono:.oxfmtrc.jsonc"
+  - "monrep/monrep-mono:.oxlintrc.json"
+  - "monrep/monrep-mono:turbo.json"
 ---
 
 # Oxfmt (polish + import house style)
@@ -72,11 +72,11 @@ Turbo runs each workspace’s `fmt` / `fmtcheck` **in parallel**.
 Prefer scoped polish when only one workspace changed:
 
 ```bash
-bun run --cwd apps/web fmtcheck
-bun run --cwd apps/web fmt
+bun run --cwd packages/main fmtcheck
+bun run --cwd packages/main fmt
 
 # Or from inside the package:
-cd apps/web && bun run fmtcheck && bun run fmt
+cd packages/main && bun run fmtcheck && bun run fmt
 ```
 
 Same pattern for `@react/*`, `@core/*`, `services/*`, etc. — use that package’s

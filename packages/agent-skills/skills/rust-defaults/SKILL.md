@@ -10,12 +10,12 @@ description: >
 metadata:
   type: lifecycle
   library: agent-skills
-  library_version: '0.5.2'
+  library_version: "0.5.2"
 sources:
-  - 'monrep/monrep-mono:packages/agent-skills/skills/rust-defaults/SKILL.md'
-  - 'monrep/monrep-mono:packages/agent/package.json'
-  - 'monrep/monrep-mono:packages/agent/rust-toolchain.toml'
-  - 'monrep/monrep-mono:packages/agent/rust-doctor.toml'
+  - "monrep/monrep-mono:packages/agent-skills/skills/rust-defaults/SKILL.md"
+  - "monrep/monrep-mono:packages/agent/package.json"
+  - "monrep/monrep-mono:packages/agent/rust-toolchain.toml"
+  - "monrep/monrep-mono:packages/agent/rust-doctor.toml"
 ---
 
 # Rust defaults (this repo)
@@ -26,9 +26,9 @@ crates later use the same pattern.
 
 ## Naming
 
-| What | Name |
-| --- | --- |
-| bun / turbo script | `doctor:rust` |
+| What                 | Name          |
+| -------------------- | ------------- |
+| bun / turbo script   | `doctor:rust` |
 | CLI package / binary | `rust-doctor` |
 
 Always invoke via `bun run doctor:rust` or

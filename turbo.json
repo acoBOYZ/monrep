@@ -4,24 +4,12 @@
   "cacheMaxAge": "14d",
   "tasks": {
     "build:types": {
-      "inputs": [
-        "src/**/*.{ts,tsx,d.ts}",
-        "tsconfig.json",
-        "tsconfig.*.json",
-        "package.json"
-      ],
-      "outputs": [
-        "dist/**/*.d.ts",
-        "lib/**/*.d.ts"
-      ],
-      "env": [
-        "NODE_ENV"
-      ]
+      "inputs": ["src/**/*.{ts,tsx,d.ts}", "tsconfig.json", "tsconfig.*.json", "package.json"],
+      "outputs": ["dist/**/*.d.ts", "lib/**/*.d.ts"],
+      "env": ["NODE_ENV"]
     },
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.{ts,tsx,js,jsx,json}",
@@ -40,18 +28,8 @@
         "bun.lock",
         "index.html"
       ],
-      "outputs": [
-        "dist/**",
-        "build/**",
-        ".bundle/**",
-        "meta.md"
-      ],
-      "env": [
-        "NODE_ENV",
-        "VITE_*",
-        "REACT_COMPILER",
-        "REACT_RELEASE"
-      ]
+      "outputs": ["dist/**", "build/**", ".bundle/**", "meta.md"],
+      "env": ["NODE_ENV", "VITE_*", "REACT_COMPILER", "REACT_RELEASE"]
     },
     "dev": {
       "dependsOn": [],
@@ -69,11 +47,7 @@
         "Cargo.lock",
         "rust-toolchain.toml"
       ],
-      "env": [
-        "NODE_ENV",
-        "PORT",
-        "VITE_*"
-      ]
+      "env": ["NODE_ENV", "PORT", "VITE_*"]
     },
     "typecheck": {
       "dependsOn": [],
@@ -89,9 +63,7 @@
         "miri/**",
         "scripts/rust-miri.ts"
       ],
-      "env": [
-        "NODE_ENV"
-      ]
+      "env": ["NODE_ENV"]
     },
     "lint": {
       "dependsOn": [],
@@ -108,9 +80,7 @@
         "rust-toolchain.toml",
         "scripts/**"
       ],
-      "env": [
-        "NODE_ENV"
-      ]
+      "env": ["NODE_ENV"]
     },
     "doctor:rust": {
       "dependsOn": [],
@@ -125,9 +95,7 @@
         "rust-toolchain.toml",
         "package.json"
       ],
-      "env": [
-        "NODE_ENV"
-      ]
+      "env": ["NODE_ENV"]
     },
     "test": {
       "dependsOn": [],
@@ -147,15 +115,8 @@
         "go.sum",
         "benchmark/**"
       ],
-      "outputs": [
-        "coverage/**",
-        ".nyc_output/**",
-        "test-results/**"
-      ],
-      "env": [
-        "NODE_ENV",
-        "CI"
-      ]
+      "outputs": ["coverage/**", ".nyc_output/**", "test-results/**"],
+      "env": ["NODE_ENV", "CI"]
     },
     "clean": {
       "dependsOn": [],
@@ -204,11 +165,5 @@
     "doctor.config.ts",
     ".oxlintrc.json"
   ],
-  "globalEnv": [
-    "NODE_ENV",
-    "CI",
-    "TURBO_TOKEN",
-    "TURBO_TEAM",
-    "TURBO_REMOTE_ONLY"
-  ]
+  "globalEnv": ["NODE_ENV", "CI", "TURBO_TOKEN", "TURBO_TEAM", "TURBO_REMOTE_ONLY"]
 }

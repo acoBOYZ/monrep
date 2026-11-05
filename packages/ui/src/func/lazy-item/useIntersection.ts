@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { boxes } from "@monrep/utils";
 import { benchObserve } from "./bench";
 import type { RefObject } from "react";
 
@@ -217,39 +218,41 @@ export function useIntersection<T extends Element = HTMLDivElement>(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let rafId: number | null = null;
-    let attempts = 0;
-    let currentCleanup: (() => void) | null = null;
-    let disposed = false;
+    const rafId = { current: null as number | null };
+    const { attempts, currentCleanup, disposed } = boxes({
+      attempts: 0,
+      currentCleanup: null as (() => void) | null,
+      disposed: false,
+    });
 
     const waitForRoot = isDeferredRootSource(rootValue);
     const tryAttach = () => {
-      if (disposed) return;
+      if (disposed.current) return;
 
       const root = resolveRoot(rootValue);
-      if (waitForRoot && root === null && attempts < 20) {
-        attempts += 1;
-        rafId = requestAnimationFrame(tryAttach);
+      if (waitForRoot && root === null && attempts.current < 20) {
+        attempts.current += 1;
+        rafId.current = requestAnimationFrame(tryAttach);
         return;
       }
 
       if (onHidden && exitOptions && exitKey) {
-        currentCleanup = attachTwoPhaseObserver({
+        currentCleanup.current = attachTwoPhaseObserver({
           el,
           root,
           entryKey,
           exitKey,
           options,
           exitOptions,
-          disposed: () => disposed,
+          disposed: () => disposed.current,
           onVisible,
           onHidden,
           setCleanup: (cleanup) => {
-            currentCleanup = cleanup;
+            currentCleanup.current = cleanup;
           },
         });
       } else {
-        currentCleanup = attachSingleObserver(
+        currentCleanup.current = attachSingleObserver(
           el,
           root,
           entryKey,
@@ -264,9 +267,9 @@ export function useIntersection<T extends Element = HTMLDivElement>(
     tryAttach();
 
     return () => {
-      disposed = true;
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      currentCleanup?.();
+      disposed.current = true;
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      currentCleanup.current?.();
     };
   }, [entryKey, exitKey, onVisible, options, rootValue, observerKey, onHidden, exitOptions]);
 

@@ -9,31 +9,31 @@
     "bindings": [
       {
         "name": "STREAMS",
-        "class_name": "StreamObject"
+        "class_name": "StreamObject",
       },
       {
         "name": "AGENT_SESSIONS",
-        "class_name": "AgentSession"
-      }
-    ]
+        "class_name": "AgentSession",
+      },
+    ],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["StreamObject"]
+      "new_sqlite_classes": ["StreamObject"],
     },
     {
       "tag": "v2",
-      "new_sqlite_classes": ["AgentSession"]
-    }
+      "new_sqlite_classes": ["AgentSession"],
+    },
   ],
   "previews": {
     "cache": {
-      "enabled": true
-    }
+      "enabled": true,
+    },
   },
   "dev": {
     "inspector_port": 9329,
-    "local_protocol": "https"
-  }
+    "local_protocol": "https",
+  },
 }

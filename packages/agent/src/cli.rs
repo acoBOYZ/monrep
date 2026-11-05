@@ -173,28 +173,23 @@ async fn cmd_run() -> anyhow::Result<()> {
 }
 
 async fn cmd_upgrade(check_only: bool) -> anyhow::Result<()> {
-  match update::check_for_update().await? {
-    None => {
-      out(&format!("up to date ({})", env!("CARGO_PKG_VERSION")))?;
-      Ok(())
-    }
-    Some(info) => {
-      out(&format!(
-        "upgrade available: {} → {} ({})",
-        env!("CARGO_PKG_VERSION"),
-        info.version,
-        info.tag
-      ))?;
-      if check_only {
-        return Ok(());
-      }
+  if let Some(info) = update::check_for_update().await? {
+    out(&format!(
+      "upgrade available: {} → {} ({})",
+      env!("CARGO_PKG_VERSION"),
+      info.version,
+      info.tag
+    ))?;
+    if !check_only {
       out("downloading…")?;
       let exe = update::apply_update(&info).await?;
       out(&format!("installed {}; re-executing", exe.display()))?;
       update::reexec_public(&exe)?;
-      Ok(())
     }
+  } else {
+    out(&format!("up to date ({})", env!("CARGO_PKG_VERSION")))?;
   }
+  Ok(())
 }
 
 fn cmd_settings(auto_update: Option<bool>) -> anyhow::Result<()> {
@@ -202,12 +197,11 @@ fn cmd_settings(auto_update: Option<bool>) -> anyhow::Result<()> {
   if let Some(v) = auto_update {
     let s = settings::set_auto_update(v)?;
     out(&format!("auto_update set to {}", s.auto_update))?;
-    out(&format!("settings: {}", path.display()))?;
   } else {
     let s = settings::load_settings()?;
     out(&format!("auto_update: {}", s.auto_update))?;
-    out(&format!("settings: {}", path.display()))?;
   }
+  out(&format!("settings: {}", path.display()))?;
   Ok(())
 }
 

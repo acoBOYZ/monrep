@@ -8,14 +8,12 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "bun check",
     "lint": "oxlint --threads=1 src .",
-    "clean": "rimraf dist node_modules bun.lock .turbo",
-    "fmt": "oxfmt src",
-    "fmtcheck": "oxfmt --check src"
+    "clean": "rimraf dist node_modules bun.lock .turbo"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.10.0",
+    "@monrep/utils": "workspace:^",
     "@tanstack/react-pacer": "^0.24.1"
   },
   "devDependencies": {
