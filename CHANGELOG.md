@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.8] - 2026-11-05
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #64 from acoBOYZ/chore-oxfmt-box by @acoBOYZ in #64
+
+- Chore-oxfmt-box by @acoBOYZ
+
+- Chore-oxfmt-box by @acoBOYZ
+
+
 ## [0.7.7] - 2026-10-15
 
 ### 🐛 Bug Fixes
