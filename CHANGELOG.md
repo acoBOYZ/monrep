@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.7.9] - 2026-11-25
+
+### ⚙️ Miscellaneous Tasks
+
+- Merge pull request #66 from acoBOYZ/chore/core-skills-lint-deps by @acoBOYZ in #66
+
+- Chore/core-skills-lint-deps by @acoBOYZ
+
+
 ## [0.7.8] - 2026-11-05
 
 ### ⚙️ Miscellaneous Tasks
