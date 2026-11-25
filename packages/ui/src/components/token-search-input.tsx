@@ -89,7 +89,9 @@ export const TokenSearchInput = ({
               "focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:outline-none",
               tokenClassName,
             )}
-            onClick={() => onTokenRemove(token.id)}
+            onClick={() => {
+              onTokenRemove(token.id);
+            }}
             aria-label={`Remove ${token.prefix ?? ""}${token.label}`}
             title={`${token.prefix ?? ""}${token.label}`}
           >
@@ -111,7 +113,9 @@ export const TokenSearchInput = ({
         <input
           ref={inputRef}
           value={current}
-          onChange={(e) => commit(e.target.value)}
+          onChange={(e) => {
+            commit(e.target.value);
+          }}
           onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key !== "Backspace" || current.length > 0 || tokens.length === 0) return;
             e.preventDefault();

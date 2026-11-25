@@ -50,9 +50,15 @@ export function DockerContainerLogsPage({ containerId, ops }: DockerContainerLog
           <OpsActionsMenu
             name={label}
             disabled={disabled}
-            onStart={() => ops.runVerb(["docker", "start", containerId], afterVerb)}
-            onStop={() => ops.runVerb(["docker", "stop", containerId], afterVerb)}
-            onRestart={() => ops.runVerb(["docker", "restart", containerId], afterVerb)}
+            onStart={() => {
+              ops.runVerb(["docker", "start", containerId], afterVerb);
+            }}
+            onStop={() => {
+              ops.runVerb(["docker", "stop", containerId], afterVerb);
+            }}
+            onRestart={() => {
+              ops.runVerb(["docker", "restart", containerId], afterVerb);
+            }}
           />
         </div>
       </div>

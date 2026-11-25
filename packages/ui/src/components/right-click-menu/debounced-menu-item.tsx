@@ -74,7 +74,9 @@ export const DebouncedMenuItem = ({
       }
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [expiresAt, isWaiting, set]);
 
   const runDebouncedMenuItemAction = (e?: ReactMouseEvent) => {

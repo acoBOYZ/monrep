@@ -106,15 +106,19 @@ export function SmartPopoverTrigger({
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    const onClick = () => handleActivate();
+    const onClick = () => {
+      handleActivate();
+    };
     root.addEventListener("click", onClick);
-    return () => root.removeEventListener("click", onClick);
+    return () => {
+      root.removeEventListener("click", onClick);
+    };
   }, []);
 
   const syncControlledOpen = useEffectEvent(() => {
     if (!isControlled) return;
 
-    const open = Boolean(controlledOpen) && !disabled;
+    const open = controlledOpen && !disabled;
     const wasOpen = previousControlledOpenRef.current;
 
     if (open && !wasOpen) {

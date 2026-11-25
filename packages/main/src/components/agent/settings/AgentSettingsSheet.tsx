@@ -50,21 +50,29 @@ export function AgentSettingsSheet({
               autoUpdate={sheet.autoUpdate}
               online={online}
               pending={sheet.pending}
-              onAutoUpdateChange={(enabled) => sheet.save({ autoUpdate: enabled })}
+              onAutoUpdateChange={(enabled) => {
+                sheet.save({ autoUpdate: enabled });
+              }}
               onUpdateNow={sheet.triggerUpdate}
             />
             <MetricsSection
               metricsEnabled={sheet.metricsEnabled}
               metricsIntervalSec={sheet.metricsIntervalSec}
               pending={sheet.pending}
-              onMetricsEnabledChange={(enabled) => sheet.save({ backgroundEnabled: enabled })}
-              onIntervalChange={(sec) => sheet.save({ metricsIntervalSec: sec })}
+              onMetricsEnabledChange={(enabled) => {
+                sheet.save({ backgroundEnabled: enabled });
+              }}
+              onIntervalChange={(sec) => {
+                sheet.save({ metricsIntervalSec: sec });
+              }}
             />
             <Separator />
             <ShellSection
               ptyCwd={sheet.ptyCwd}
               pending={sheet.pending}
-              onPtyCwdChange={(cwd) => sheet.save({ ptyCwd: cwd })}
+              onPtyCwdChange={(cwd) => {
+                sheet.save({ ptyCwd: cwd });
+              }}
             />
           </div>
         </ScrollArea>

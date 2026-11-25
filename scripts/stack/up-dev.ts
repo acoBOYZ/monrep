@@ -17,17 +17,15 @@ run(["bun", "upgrade", "--stable"]);
 run(["bunx", "--bun", "npm-check-updates", "-u", "--root", "--workspaces", "--format", "group"]);
 
 run(["bun", "install"]);
+run(["bun", "prune"]);
 
 run(["bun", "run", "sync:brand"]);
 
-// TODO: Re-enable this when claudflare skills fix the type issues in their md ts/tsx files
 if (existsSync(agentSkillsDir)) {
-  // run(["bun", "run", "skills:check"]);
-  run([
-    "printf",
-    "%s\n",
-    "\x1b[31mTODO: Re-enable skills:check when claudflare skills fix the type issues in their md ts/tsx files\x1b[0m",
-  ]);
+  run(["bun", "run", "skills:cf-up"]);
+  run(["bun", "run", "skills:mwg-up"]);
+  run(["bun", "run", "skills:pstack-up"]);
+  run(["bun", "run", "skills:check"]);
 }
 
 // rustup stable + wrap Cargo.toml / Cargo.lock (never cargo-update inside upstream/)

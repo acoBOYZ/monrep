@@ -114,7 +114,9 @@ export const LazyItem = ({
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+    };
   }, [visible, recycle, finalMinHeight]);
 
   const renderSkeleton = typeof finalSkeleton === "function" ? finalSkeleton() : finalSkeleton;

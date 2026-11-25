@@ -21,7 +21,9 @@ export function useOpsSelection(
       if (!online || busy) return;
       setSelectedKey(key);
       void runAsync(argv)
-        .then((lines) => setOutput(lines.join("\n")))
+        .then((lines) => {
+          setOutput(lines.join("\n"));
+        })
         .catch(() => {
           /* error in hook state */
         });

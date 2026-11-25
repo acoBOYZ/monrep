@@ -17,7 +17,6 @@ Workers have a 128 MB memory limit. Buffering entire bodies with `await response
 **Check**: any `await response.text()`, `await response.json()`, or `await response.arrayBuffer()` on data that could be large or unbounded. Small, bounded payloads (known-size JSON, config files) are fine to buffer.
 
 Correct — stream through:
-
 ```ts
 async fetch(request: Request, env: Env): Promise<Response> {
   const response = await fetch("https://api.example.com/large-dataset");
@@ -26,7 +25,6 @@ async fetch(request: Request, env: Env): Promise<Response> {
 ```
 
 Correct — concatenate multiple streams:
-
 ```ts
 async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const urls = ["https://api.example.com/part-1", "https://api.example.com/part-2"];
@@ -50,7 +48,6 @@ async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response
 ```
 
 Anti-pattern:
-
 ```ts
 // Buffers entire body — crashes on large payloads
 const response = await fetch("https://api.example.com/large-dataset");
@@ -82,10 +79,9 @@ async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response
 ```
 
 Anti-pattern:
-
 ```ts
 // Destructuring ctx loses the this binding
-const { waitUntil } = ctx; // "Illegal invocation" at runtime
+const { waitUntil } = ctx;  // "Illegal invocation" at runtime
 waitUntil(somePromise);
 ```
 
@@ -105,12 +101,11 @@ const object = await env.MY_BUCKET.get("my-file");
 ```
 
 Anti-pattern:
-
 ```ts
 // REST API from inside a Worker — unnecessary overhead
 const response = await fetch(
   "https://api.cloudflare.com/client/v4/accounts/.../r2/buckets/.../objects/my-file",
-  { headers: { Authorization: `Bearer ${env.CF_API_TOKEN}` } },
+  { headers: { Authorization: `Bearer ${env.CF_API_TOKEN}` } }
 );
 ```
 
@@ -169,7 +164,7 @@ Hyperdrive maintains a regional connection pool, eliminating per-request TCP + T
 
 ```jsonc
 {
-  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<YOUR_HYPERDRIVE_ID>" }],
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "<YOUR_HYPERDRIVE_ID>" }]
 }
 ```
 
@@ -185,6 +180,8 @@ async fetch(request: Request, env: Env): Promise<Response> {
 ```
 
 **Retrieve**: `/hyperdrive/` for current configuration and supported databases.
+
+For multiple sequential queries to one regional database, follow [database placement](./configuration.md#place-compute-near-regional-databases) before deployment. A Hyperdrive binding does not automatically place the Worker near its database.
 
 ---
 
@@ -207,14 +204,13 @@ export default {
 ```
 
 Anti-pattern:
-
 ```ts
 // Module-level mutable state — leaks between requests
 let currentUser: string | null = null;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    currentUser = request.headers.get("X-User-Id"); // Visible to next request
+    currentUser = request.headers.get("X-User-Id");  // Visible to next request
     // ...
   },
 };
@@ -228,19 +224,13 @@ A Promise that is not `await`ed, `return`ed, or passed to `ctx.waitUntil()` is a
 
 ```ts
 // Correct: await when you need the result
-const response = await fetch("https://api.example.com/process", {
-  method: "POST",
-  body: JSON.stringify(data),
-});
+const response = await fetch("https://api.example.com/process", { method: "POST", body: JSON.stringify(data) });
 
 // Correct: waitUntil when you don't need the result before responding
-ctx.waitUntil(
-  fetch("https://api.example.com/webhook", { method: "POST", body: JSON.stringify(data) }),
-);
+ctx.waitUntil(fetch("https://api.example.com/webhook", { method: "POST", body: JSON.stringify(data) }));
 ```
 
 Anti-pattern:
-
 ```ts
 // Floating promise — result dropped, error swallowed
 fetch("https://api.example.com/webhook", { method: "POST", body: JSON.stringify(data) });
@@ -248,7 +238,7 @@ fetch("https://api.example.com/webhook", { method: "POST", body: JSON.stringify(
 
 ### Be aware of platform limits
 
-Workers have a 10ms CPU time limit (Bundled) or 30s (Standard/Unbound). Heavy synchronous work — tight loops, large JSON parsing, compute-intensive crypto — can hit the CPU limit and terminate the request.
+Workers have CPU time limits based on the account plan. Heavy synchronous work — tight loops, large JSON parsing, compute-intensive crypto — can hit the CPU limit and terminate the request.
 
 **Check**: compute-heavy operations that run synchronously. Consider breaking work into smaller chunks, offloading to Queues/Workflows, or using WebAssembly for CPU-intensive tasks.
 
@@ -273,9 +263,7 @@ const sessionId = crypto.randomUUID();
 // Secure random bytes
 const tokenBytes = new Uint8Array(32);
 crypto.getRandomValues(tokenBytes);
-const token = Array.from(tokenBytes)
-  .map((b) => b.toString(16).padStart(2, "0"))
-  .join("");
+const token = Array.from(tokenBytes).map((b) => b.toString(16).padStart(2, "0")).join("");
 ```
 
 ```ts
@@ -291,7 +279,6 @@ async function verifyToken(provided: string, expected: string): Promise<boolean>
 ```
 
 Anti-pattern:
-
 ```ts
 // Predictable — not cryptographically secure
 const token = Math.random().toString(36).substring(2);
@@ -325,17 +312,17 @@ async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response
 
 ## Development & Testing
 
-### Test with @cloudflare/vitest-pool-workers
+### Test with @cloudflare/vitest-plugin
 
 Runs tests inside the Workers runtime with real bindings. Catches issues that Node.js-based tests miss.
 
-**Known pitfall**: the Vitest pool auto-injects `nodejs_compat`, so tests pass even if your wrangler config is missing the flag. Always confirm your `wrangler.jsonc` includes `nodejs_compat` if your code depends on Node.js built-ins.
+**Known pitfall**: the Vitest integration auto-injects `nodejs_compat`, so tests pass even if your wrangler config is missing the flag. Always confirm your `wrangler.jsonc` includes `nodejs_compat` if your code depends on Node.js built-ins.
 
-**Check**: test setup uses `@cloudflare/vitest-pool-workers`. Tests cover nullable returns (e.g., KV `.get()` returning `null`).
+**Check**: test setup uses `@cloudflare/vitest-plugin` (it replaced `@cloudflare/vitest-pool-workers`; see [Migrate to Vitest plugin](https://developers.cloudflare.com/workers/testing/vitest-integration/migration-guides/migrate-to-vitest-plugin/index.md)). Tests cover nullable returns (e.g., KV `.get()` returning `null`).
 
 ```ts
-import { env } from "cloudflare:test";
 import { describe, it, expect } from "vitest";
+import { env } from "cloudflare:workers";
 
 describe("KV operations", () => {
   it("should store and retrieve a value", async () => {

@@ -112,20 +112,17 @@ export function useObjectReducer<T extends object>(initialState: T): ObjectReduc
 
   const [state, dispatch] = useReducer(objectReducer<T>, initialState);
 
-  const set = useCallback<ObjectReducerSet<T>>(
-    (key, value) => dispatch({ type: "set", key, value } as Action<T>),
-    [],
-  );
+  const set = useCallback<ObjectReducerSet<T>>((key, value) => {
+    dispatch({ type: "set", key, value } as Action<T>);
+  }, []);
 
-  const assign = useCallback<ObjectReducerAssign<T>>(
-    (value) => dispatch({ type: "assign", value }),
-    [],
-  );
+  const assign = useCallback<ObjectReducerAssign<T>>((value) => {
+    dispatch({ type: "assign", value });
+  }, []);
 
-  const reset = useCallback<ObjectReducerReset<T>>(
-    (value) => dispatch({ type: "reset", value, base: initialRef.current }),
-    [],
-  );
+  const reset = useCallback<ObjectReducerReset<T>>((value) => {
+    dispatch({ type: "reset", value, base: initialRef.current });
+  }, []);
 
   return { state, set, assign, reset } as const;
 }

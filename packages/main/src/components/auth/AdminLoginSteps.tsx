@@ -18,7 +18,9 @@ export function AdminLoginSteps({ flow }: AdminLoginStepsProps) {
           pending={flow.pending}
           onStart={flow.startPasskeyLogin}
           onVerified={flow.verifyPasskeyLogin}
-          onFallbackPassword={() => flow.setStep("password")}
+          onFallbackPassword={() => {
+            flow.setStep("password");
+          }}
         />
       ) : null}
 
@@ -33,7 +35,13 @@ export function AdminLoginSteps({ flow }: AdminLoginStepsProps) {
           onPasswordChange={flow.setPassword}
           onTurnstileToken={flow.setTurnstileToken}
           onSubmit={() => void flow.submitPassword()}
-          onUsePasskey={flow.canUsePasskey ? () => flow.setStep("passkey") : undefined}
+          onUsePasskey={
+            flow.canUsePasskey
+              ? () => {
+                  flow.setStep("passkey");
+                }
+              : undefined
+          }
         />
       ) : null}
 

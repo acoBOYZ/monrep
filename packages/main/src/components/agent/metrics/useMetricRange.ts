@@ -16,8 +16,12 @@ export function useMetricRange() {
   }, [stored, setRange]);
 
   useEffect(() => {
-    const id = window.setInterval(() => setTo(Date.now()), 30_000);
-    return () => window.clearInterval(id);
+    const id = window.setInterval(() => {
+      setTo(Date.now());
+    }, 30_000);
+    return () => {
+      window.clearInterval(id);
+    };
   }, []);
 
   const range = isMetricRange(stored) ? stored : DEFAULT_RANGE;

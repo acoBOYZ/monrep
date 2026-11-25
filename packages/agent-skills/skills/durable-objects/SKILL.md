@@ -4,11 +4,10 @@ description: Build, debug, or review Cloudflare Durable Objects code for persist
 metadata:
   type: core
   library: cloudflare
-  library_version: "41e0d19"
+  library_version: 'ff191de'
 sources:
-  - "cloudflare/skills:skills/durable-objects/SKILL.md"
+  - 'cloudflare/skills:skills/durable-objects/SKILL.md'
 ---
-
 # Durable Objects
 
 Build stateful, coordinated applications on Cloudflare's edge using Durable Objects.
@@ -17,12 +16,12 @@ Build stateful, coordinated applications on Cloudflare's edge using Durable Obje
 
 Your knowledge of Durable Objects APIs and configuration may be outdated. **Prefer retrieval over pre-training** for any Durable Objects task.
 
-| Resource              | URL                                                                              |
-| --------------------- | -------------------------------------------------------------------------------- |
-| Docs                  | https://developers.cloudflare.com/durable-objects/index.md                       |
-| API Reference         | https://developers.cloudflare.com/durable-objects/api/index.md                   |
-| Best Practices        | https://developers.cloudflare.com/durable-objects/best-practices/index.md        |
-| Examples              | https://developers.cloudflare.com/durable-objects/examples/index.md              |
+| Resource | URL |
+|----------|-----|
+| Docs | https://developers.cloudflare.com/durable-objects/index.md |
+| API Reference | https://developers.cloudflare.com/durable-objects/api/index.md |
+| Best Practices | https://developers.cloudflare.com/durable-objects/best-practices/index.md |
+| Examples | https://developers.cloudflare.com/durable-objects/examples/index.md |
 | Roles and permissions | https://developers.cloudflare.com/workers/authorization/durable-objects/index.md |
 
 Fetch the relevant doc page when implementing features.
@@ -40,7 +39,7 @@ Fetch the relevant doc page when implementing features.
 
 - `./references/rules.md` - Core rules, storage, concurrency, RPC, alarms
 - [Testing reference](./references/testing.md) - Current Vitest documentation, migration choices, and test selection
-- `./references/workers.md` - Workers handlers, types, wrangler config, observability
+- [Workers reference](./references/workers.md) - Workers handlers, types, configuration, tracing, and local debugging
 
 Search: `blockConcurrencyWhile`, `idFromName`, `getByName`, `setAlarm`, `sql.exec`
 
@@ -48,13 +47,13 @@ Search: `blockConcurrencyWhile`, `idFromName`, `getByName`, `setAlarm`, `sql.exe
 
 ### Use Durable Objects For
 
-| Need                      | Example                                           |
-| ------------------------- | ------------------------------------------------- |
-| Coordination              | Chat rooms, multiplayer games, collaborative docs |
-| Strong consistency        | Inventory, booking systems, turn-based games      |
-| Per-entity storage        | Multi-tenant SaaS, per-user data                  |
-| Persistent connections    | WebSockets, real-time notifications               |
-| Scheduled work per entity | Subscription renewals, game timeouts              |
+| Need | Example |
+|------|---------|
+| Coordination | Chat rooms, multiplayer games, collaborative docs |
+| Strong consistency | Inventory, booking systems, turn-based games |
+| Per-entity storage | Multi-tenant SaaS, per-user data |
+| Persistent connections | WebSockets, real-time notifications |
+| Scheduled work per entity | Subscription renewals, game timeouts |
 
 ### Do NOT Use For
 
@@ -70,9 +69,9 @@ Search: `blockConcurrencyWhile`, `idFromName`, `getByName`, `setAlarm`, `sql.exe
 // wrangler.jsonc
 {
   "durable_objects": {
-    "bindings": [{ "name": "MY_DO", "class_name": "MyDurableObject" }],
+    "bindings": [{ "name": "MY_DO", "class_name": "MyDurableObject" }]
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MyDurableObject"] }],
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["MyDurableObject"] }]
 }
 ```
 
@@ -101,7 +100,7 @@ export class MyDurableObject extends DurableObject<Env> {
   async addItem(data: string): Promise<number> {
     const result = this.ctx.storage.sql.exec<{ id: number }>(
       "INSERT INTO items (data) VALUES (?) RETURNING id",
-      data,
+      data
     );
     return result.one().id;
   }
@@ -184,3 +183,7 @@ await this.ctx.storage.deleteAlarm();
 ## Testing
 
 Read the [testing reference](./references/testing.md) before configuring a suite or writing Durable Object tests. It routes to current setup, APIs, and examples and identifies the behavior to cover.
+
+## Skill feedback
+
+If the user reports that this skill gave incorrect or outdated guidance, or is missing information, read [references/skill-feedback.md](references/skill-feedback.md).

@@ -54,7 +54,9 @@ export const SearchInput = ({
       <input
         ref={inputRef}
         value={current}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => commit(e.target.value)}
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          commit(e.target.value);
+        }}
         className={cn(
           "flex min-h-9 w-full rounded-md border border-input bg-transparent",
           "py-1 pr-10 pl-8 text-sm shadow-none",

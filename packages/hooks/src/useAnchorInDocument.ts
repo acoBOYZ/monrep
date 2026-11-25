@@ -8,7 +8,9 @@ export function useAnchorInDocument(anchor: HTMLElement | null): boolean {
       if (typeof document === "undefined" || !anchor) return EMPTY_UNSUBSCRIBE;
       const observer = new MutationObserver(onStoreChange);
       observer.observe(document.body, { childList: true, subtree: true });
-      return () => observer.disconnect();
+      return () => {
+        observer.disconnect();
+      };
     },
     [anchor],
   );

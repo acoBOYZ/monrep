@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useFormatForDisplay } from "@tanstack/react-hotkeys";
 import { DebouncedMenuItem } from "./debounced-menu-item";
 import { RightClickMenuHotkeyRegistration } from "./right-click-menu-hotkey";
 import {
@@ -20,13 +21,14 @@ export const RightClickMenuContent = ({
   disabled?: boolean;
   onClose: () => void;
 }) => {
+  const formatForDisplay = useFormatForDisplay();
   const menuEntries = useMemo(() => {
     return menuItems.map((item, index) => ({
       item,
       key: getMenuEntryKey(item, index),
-      suffix: resolveItemSuffix(item),
+      suffix: resolveItemSuffix(item, formatForDisplay),
     }));
-  }, [menuItems]);
+  }, [menuItems, formatForDisplay]);
 
   const hotkeyBindings = useMemo(() => {
     return menuEntries.flatMap(({ item, key }) =>

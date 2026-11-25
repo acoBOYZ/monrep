@@ -51,7 +51,14 @@ export function OpsActionsMenuContent({
             />
             {confirm === "stop" ? "Stop" : "Restart"}
           </Button>
-          <Button type="button" size="sm" variant="ghost" onClick={() => setConfirm(null)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setConfirm(null);
+            }}
+          >
             <HugeiconsIcon icon={ArrowTurnBackwardIcon} className="size-4" aria-hidden />
             Back
           </Button>
@@ -80,7 +87,9 @@ export function OpsActionsMenuContent({
         size="sm"
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => setConfirm("stop")}
+        onClick={() => {
+          setConfirm("stop");
+        }}
       >
         <HugeiconsIcon icon={SquareStopIcon} className="size-4 text-destructive" aria-hidden />
         Stop
@@ -90,7 +99,9 @@ export function OpsActionsMenuContent({
         size="sm"
         variant="ghost"
         className="w-full justify-start"
-        onClick={() => setConfirm("restart")}
+        onClick={() => {
+          setConfirm("restart");
+        }}
       >
         <HugeiconsIcon icon={SquareArrowReload01Icon} className="size-4 text-warning" aria-hidden />
         Restart

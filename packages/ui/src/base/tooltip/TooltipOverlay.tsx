@@ -85,7 +85,9 @@ const TooltipFloatingShell = ({ state, onClose, className, children }: ShellProp
       childList: true,
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [visible, state.anchor, onClose]);
 
   const setFloating = useCallback(

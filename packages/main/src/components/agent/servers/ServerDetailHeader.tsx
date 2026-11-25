@@ -47,7 +47,14 @@ export function ServerDetailHeader({ server, serverId, online }: ServerDetailHea
             aria-label="Server actions"
             className="ms-auto flex shrink-0 flex-wrap items-center gap-2"
           >
-            <Button type="button" variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSettingsOpen(true);
+              }}
+            >
               <HugeiconsIcon icon={Settings02Icon} className="size-4" aria-hidden />
               Settings
             </Button>

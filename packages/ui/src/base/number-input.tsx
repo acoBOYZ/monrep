@@ -66,8 +66,12 @@ export const NumberInput = ({
     [stepper, max, min, value, isControlled, onValueChange],
   );
 
-  const handleIncrement = useCallback(() => stepValue(1), [stepValue]);
-  const handleDecrement = useCallback(() => stepValue(-1), [stepValue]);
+  const handleIncrement = useCallback(() => {
+    stepValue(1);
+  }, [stepValue]);
+  const handleDecrement = useCallback(() => {
+    stepValue(-1);
+  }, [stepValue]);
 
   useHotkey(
     "ArrowUp",

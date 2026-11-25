@@ -40,10 +40,14 @@ export function EditableLabelInput({
   const shared = {
     ref: bindInputRef,
     value: editValue,
-    onChange: (e: { currentTarget: { value: string } }) => onDraftChange(e.currentTarget.value),
+    onChange: (e: { currentTarget: { value: string } }) => {
+      onDraftChange(e.currentTarget.value);
+    },
     onBlur: onBlurFinish,
     onKeyDown,
-    onDoubleClick: (e: { stopPropagation: () => void }) => e.stopPropagation(),
+    onDoubleClick: (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+    },
     disabled: disabled || saving,
     maxLength,
     className: inputClassName,

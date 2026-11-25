@@ -33,16 +33,24 @@ const loadTurnstileScript = (): Promise<void> => {
   scriptPromise = new Promise((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>("script[data-turnstile]");
     if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Turnstile script failed")));
+      existing.addEventListener("load", () => {
+        resolve();
+      });
+      existing.addEventListener("error", () => {
+        reject(new Error("Turnstile script failed"));
+      });
       return;
     }
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async = true;
     script.dataset.turnstile = "1";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Turnstile script failed"));
+    script.onload = () => {
+      resolve();
+    };
+    script.onerror = () => {
+      reject(new Error("Turnstile script failed"));
+    };
     document.head.appendChild(script);
   });
   return scriptPromise;
@@ -63,9 +71,15 @@ export function TurnstileWidget({ siteKey, onToken }: TurnstileWidgetProps) {
       }
       widgetIdRef.current = window.turnstile.render(hostRef.current, {
         sitekey: siteKey,
-        callback: (token) => onToken(token),
-        "expired-callback": () => onToken(""),
-        "error-callback": () => onToken(""),
+        callback: (token) => {
+          onToken(token);
+        },
+        "expired-callback": () => {
+          onToken("");
+        },
+        "error-callback": () => {
+          onToken("");
+        },
       });
       setReady(true);
     });

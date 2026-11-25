@@ -158,7 +158,9 @@ export const CommandInput = ({ className, value, onValueChange, ...props }: Comm
   useEffect(() => {
     if (!bindInput) return;
     bindInput({ value, onValueChange });
-    return () => bindInput({});
+    return () => {
+      bindInput({});
+    };
   }, [bindInput, onValueChange, value]);
 
   return (

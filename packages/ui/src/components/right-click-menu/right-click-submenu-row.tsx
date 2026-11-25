@@ -1,5 +1,6 @@
 import { ChevronRightIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useFormatForDisplay } from "@tanstack/react-hotkeys";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,17 +22,16 @@ const preventSubmenuCloseAutoFocus = (event: Event) => {
   event.preventDefault();
 };
 
-const RightClickSubmenuChild = ({
-  item,
-  menuDisabled,
-  onClose,
-}: {
+type RightClickSubmenuChildProps = {
   item: Omit<RightClickMenuItem, "childs">;
   menuDisabled?: boolean;
   onClose: () => void;
-}) => {
+};
+
+const RightClickSubmenuChild = ({ item, menuDisabled, onClose }: RightClickSubmenuChildProps) => {
+  const formatForDisplay = useFormatForDisplay();
   const isDisabled = Boolean(menuDisabled || item.disabled);
-  const suffix = resolveItemSuffix(item);
+  const suffix = resolveItemSuffix(item, formatForDisplay);
 
   const activateChildAndCloseMenu = (event: ReactMouseEvent) => {
     if (item.disabled || item.hidden) return;

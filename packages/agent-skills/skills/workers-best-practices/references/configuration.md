@@ -17,8 +17,8 @@ Set `compatibility_date` to today on new projects. Encourage periodic updates on
 ```jsonc
 // wrangler.jsonc
 {
-  "compatibility_date": "$today", // Replace with today's date (YYYY-MM-DD)
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_date": "$today",  // Replace with today's date (YYYY-MM-DD)
+  "compatibility_flags": ["nodejs_compat"]
 }
 ```
 
@@ -32,7 +32,7 @@ The `nodejs_compat` flag enables Node.js built-in modules (`node:crypto`, `node:
 
 ```jsonc
 {
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": ["nodejs_compat"]
 }
 ```
 
@@ -53,11 +53,10 @@ export default {
 ```
 
 Anti-pattern:
-
 ```ts
 // Hand-written Env that drifts from actual bindings
 interface Env {
-  MY_KV: KVNamespace; // What if the binding name changed?
+  MY_KV: KVNamespace;  // What if the binding name changed?
 }
 ```
 
@@ -70,19 +69,18 @@ Secrets must never appear in wrangler config or source code. Use `wrangler secre
 ```jsonc
 {
   "vars": {
-    "API_BASE_URL": "https://api.example.com", // Non-secret: OK in config
-  },
+    "API_BASE_URL": "https://api.example.com"  // Non-secret: OK in config
+  }
   // Secrets set via: wrangler secret put API_KEY
 }
 ```
 
 Anti-pattern:
-
 ```jsonc
 {
   "vars": {
-    "API_KEY": "sk-live-abc123...", // Secret in version control
-  },
+    "API_KEY": "sk-live-abc123..."  // Secret in version control
+  }
 }
 ```
 
@@ -106,6 +104,12 @@ An unused binding alone is not a finding; establish a concrete configuration or 
 
 For a new Durable Object class, verify its migration entry and exported class name against the target Wrangler schema.
 
+### Place compute near regional databases
+
+Hyperdrive connection pooling does not automatically place a Worker near its database. For multiple sequential queries to one regional database, identify the actual provider and region and configure an explicit region hint before deployment. Preserve explicit user placement choices and ask for missing region information rather than guessing from a connection hostname.
+
+Retrieve [Workers placement](https://developers.cloudflare.com/workers/configuration/placement/index.md) for supported options and handler limitations. Use [CF's configuration mapping](https://developers.cloudflare.com/cf/wrangler/reference/index.md) for `cloudflare.config.ts`, or the installed schema for Wrangler projects. Placement affects fetch handlers, not RPC methods or named entrypoints. For unknown or multiple back-end locations, consider Smart Placement with its traffic requirements. Compare request duration on deployed Workers using representative queries and cache behavior; local development does not measure production placement.
+
 ## Observability
 
 ### Enable Workers Logs and Traces
@@ -119,25 +123,20 @@ Enable Workers Logs and Traces in Wrangler config before deploying to production
   "observability": {
     "enabled": true,
     "logs": { "enabled": true, "head_sampling_rate": 1 },
-    "traces": { "enabled": true, "head_sampling_rate": 0.01 },
-  },
+    "traces": { "enabled": true, "head_sampling_rate": 0.01 }
+  }
 }
 ```
 
 ```ts
 // Structured JSON — searchable and filterable
-console.log(
-  JSON.stringify({ message: "incoming request", method: request.method, path: url.pathname }),
-);
+console.log(JSON.stringify({ message: "incoming request", method: request.method, path: url.pathname }));
 
 // Error severity
-console.error(
-  JSON.stringify({ message: "request failed", error: e instanceof Error ? e.message : String(e) }),
-);
+console.error(JSON.stringify({ message: "request failed", error: e instanceof Error ? e.message : String(e) }));
 ```
 
 Anti-pattern:
-
 ```ts
 // Unstructured string logs — hard to query
 console.log("Got a request to " + url.pathname);

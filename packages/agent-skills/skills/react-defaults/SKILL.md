@@ -9,7 +9,7 @@ description: >
 metadata:
   type: core
   library: agent-skills
-  library_version: "0.5.2"
+  library_version: '0.5.2'
 sources:
   - "monrep/monrep-mono:packages/agent-skills/skills/react-defaults/SKILL.md"
   - "monrep/monrep-mono:doctor.config.ts"

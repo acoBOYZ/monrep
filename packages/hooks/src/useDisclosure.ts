@@ -7,9 +7,15 @@ export function useDisclosure({
 } = {}) {
   const [isOpen, setIsOpen] = useState(defaultIsOpen);
 
-  const onOpen = useCallback(() => setIsOpen(true), []);
-  const onClose = useCallback(() => setIsOpen(false), []);
-  const onToggle = useCallback(() => setIsOpen((currentValue) => !currentValue), []);
+  const onOpen = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+  const onClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+  const onToggle = useCallback(() => {
+    setIsOpen((currentValue) => !currentValue);
+  }, []);
 
   return useMemo(
     () => ({

@@ -1,7 +1,8 @@
 import { cn } from "@monrep/utils";
-import { formatForDisplay } from "@tanstack/react-hotkeys";
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
-import type { Hotkey, UseHotkeyOptions } from "@tanstack/react-hotkeys";
+import type { Hotkey, UseHotkeyOptions, useFormatForDisplay } from "@tanstack/react-hotkeys";
+
+export type FormatForDisplayFn = ReturnType<typeof useFormatForDisplay>;
 
 export type RightClickMenuHotkeyBinding = {
   hotkey: Hotkey;
@@ -84,7 +85,10 @@ export const resolveHotkeyInputs = (item: RightClickMenuItem) => {
   return inputs;
 };
 
-export const resolveItemSuffix = (item: RightClickMenuItem): ReactNode => {
+export const resolveItemSuffix = (
+  item: RightClickMenuItem,
+  formatForDisplay: FormatForDisplayFn,
+): ReactNode => {
   if (item.suffix !== undefined && item.suffix !== null) {
     return item.suffix;
   }

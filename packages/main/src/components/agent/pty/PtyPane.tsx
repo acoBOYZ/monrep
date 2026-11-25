@@ -78,10 +78,16 @@ export function PtyPane({ wsReady }: PtyPaneProps) {
     };
 
     const api: PaneApi = {
-      write: (bytes) => term.write(bytes),
-      clear: () => term.clear(),
+      write: (bytes) => {
+        term.write(bytes);
+      },
+      clear: () => {
+        term.clear();
+      },
       fitAndResize,
-      writeln: (line) => term.writeln(line),
+      writeln: (line) => {
+        term.writeln(line);
+      },
       getPtyId: () => ptyIdRef.current,
     };
     apiRef.current = api;

@@ -110,7 +110,9 @@ export function DockerLogsPanel({
             </ImpactFlash>
             <Tabs
               value={String(tail)}
-              onValueChange={(value) => onTailChange(Number(value) as LogTail)}
+              onValueChange={(value) => {
+                onTailChange(Number(value) as LogTail);
+              }}
             >
               <TabsList aria-label="Tail lines">
                 {LOG_TAIL_OPTIONS.map((option) => (

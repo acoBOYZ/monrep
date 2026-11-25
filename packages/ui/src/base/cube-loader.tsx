@@ -64,7 +64,9 @@ export function CubeLoader({
     ...props,
   });
   const setRefs = useCallback(
-    (svg: SVGSVGElement | null) => setCubeAnimationPhase(svg, ref),
+    (svg: SVGSVGElement | null) => {
+      setCubeAnimationPhase(svg, ref);
+    },
     [ref],
   );
 

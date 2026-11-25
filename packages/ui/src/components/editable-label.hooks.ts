@@ -56,7 +56,9 @@ export function useEditableLabel({
       finishRef.current();
     };
     document.addEventListener("pointerdown", dismiss, true);
-    return () => document.removeEventListener("pointerdown", dismiss, true);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss, true);
+    };
   }, [editing]);
 
   const cancel = useCallback(() => {
