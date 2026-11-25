@@ -20,14 +20,14 @@ export function useServicesOpsPage(serverId: string) {
     cancel,
   } = useOpsList({
     serverId,
-    online: Boolean(online),
+    online,
     listArgv: SYSTEMD_LIST_ARGV,
     parse: (lines) => {
       const { units, parseError } = parseSystemctlUnitsPlain(lines);
       return { items: units, parseError };
     },
   });
-  const selection = useOpsSelection(Boolean(online), busy, runAsync);
+  const selection = useOpsSelection(online, busy, runAsync);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();

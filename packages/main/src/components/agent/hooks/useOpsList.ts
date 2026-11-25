@@ -46,7 +46,9 @@ export function useOpsList<T>({ serverId, online, listArgv, parse }: UseOpsListP
     if (!online || bootRef.current) return;
     bootRef.current = true;
     void runAsync([...listArgv])
-      .then((lines) => applyLines(lines))
+      .then((lines) => {
+        applyLines(lines);
+      })
       .catch(() => {
         /* error in hook state */
       });
@@ -57,7 +59,9 @@ export function useOpsList<T>({ serverId, online, listArgv, parse }: UseOpsListP
       if (!online || busy) return;
       setLoading(true);
       void runAsync([...listArgv])
-        .then((lines) => applyLines(lines, options))
+        .then((lines) => {
+          applyLines(lines, options);
+        })
         .catch(() => {
           /* error in hook state */
         })

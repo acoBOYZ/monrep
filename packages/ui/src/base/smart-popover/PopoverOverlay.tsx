@@ -109,7 +109,9 @@ const SmartPopoverFloatingShell = ({ state, onClose, className, children }: Shel
       subtree: true,
     });
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [visible, state.anchor, onClose]);
 
   const side = placement.split("-")[0];

@@ -8,7 +8,7 @@ export const useSearchDraft = (
   onDebouncedValueChange: ((next: string) => void) | undefined,
   debounce: number,
 ) => {
-  const [draft, setDraft] = useState(() => String(value ?? defaultValue));
+  const [draft, setDraft] = useState(() => value ?? defaultValue);
   const [seen, setSeen] = useState(value);
   if (value !== undefined && !Object.is(value, seen)) {
     setSeen(value);

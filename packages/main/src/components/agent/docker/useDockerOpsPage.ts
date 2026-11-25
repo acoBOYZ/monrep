@@ -18,7 +18,7 @@ export function useDockerOpsPage(serverId: string) {
     cancel,
   } = useOpsList({
     serverId,
-    online: Boolean(online),
+    online,
     listArgv: DOCKER_LIST_ARGV,
     parse: (lines) => {
       const { containers, parseError } = parseDockerPsNdjson(lines);
@@ -56,7 +56,7 @@ export function useDockerOpsPage(serverId: string) {
   return {
     server,
     isReady,
-    online: Boolean(online),
+    online,
     filter,
     setFilter,
     filtered,

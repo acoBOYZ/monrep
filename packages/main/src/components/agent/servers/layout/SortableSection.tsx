@@ -47,8 +47,12 @@ export function SortableSection({ id, index, children }: SortableSectionProps) {
             },
           });
         },
-        onDragStart: () => setDragging(true),
-        onDrop: () => setDragging(false),
+        onDragStart: () => {
+          setDragging(true);
+        },
+        onDrop: () => {
+          setDragging(false);
+        },
       }),
       dropTargetForElements({
         element,
@@ -60,10 +64,18 @@ export function SortableSection({ id, index, children }: SortableSectionProps) {
             input,
             allowedEdges: ["top", "bottom"],
           }),
-        onDragEnter: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
-        onDrag: ({ self }) => setClosestEdge(extractClosestEdge(self.data)),
-        onDragLeave: () => setClosestEdge(null),
-        onDrop: () => setClosestEdge(null),
+        onDragEnter: ({ self }) => {
+          setClosestEdge(extractClosestEdge(self.data));
+        },
+        onDrag: ({ self }) => {
+          setClosestEdge(extractClosestEdge(self.data));
+        },
+        onDragLeave: () => {
+          setClosestEdge(null);
+        },
+        onDrop: () => {
+          setClosestEdge(null);
+        },
       }),
     );
   }, [id, index]);

@@ -6,8 +6,12 @@ export function useCoalescedPair<T extends object>(pair: T): T {
 
   useLayoutEffect(() => {
     latest.current = pair;
-    const id = requestAnimationFrame(() => setSnap(latest.current));
-    return () => cancelAnimationFrame(id);
+    const id = requestAnimationFrame(() => {
+      setSnap(latest.current);
+    });
+    return () => {
+      cancelAnimationFrame(id);
+    };
   }, [pair]);
   return snap;
 }

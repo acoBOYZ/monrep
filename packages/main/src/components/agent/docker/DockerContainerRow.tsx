@@ -75,9 +75,15 @@ export function DockerContainerRow({
         <OpsActionsMenu
           name={label}
           disabled={disabled}
-          onStart={() => onStart(container)}
-          onStop={() => onStop(container)}
-          onRestart={() => onRestart(container)}
+          onStart={() => {
+            onStart(container);
+          }}
+          onStop={() => {
+            onStop(container);
+          }}
+          onRestart={() => {
+            onRestart(container);
+          }}
         />
       </TableCell>
     </TableRow>

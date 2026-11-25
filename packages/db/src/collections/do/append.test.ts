@@ -63,7 +63,7 @@ describe("appendStreamEvent", () => {
       schema.presence.upsert({ value: { userId: "u1", status: "online" } }),
     );
 
-    return expect(persisted).rejects.toThrow("txid timeout");
+    expect(persisted).rejects.toThrow("txid timeout");
   });
 });
 

@@ -69,9 +69,13 @@ function SidebarProvider({
     update(target.clientWidth);
 
     if (typeof ResizeObserver === "undefined") {
-      const onResize = () => update(target.clientWidth);
+      const onResize = () => {
+        update(target.clientWidth);
+      };
       window.addEventListener("resize", onResize, { passive: true });
-      return () => window.removeEventListener("resize", onResize);
+      return () => {
+        window.removeEventListener("resize", onResize);
+      };
     }
 
     const observer = new ResizeObserver(([entry]) => {
@@ -80,7 +84,9 @@ function SidebarProvider({
     });
 
     observer.observe(target);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+    };
   }, [containerRef, mobilePortalContainer]);
 
   const [_open, _setOpen] = useState(defaultOpen);
@@ -114,7 +120,11 @@ function SidebarProvider({
   );
 
   const toggleSidebar = useCallback(() => {
-    return isMobile ? setOpenMobile((p) => !p) : setOpen((p) => !p);
+    if (isMobile) {
+      setOpenMobile((p) => !p);
+    } else {
+      setOpen((p) => !p);
+    }
   }, [isMobile, setOpen, setOpenMobile]);
 
   const [resolvedMobilePortalContainer, setResolvedMobilePortalContainer] =

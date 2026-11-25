@@ -171,7 +171,7 @@ describe("createUpsertStreamAction", () => {
       schema: rowSchema,
     });
 
-    return expect(action.mutationFn({ userId: "u1", status: "online" }, undefined)).rejects.toThrow(
+    expect(action.mutationFn({ userId: "u1", status: "online" }, undefined)).rejects.toThrow(
       "append failed",
     );
   });
@@ -187,9 +187,9 @@ describe("createUpsertStreamAction", () => {
       schema: ulidRowSchema,
     });
 
-    expect(() => action.onMutate({ userId: "ada", status: "online" })).toThrow(
-      SchemaValidationError,
-    );
+    expect(() => {
+      action.onMutate({ userId: "ada", status: "online" });
+    }).toThrow(SchemaValidationError);
     expect(collection.rows.size).toBe(0);
     expect(db.appended).toHaveLength(0);
   });

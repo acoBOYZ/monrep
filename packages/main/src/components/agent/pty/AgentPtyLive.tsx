@@ -31,9 +31,13 @@ export function AgentPtyLive() {
         name={`pty-${serverId}`}
         height="360px"
         fillContent
-        onClear={() => clearPane()}
+        onClear={() => {
+          clearPane();
+        }}
         onMaximize={() => {
-          requestAnimationFrame(() => fitAndResize());
+          requestAnimationFrame(() => {
+            fitAndResize();
+          });
         }}
       >
         <PtyPane wsReady={ready} />

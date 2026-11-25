@@ -40,7 +40,9 @@ export const TerminalTabBar = ({ tabs, activeTabId, onSelect, onClose }: Termina
             aria-selected={isActive}
             aria-label={tab.title}
             className="absolute inset-0 z-0 cursor-pointer rounded-lg"
-            onClick={() => onSelect(tab.id)}
+            onClick={() => {
+              onSelect(tab.id);
+            }}
           />
           <button
             type="button"

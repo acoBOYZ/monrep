@@ -9,7 +9,7 @@ description: >
 metadata:
   type: core
   library: agent-skills
-  library_version: "0.5.2"
+  library_version: '0.5.2'
 sources:
   - "kangrux/kangrux-mono:packages/agent-skills/skills/tanstack-db/SKILL.md"
   - "kangrux/kangrux-mono:packages/main/src/bootstrap.ts"

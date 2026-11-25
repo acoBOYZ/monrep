@@ -47,7 +47,9 @@ export function PasswordStep({
           autoComplete="username"
           required
           value={email}
-          onChange={(event) => onEmailChange(event.target.value)}
+          onChange={(event) => {
+            onEmailChange(event.target.value);
+          }}
           placeholder={`admin@${ADMIN_EMAIL_DOMAIN}`}
         />
       </div>
@@ -58,7 +60,9 @@ export function PasswordStep({
           autoComplete="current-password"
           required
           value={password}
-          onChange={(event) => onPasswordChange(event.target.value)}
+          onChange={(event) => {
+            onPasswordChange(event.target.value);
+          }}
           placeholder="••••••••"
         />
       </div>

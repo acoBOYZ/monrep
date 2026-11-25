@@ -1,4 +1,5 @@
 import { cn } from "@monrep/utils";
+import type { CSSProperties } from "react";
 
 type LabelPreviewProps = {
   lines: Array<string> | null;
@@ -54,19 +55,16 @@ export function LabelPreview({
         "w-full min-w-0 py-1",
         padX,
         labelType,
-        !usesPreview && "truncate",
+        !usesPreview && displayLines <= 1 && "truncate",
         text ? "text-foreground" : "text-muted-foreground/60",
         usesPreview && "overflow-hidden wrap-break-word whitespace-pre-line",
         !usesPreview && multiline && "overflow-hidden wrap-break-word whitespace-pre-wrap",
+        !usesPreview && displayLines > 1 && "line-clamp-(--editable-label-lines)",
         editing && "pointer-events-none opacity-0",
       )}
       style={
         !usesPreview && displayLines > 1
-          ? {
-              WebkitLineClamp: displayLines,
-              WebkitBoxOrient: "vertical",
-              display: "-webkit-box",
-            }
+          ? ({ "--editable-label-lines": displayLines } as CSSProperties)
           : undefined
       }
     >

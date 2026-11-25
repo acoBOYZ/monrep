@@ -25,7 +25,7 @@ export const verifyTurnstileToken = async (
   if (!response.ok) {
     return { ok: false, codes: [`http_${response.status}`] };
   }
-  const json = (await response.json()) as SiteverifyResponse;
+  const json: SiteverifyResponse = await response.json();
   if (json.success) return { ok: true };
   return { ok: false, codes: json["error-codes"] ?? ["unknown"] };
 };

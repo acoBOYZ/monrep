@@ -148,7 +148,9 @@ function attachTwoPhaseObserver(args: {
     });
     observer.observe(el);
 
-    return () => detachFromObserver(exitKey, root, el, observer, elements);
+    return () => {
+      detachFromObserver(exitKey, root, el, observer, elements);
+    };
   };
 
   const attachEntry = () => {
@@ -165,7 +167,9 @@ function attachTwoPhaseObserver(args: {
     });
     observer.observe(el);
 
-    return () => detachFromObserver(entryKey, root, el, observer, elements);
+    return () => {
+      detachFromObserver(entryKey, root, el, observer, elements);
+    };
   };
 
   return attachEntry();

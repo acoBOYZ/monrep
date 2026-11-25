@@ -27,7 +27,9 @@ export function ThemeToggle() {
       variant="ghost"
       size="iconxs"
       className="size-7"
-      onClick={() => setTheme(next)}
+      onClick={() => {
+        setTheme(next);
+      }}
       aria-label={`Theme: ${LABEL[theme]}. Switch to ${LABEL[next]}.`}
     >
       {theme === "system" ? (

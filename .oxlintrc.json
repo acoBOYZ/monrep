@@ -101,7 +101,10 @@
     "use-isnan": "error",
     "valid-typeof": "error",
     // unicorn
-    "unicorn/prefer-node-protocol": "error"
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/no-abusive-eslint-disable": "error",
+    // oxc
+    "oxc/no-accumulating-spread": "error"
   },
 
   // Append rules in the matching override; append to `plugins` arrays, never replace.
@@ -262,14 +265,38 @@
           "error",
           {
             "allowThrowingUnknown": true,
-            "allowRethrowing": true
+            "allowRethrowing": true,
+            "allow": [
+              {
+                "from": "package",
+                "name": ["NotFoundError", "Redirect"],
+                "package": "@tanstack/router-core"
+              },
+              {
+                "from": "package",
+                "name": ["NotFoundError", "Redirect"],
+                "package": "@tanstack/react-router"
+              }
+            ]
           }
         ],
         "typescript/prefer-namespace-keyword": "error",
         "typescript/prefer-promise-reject-errors": "error",
         "typescript/restrict-plus-operands": "error",
         "typescript/restrict-template-expressions": "error",
-        "typescript/unbound-method": "error"
+        "typescript/unbound-method": "error",
+        "typescript/no-deprecated": "error",
+        // high-signal
+        "typescript/switch-exhaustiveness-check": [
+          "error",
+          { "considerDefaultExhaustiveForUnions": true }
+        ],
+        "typescript/no-misused-spread": "error",
+        "typescript/consistent-type-exports": "error",
+        // optional (slightly noisier)
+        "typescript/no-unnecessary-template-expression": "error",
+        "typescript/no-unnecessary-type-conversion": "error",
+        "typescript/no-confusing-void-expression": "error"
       }
     },
 
@@ -286,11 +313,16 @@
         "typescript/await-thenable": "off",
         "typescript/no-array-delete": "off",
         "typescript/no-base-to-string": "off",
+        "typescript/no-confusing-void-expression": "off",
+        "typescript/no-deprecated": "off",
         "typescript/no-duplicate-type-constituents": "off",
         "typescript/no-floating-promises": "off",
         "typescript/no-implied-eval": "off",
         "typescript/no-misused-promises": "off",
+        "typescript/no-misused-spread": "off",
         "typescript/no-redundant-type-constituents": "off",
+        "typescript/no-unnecessary-template-expression": "off",
+        "typescript/no-unnecessary-type-conversion": "off",
         "typescript/no-unsafe-argument": "off",
         "typescript/no-unsafe-assignment": "off",
         "typescript/no-unsafe-call": "off",
@@ -302,7 +334,9 @@
         "typescript/prefer-promise-reject-errors": "off",
         "typescript/restrict-plus-operands": "off",
         "typescript/restrict-template-expressions": "off",
-        "typescript/unbound-method": "off"
+        "typescript/switch-exhaustiveness-check": "off",
+        "typescript/unbound-method": "off",
+        "typescript/consistent-type-exports": "off"
       }
     },
 
@@ -320,9 +354,10 @@
 
     // Generated: do not lint-fix import member order
     {
-      "files": ["**/*.gen.ts", "**/*.gen.*"],
+      "files": ["**/*.gen.ts", "**/*.gen.*", "**/*.d.ts"],
       "rules": {
-        "eslint/sort-imports": "off"
+        "eslint/sort-imports": "off",
+        "unicorn/no-abusive-eslint-disable": "off"
       }
     }
   ]

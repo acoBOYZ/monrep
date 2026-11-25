@@ -45,7 +45,9 @@ export function SessionWsProvider({ serverId, children }: SessionWsProviderProps
     [serverId],
   );
   const setPane = useCallback(
-    (pane: PaneApi | null) => getSessionWs(serverId).setPane(pane),
+    (pane: PaneApi | null) => {
+      getSessionWs(serverId).setPane(pane);
+    },
     [serverId],
   );
   const clearPane = useCallback(() => {

@@ -25,7 +25,9 @@ export function NewServerForm({
           required
           maxLength={120}
           value={name}
-          onChange={(e) => onNameChange(e.target.value)}
+          onChange={(e) => {
+            onNameChange(e.target.value);
+          }}
           placeholder="prod-edge-1"
           autoComplete="off"
         />

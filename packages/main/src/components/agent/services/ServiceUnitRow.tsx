@@ -40,7 +40,9 @@ export function ServiceUnitRow({
     <TableRow
       className="h-10 cursor-pointer"
       data-state={selected ? "selected" : undefined}
-      onClick={() => onSelect(unit.unit)}
+      onClick={() => {
+        onSelect(unit.unit);
+      }}
     >
       <TableCell className="max-w-0 overflow-hidden font-mono text-xs font-medium">
         <TooltipTrigger content={unit.unit} className="block max-w-full min-w-0">
@@ -67,7 +69,12 @@ export function ServiceUnitRow({
           <span className="block truncate text-sm">{unit.description || "—"}</span>
         </TooltipTrigger>
       </TableCell>
-      <TableCell className="overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <TableCell
+        className="overflow-hidden"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
         <div className="flex items-center justify-end gap-0.5">
           <TooltipTrigger content="Logs">
             <Button
@@ -76,7 +83,9 @@ export function ServiceUnitRow({
               variant="ghost"
               disabled={disabled}
               aria-label="Logs"
-              onClick={() => onLogs(unit)}
+              onClick={() => {
+                onLogs(unit);
+              }}
             >
               <HugeiconsIcon icon={File02Icon} className="size-3.5" aria-hidden />
             </Button>
@@ -88,7 +97,9 @@ export function ServiceUnitRow({
               variant="ghost"
               disabled={disabled}
               aria-label="Status"
-              onClick={() => onStatus(unit)}
+              onClick={() => {
+                onStatus(unit);
+              }}
             >
               <HugeiconsIcon icon={InformationCircleIcon} className="size-3.5" aria-hidden />
             </Button>
@@ -96,9 +107,15 @@ export function ServiceUnitRow({
           <OpsActionsMenu
             name={unit.unit}
             disabled={disabled}
-            onStart={() => onStart(unit)}
-            onStop={() => onStop(unit)}
-            onRestart={() => onRestart(unit)}
+            onStart={() => {
+              onStart(unit);
+            }}
+            onStop={() => {
+              onStop(unit);
+            }}
+            onRestart={() => {
+              onRestart(unit);
+            }}
           />
         </div>
       </TableCell>

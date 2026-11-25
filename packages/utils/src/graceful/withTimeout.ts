@@ -14,7 +14,9 @@ export async function withTimeout<T>(
   return await Promise.race<T>([
     fn(),
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`${label} shutdown timeout`)), timeout),
+      setTimeout(() => {
+        reject(new Error(`${label} shutdown timeout`));
+      }, timeout),
     ),
   ]);
 }

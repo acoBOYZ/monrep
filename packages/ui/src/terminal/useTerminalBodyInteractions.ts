@@ -31,7 +31,9 @@ export function useTerminalBodyInteractions({
       hiddenInputRef.current?.focus();
     };
     wrapper.addEventListener("click", handleClick);
-    return () => wrapper.removeEventListener("click", handleClick);
+    return () => {
+      wrapper.removeEventListener("click", handleClick);
+    };
   }, [wrapperRef, hiddenInputRef, onInput]);
 
   useEffect(() => {

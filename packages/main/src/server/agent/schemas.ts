@@ -26,7 +26,7 @@ export const DeviceTokenRequestSchema = z.object({
 export const EnrollResponseSchema = z.object({
   deviceId: z.string(),
   deviceSecret: z.string(),
-  controlUrl: z.string().url(),
+  controlUrl: z.url(),
 });
 
 export type EnrollResponse = z.infer<typeof EnrollResponseSchema>;

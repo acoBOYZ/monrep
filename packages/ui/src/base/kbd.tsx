@@ -1,7 +1,7 @@
 import { SlashIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { cn } from "@monrep/utils";
-import { formatForDisplay } from "@tanstack/react-hotkeys";
+import { useFormatForDisplay } from "@tanstack/react-hotkeys";
 import { cva } from "class-variance-authority";
 import type { ComponentProps } from "react";
 import type { Hotkey } from "@tanstack/react-hotkeys";
@@ -64,6 +64,7 @@ type KbdGroupProps = {
 } & VariantProps<typeof kbdVariants>;
 
 export function KbdGroup({ hotkey, variant, size, className }: KbdGroupProps) {
+  const formatForDisplay = useFormatForDisplay();
   const hotkeys = Array.isArray(hotkey) ? hotkey : [hotkey];
 
   return (

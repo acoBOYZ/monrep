@@ -87,7 +87,9 @@ export const isRecoverableStreamError = (error: Error): boolean => {
 const notifyEpochAdvance = (moduleId: string, sessionEpoch: string): boolean => {
   const nextLabel = streamEpochLabel(moduleId);
   if (nextLabel === sessionEpoch) return false;
-  epochListeners.get(moduleId)?.forEach((listener) => listener(nextLabel));
+  epochListeners.get(moduleId)?.forEach((listener) => {
+    listener(nextLabel);
+  });
   return true;
 };
 
@@ -135,7 +137,9 @@ const openSession = async (moduleId: string, epoch: string): Promise<StreamSessi
       fetch(input, init).then((response) => {
         const headerEpoch = response.headers.get(STREAM_EPOCH_HEADER);
         if (headerEpoch && headerEpoch !== epoch) {
-          epochListeners.get(moduleId)?.forEach((listener) => listener(headerEpoch));
+          epochListeners.get(moduleId)?.forEach((listener) => {
+            listener(headerEpoch);
+          });
         }
         const method = (typeof init?.method === "string" ? init.method : "GET").toUpperCase();
         if (method === "GET") {

@@ -1,4 +1,4 @@
-const ENABLED = Boolean(false);
+const ENABLED = typeof Bun !== "undefined" && Bun.env.NODE_ENV !== "production";
 
 const noop = (_label?: string): void => {};
 
@@ -6,7 +6,8 @@ const noop = (_label?: string): void => {};
 export const timeLogger = ENABLED
   ? (() => {
       const starts = new Map<string, number>();
-      const nowNs = () => Bun.nanoseconds();
+      const nowNs = () =>
+        typeof Bun !== "undefined" ? Bun.nanoseconds() : Math.round(performance.now() * 1e6);
 
       const formatDuration = (ns: number): string => {
         if (ns >= 1_000_000) return `${(ns / 1_000_000).toFixed(3)}ms`;

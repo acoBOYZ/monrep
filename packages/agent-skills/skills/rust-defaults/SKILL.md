@@ -10,7 +10,7 @@ description: >
 metadata:
   type: lifecycle
   library: agent-skills
-  library_version: "0.5.2"
+  library_version: '0.5.2'
 sources:
   - "monrep/monrep-mono:packages/agent-skills/skills/rust-defaults/SKILL.md"
   - "monrep/monrep-mono:packages/agent/package.json"

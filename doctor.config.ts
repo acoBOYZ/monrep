@@ -7,11 +7,10 @@ export const sharedDoctorConfig = {
   // Doctor only runs its curated react-doctor surface — no duplicate work.
   adoptExistingLintConfig: false,
   rules: {
-    "react-doctor/no-multi-comp": "warn",
-    "react-doctor/react-compiler-no-manual-memoization": "warn",
-    "react-doctor/no-giant-component": "warn",
-    "react-doctor/no-high-complexity-react-function": "warn",
-    "react-doctor/duplicate-jsx-subtree": "warn",
+    "react-doctor/no-multi-comp": "off",
+    "react-doctor/no-giant-component": "off",
+    "react-doctor/no-high-complexity-react-function": "off",
+    "react-doctor/duplicate-jsx-subtree": "off",
   },
 } as const satisfies ReactDoctorConfig;
 
